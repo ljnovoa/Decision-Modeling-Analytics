@@ -1,0 +1,3 @@
+run in cmd line:
+
+run npm run
