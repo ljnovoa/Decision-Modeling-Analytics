@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oktomasks LP Sensitivity Lab</title>
+  <link rel="stylesheet" href="style.css?v=20260602-3">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="top-bar hero-band">
+      <div class="brand-lockup">
+        <div class="polytope-logo" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="title-block">
+          <h1>Oktomasks LP Sensitivity Lab</h1>
+          <p class="credit">Designed by Luis Novoa and built using Codex</p>
+        </div>
+      </div>
+      <div class="solution-strip" aria-live="polite">
+        <div>
+          <span>Base Solution</span>
+          <strong id="base-solution">-</strong>
+        </div>
+        <div>
+          <span>Base Profit</span>
+          <strong id="base-profit">-</strong>
+        </div>
+        <div>
+          <span># OktoValves</span>
+          <strong id="xv-value">-</strong>
+        </div>
+        <div>
+          <span># OktoPrints</span>
+          <strong id="xp-value">-</strong>
+        </div>
+        <div>
+          <span>New Profit</span>
+          <strong id="objective-value">-</strong>
+        </div>
+        <div>
+          <span>Change in Profit</span>
+          <strong id="profit-delta">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="setup-grid">
+        <section class="panel formulation-panel">
+          <div class="section-title">
+            <h2>Formulation</h2>
+            <button id="reset-all" class="icon-button" title="Reset all parameters" aria-label="Reset all parameters">Reset</button>
+          </div>
+          <div class="formula-block" id="formula-block"></div>
+        </section>
+
+        <section class="panel controls-panel">
+          <div class="section-title">
+            <h2>Change One Parameter</h2>
+            <span id="active-change">Base case</span>
+          </div>
+          <div class="range-summary" id="range-summary"></div>
+          <div class="control-list" id="controls"></div>
+        </section>
+    </section>
+
+    <section class="plots-grid">
+        <section class="visual-panel">
+          <div class="canvas-toolbar">
+            <div>
+              <h2>3D Geometry</h2>
+              <p id="geometry-caption">Profit plane over the feasible region on the floor.</p>
+              <div class="constraint-legend" id="constraint-legend-3d"></div>
+            </div>
+            <div class="view-buttons" role="group" aria-label="View controls">
+              <button class="small-button" id="view-home">Home</button>
+            </div>
+          </div>
+          <canvas id="scene" width="1100" height="700" aria-label="3D LP geometry canvas"></canvas>
+        </section>
+
+        <section class="plane-panel">
+          <div class="canvas-toolbar">
+            <div>
+              <h2>2D Feasible Region</h2>
+              <p>Same scale on both axes, with the active sensitivity range tracked.</p>
+              <div class="constraint-legend" id="constraint-legend-2d"></div>
+            </div>
+          </div>
+          <canvas id="plane" width="1100" height="420" aria-label="2D feasible region canvas"></canvas>
+        </section>
+    </section>
+
+    <section class="report-panel">
+      <div class="section-title">
+        <h2>Sensitivity Report</h2>
+        <span id="report-note">Base Solver report; values do not change when sliders move</span>
+      </div>
+      <div class="report-grid">
+        <div>
+          <h3>Variable Cells</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Final Value</th>
+                  <th>Reduced Cost</th>
+                  <th>Objective Coefficient</th>
+                  <th>Allowable Increase</th>
+                  <th>Allowable Decrease</th>
+                </tr>
+              </thead>
+              <tbody id="variable-report"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h3>Constraints</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Final Value</th>
+                  <th>Shadow Price</th>
+                  <th>Constraint R.H. Side</th>
+                  <th>Allowable Increase</th>
+                  <th>Allowable Decrease</th>
+                </tr>
+              </thead>
+              <tbody id="constraint-report"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js?v=20260602-3"></script>
+</body>
+</html>
