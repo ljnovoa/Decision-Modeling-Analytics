@@ -30,6 +30,13 @@ function xToVal(x) {
   );
 }
 
+function xToValFloat(x) {
+  return clamp(
+    VAL_MIN + ((x - BEAM_LEFT) / BEAM_LEN) * (VAL_MAX - VAL_MIN),
+    VAL_MIN, VAL_MAX
+  );
+}
+
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 // ── Grid lines behind beam ───────────────────────────────────────────────────
@@ -101,40 +108,45 @@ function Fulcrum({ cx, active, mode }) {
   );
 }
 
-// ── Individual mass ──────────────────────────────────────────────────────────
+// ── Individual mass (square block) ──────────────────────────────────────────
 function Mass({ value, x, y, highlight, dimmed, mode, stackIdx, onClick }) {
   const color = highlight ? COLOR[mode] : '#e2e8f0';
   const opacity = dimmed ? 0.25 : 1;
   const glowFilter = highlight ? `url(#glow-${mode})` : undefined;
+  const S = MASS_R * 2;
+  const gid = `mass-grad-${value}-${stackIdx}`;
 
   return (
-    <g
-      style={{ cursor: 'pointer', opacity, transition: 'opacity 0.3s' }}
-      onClick={onClick}
-    >
+    <g style={{ cursor: 'pointer', opacity, transition: 'opacity 0.3s' }} onClick={onClick}>
       <defs>
-        <radialGradient id={`mass-grad-${value}-${stackIdx}`} cx="35%" cy="30%" r="65%">
-          <stop offset="0%" stopColor={highlight ? color : '#c8d3e0'} />
-          <stop offset="100%" stopColor={highlight ? `${color}55` : '#4b5563'} />
-        </radialGradient>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor={highlight ? color        : '#c8d3e0'} />
+          <stop offset="100%" stopColor={highlight ? `${color}44` : '#374151'} />
+        </linearGradient>
       </defs>
-      {/* shadow */}
-      <ellipse cx={x} cy={y + MASS_R + 2} rx={MASS_R * 0.7} ry={5} fill="rgba(0,0,0,0.4)" />
-      <circle
-        cx={x} cy={y}
-        r={MASS_R}
-        fill={`url(#mass-grad-${value}-${stackIdx})`}
+      {/* drop shadow */}
+      <rect x={x - MASS_R + 3} y={y + MASS_R} width={S} height={4} rx={2} fill="rgba(0,0,0,0.45)" />
+      {/* block */}
+      <rect
+        x={x - MASS_R} y={y - MASS_R}
+        width={S} height={S} rx={3}
+        fill={`url(#${gid})`}
         filter={glowFilter}
-        stroke={highlight ? color : 'rgba(255,255,255,0.15)'}
+        stroke={highlight ? color : 'rgba(255,255,255,0.18)'}
         strokeWidth={highlight ? 2 : 1}
-        style={{ transition: 'all 0.4s' }}
+        style={{ transition: 'stroke 0.4s, filter 0.4s' }}
+      />
+      {/* top-edge shine */}
+      <line
+        x1={x - MASS_R + 4} y1={y - MASS_R + 2}
+        x2={x + MASS_R - 4} y2={y - MASS_R + 2}
+        stroke="rgba(255,255,255,0.28)" strokeWidth={1} strokeLinecap="round"
       />
       <text
-        x={x} y={y + 4.5}
+        x={x} y={y + 5}
         textAnchor="middle"
         fill={highlight ? '#fff' : '#e2e8f0'}
-        fontSize={12}
-        fontWeight={600}
+        fontSize={12} fontWeight={600}
         fontFamily="JetBrains Mono, monospace"
         style={{ pointerEvents: 'none', userSelect: 'none' }}
       >
@@ -195,7 +207,7 @@ export default function BeamScene({ values, activeMode, onClickMass }) {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return null;
     const svgX = (clientX - rect.left) * (W / rect.width);
-    return clamp(xToVal(svgX), VAL_MIN, VAL_MAX);
+    return xToValFloat(svgX);
   }, []);
 
   const onFulcrumPointerDown = e => {
@@ -226,7 +238,7 @@ export default function BeamScene({ values, activeMode, onClickMass }) {
     const stackIdx = stacks[i];
 
     const yBase = BEAM_Y - MASS_R - 6;
-    return { x: bx, y: yBase - stackIdx * (MASS_R * 2 + 4) };
+    return { x: bx, y: yBase - stackIdx * (MASS_R * 2 + 1) };
   });
 
   // ── Highlight logic ─────────────────────────────────────────────────────────
