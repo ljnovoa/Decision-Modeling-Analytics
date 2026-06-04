@@ -225,16 +225,8 @@ export default function BeamScene({ values, activeMode, onClickMass }) {
     const bx = valToX(v);
     const stackIdx = stacks[i];
 
-    if (activeMode === 'mode') {
-      // stack vertically: tallest at top
-      const yBase = BEAM_Y - MASS_R - 6;
-      return { x: bx, y: yBase - stackIdx * (MASS_R * 2 + 4) };
-    }
-    if (activeMode === 'median') {
-      // sort masses to show order; slight vertical spread for clarity
-      return { x: bx, y: BEAM_Y - MASS_R - 6 };
-    }
-    return { x: bx, y: BEAM_Y - MASS_R - 6 };
+    const yBase = BEAM_Y - MASS_R - 6;
+    return { x: bx, y: yBase - stackIdx * (MASS_R * 2 + 4) };
   });
 
   // ── Highlight logic ─────────────────────────────────────────────────────────
