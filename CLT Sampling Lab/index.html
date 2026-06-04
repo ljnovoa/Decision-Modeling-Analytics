@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sampling Distribution Lab</title>
+  <style>
+    @font-face {
+      font-family: "Excalifont";
+      src: url("./Excalifont-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5f6f7d;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-strong: #ffffff;
+      --line: rgba(23, 32, 42, 0.13);
+      --cyan: #00a8c8;
+      --blue: #2f6bff;
+      --rose: #e64b72;
+      --gold: #f2aa25;
+      --green: #12a66a;
+      --shadow: 0 18px 50px rgba(26, 35, 58, 0.15);
+      --radius: 8px;
+      font-family: "Excalifont", "Comic Sans MS", "Segoe Print", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(0, 168, 200, 0.16), transparent 26rem),
+        radial-gradient(circle at 86% 4%, rgba(242, 170, 37, 0.18), transparent 25rem),
+        linear-gradient(135deg, #f7fbff 0%, #eef4f1 45%, #fff9ec 100%);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: end;
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 1.35rem 1.25rem 0.7rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 3.8vw, 4.4rem);
+      line-height: 0.96;
+      letter-spacing: 0;
+      max-width: 980px;
+    }
+
+    .subtitle {
+      margin: 0.65rem 0 0;
+      max-width: 1120px;
+      color: var(--muted);
+      font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+      line-height: 1.45;
+    }
+
+    .subtitle-main {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .subtitle-credit {
+      display: block;
+      margin-top: 0.18rem;
+      font-size: 0.82em;
+      color: rgba(95, 111, 125, 0.86);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      justify-self: end;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+      padding: 0.5rem 0.7rem;
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(26, 35, 58, 0.08);
+      white-space: nowrap;
+      font-weight: 700;
+      color: #263547;
+    }
+
+    .pulse {
+      width: 0.7rem;
+      height: 0.7rem;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 0 rgba(18, 166, 106, 0.38);
+      animation: throb 1.45s infinite;
+    }
+
+    body:not(.running) .pulse {
+      background: var(--gold);
+      animation: none;
+    }
+
+    @keyframes throb {
+      70% { box-shadow: 0 0 0 10px rgba(18, 166, 106, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(18, 166, 106, 0); }
+    }
+
+    main {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 0.5rem 1.25rem 1.5rem;
+      display: grid;
+      grid-template-columns: clamp(300px, 24vw, 360px) minmax(0, 1fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .controls,
+    .panel,
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius);
+    }
+
+    .controls {
+      position: sticky;
+      top: 1rem;
+      padding: 1rem;
+      display: grid;
+      gap: 0.95rem;
+    }
+
+    .control-group {
+      display: grid;
+      gap: 0.5rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .control-group:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      font-weight: 800;
+      color: #223044;
+    }
+
+    .value {
+      color: var(--blue);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.92rem;
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 0.62rem 0.7rem;
+      font: inherit;
+      font-weight: 650;
+      min-height: 2.55rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+
+    .param-grid label {
+      display: grid;
+      gap: 0.35rem;
+      color: var(--muted);
+      font-weight: 750;
+      font-size: 0.82rem;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    button {
+      border: 0;
+      background: #243143;
+      color: #fff;
+      border-radius: 6px;
+      min-height: 2.75rem;
+      padding: 0.5rem 0.7rem;
+      font: inherit;
+      font-weight: 850;
+      cursor: pointer;
+      transition: transform 0.16s ease, filter 0.16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+    }
+
+    button.secondary {
+      background: #e9eef5;
+      color: #223044;
+    }
+
+    button.accent {
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+    }
+
+    .explain {
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .stage {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .sampling-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .panel {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 0.85rem;
+      padding: 0.85rem 0.95rem 0;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .panel p {
+      margin: 0.3rem 0 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 0.88rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 1.7rem;
+      padding: 0 0.55rem;
+      border-radius: 999px;
+      background: rgba(47, 107, 255, 0.1);
+      color: #2148a8;
+      font-size: 0.75rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: clamp(190px, 20vw, 250px);
+    }
+
+    .large canvas {
+      height: clamp(210px, 23vw, 290px);
+    }
+
+    .chart-with-side {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(140px, 0.32fr);
+      gap: 0.65rem;
+      align-items: stretch;
+      padding-right: 0.85rem;
+    }
+
+    .side-stats {
+      display: grid;
+      align-content: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0 0.65rem;
+    }
+
+    .side-stat {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.62);
+      border-radius: 6px;
+      padding: 0.55rem;
+      min-width: 0;
+    }
+
+    .side-stat .name {
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 1.05;
+    }
+
+    .side-stat .num {
+      margin-top: 0.2rem;
+      color: #223044;
+      font-size: clamp(1rem, 1.55vw, 1.35rem);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.75rem;
+      align-items: start;
+    }
+
+    .metric {
+      padding: 0.85rem;
+      min-height: 5.2rem;
+    }
+
+    .metric .name {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric .num {
+      margin-top: 0.35rem;
+      font-size: clamp(1.15rem, 2vw, 1.85rem);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.05;
+    }
+
+    .metric .hint {
+      margin-top: 0.35rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.25;
+    }
+
+    .lesson {
+      padding: 1rem;
+      background:
+        linear-gradient(135deg, rgba(0, 168, 200, 0.11), rgba(242, 170, 37, 0.12)),
+        var(--panel);
+    }
+
+    .lesson h2 {
+      font-size: 1.15rem;
+    }
+
+    .lesson ul {
+      margin: 0.65rem 0 0;
+      padding-left: 1.1rem;
+      color: var(--muted);
+      line-height: 1.42;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem 0.85rem;
+      padding: 0 0.95rem 0.85rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 750;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .swatch {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 3px;
+      background: var(--blue);
+    }
+
+    .swatch.rose { background: var(--rose); }
+    .swatch.cyan { background: var(--cyan); }
+    .swatch.gold { background: var(--gold); }
+    .swatch.green { background: var(--green); }
+
+    @media (max-width: 1120px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+      }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        grid-template-columns: 1fr;
+      }
+
+      .status-pill {
+        justify-self: start;
+      }
+
+      .subtitle-main {
+        white-space: normal;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      canvas,
+      .large canvas {
+        height: 220px;
+      }
+
+      .chart-with-side {
+        grid-template-columns: 1fr;
+        padding-right: 0;
+      }
+
+      .side-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0 0.85rem 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Sampling Distribution Lab</h1>
+      <p class="subtitle">
+        <span class="subtitle-main">Draw repeated samples from a population and watch the means and sums build their own distributions.</span>
+        <span class="subtitle-credit">Designed by Luis Novoa and implemented using Codex - for educational purposes.</span>
+      </p>
+    </div>
+    <div class="status-pill"><span class="pulse"></span><span id="runState">Paused</span></div>
+  </header>
+
+  <main>
+    <aside class="controls" aria-label="Simulation controls">
+      <section class="control-group">
+        <div class="label-row"><label for="dist">Population</label></div>
+        <select id="dist">
+          <option value="normal">Normal</option>
+          <option value="uniform">Uniform</option>
+          <option value="exponential">Exponential</option>
+          <option value="gamma">Gamma</option>
+        </select>
+        <div class="param-grid" id="params"></div>
+      </section>
+
+      <section class="control-group">
+        <div class="label-row"><label for="sampleSize">Sample size</label><span class="value" id="sampleSizeValue">30</span></div>
+        <input id="sampleSize" type="range" min="1" max="500" value="30" />
+      </section>
+
+      <section class="control-group">
+        <div class="label-row"><label for="trialTarget">Trials</label><span class="value" id="trialTargetValue">10,000</span></div>
+        <input id="trialTarget" type="range" min="10" max="100000" step="10" value="10000" />
+      </section>
+
+      <section class="control-group">
+        <div class="label-row"><label for="speed">Drawing speed</label><span class="value" id="speedValue">600/frame</span></div>
+        <input id="speed" type="range" min="1" max="2000" value="600" />
+      </section>
+
+      <section class="control-group">
+        <div class="buttons">
+          <button class="accent" id="startBtn">Start</button>
+          <button class="secondary" id="stepBtn">Step</button>
+          <button class="secondary" id="resetBtn">Reset</button>
+        </div>
+        <p class="explain" id="lessonText">Start with any population. As samples pile up, compare the shape of the raw population with the shape of sample means.</p>
+      </section>
+    </aside>
+
+    <section class="stage">
+      <div class="metrics">
+        <div class="metric">
+          <div class="name">Trials drawn</div>
+          <div class="num" id="trialsDrawn">0</div>
+          <div class="hint">out of selected total</div>
+        </div>
+        <div class="metric">
+          <div class="name">Population mean</div>
+          <div class="num" id="popMean">0.00</div>
+          <div class="hint">where the population's fulcrum is</div>
+        </div>
+        <div class="metric">
+          <div class="name">Last sample mean</div>
+          <div class="num" id="lastSampleMean">0.00</div>
+          <div class="hint">average of the newest draw</div>
+        </div>
+        <div class="metric">
+          <div class="name">Last sample SD</div>
+          <div class="num" id="lastSampleSd">0.00</div>
+          <div class="hint">spread inside the newest draw</div>
+        </div>
+      </div>
+
+      <div class="top-grid">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Population Distribution</h2>
+              <p>The world the samples come from.</p>
+            </div>
+            <span class="tag" id="popTag">Normal</span>
+          </div>
+          <canvas id="populationCanvas" width="900" height="520"></canvas>
+          <div class="legend">
+            <span class="key"><span class="swatch cyan"></span>population</span>
+            <span class="key"><span class="swatch gold"></span>population mean</span>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Latest Sample</h2>
+              <p>One random sample at a time.</p>
+            </div>
+            <span class="tag" id="sampleTag">n = 30</span>
+          </div>
+          <canvas id="sampleCanvas" width="900" height="520"></canvas>
+          <div class="legend">
+            <span class="key"><span class="swatch blue"></span>sample values</span>
+            <span class="key"><span class="swatch gold"></span>sample mean</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="sampling-grid">
+        <article class="panel large">
+          <div class="panel-head">
+            <div>
+              <h2>Sampling Distribution of the Mean</h2>
+              <p>Each bar counts sample means within a small range. The curve is the CLT prediction, scaled to the histogram counts.</p>
+            </div>
+          </div>
+          <div class="chart-with-side">
+            <canvas id="meanCanvas" width="900" height="560"></canvas>
+            <div class="side-stats" aria-label="Mean sampling distribution summaries">
+              <div class="side-stat">
+                <div class="name">Sim average</div>
+                <div class="num" id="meanAvg">0.00</div>
+              </div>
+              <div class="side-stat">
+                <div class="name">Sim SD</div>
+                <div class="num" id="meanSideSd">0.00</div>
+              </div>
+              <div class="side-stat">
+                <div class="name">Theory mean</div>
+                <div class="num" id="meanTheoryMean">0.00</div>
+              </div>
+              <div class="side-stat">
+                <div class="name">Theory SD</div>
+                <div class="num" id="meanTheorySd">0.00</div>
+              </div>
+            </div>
+          </div>
+          <div class="legend">
+            <span class="key"><span class="swatch blue"></span>sample means</span>
+            <span class="key"><span class="swatch gold"></span>theoretical center</span>
+            <span class="key"><span class="swatch rose"></span>normal overlay</span>
+          </div>
+        </article>
+
+        <article class="panel large">
+          <div class="panel-head">
+            <div>
+              <h2>Sampling Distribution of the Sum</h2>
+              <p>Each bar counts sample sums within a small range. The curve is the CLT prediction, scaled to the histogram counts.</p>
+            </div>
+          </div>
+          <div class="chart-with-side">
+            <canvas id="sumCanvas" width="900" height="560"></canvas>
+            <div class="side-stats" aria-label="Sum sampling distribution summaries">
+              <div class="side-stat">
+                <div class="name">Sim average</div>
+                <div class="num" id="sumAvg">0.00</div>
+              </div>
+              <div class="side-stat">
+                <div class="name">Sim SD</div>
+                <div class="num" id="sumSideSd">0.00</div>
+              </div>
+              <div class="side-stat">
+                <div class="name">Theory mean</div>
+                <div class="num" id="sumTheoryMean">0.00</div>
+              </div>
+              <div class="side-stat">
+                <div class="name">Theory SD</div>
+                <div class="num" id="sumTheorySd">0.00</div>
+              </div>
+            </div>
+          </div>
+          <div class="legend">
+            <span class="key"><span class="swatch green"></span>sample sums</span>
+            <span class="key"><span class="swatch gold"></span>theoretical center</span>
+            <span class="key"><span class="swatch rose"></span>normal overlay</span>
+          </div>
+        </article>
+      </div>
+
+      <article class="panel lesson">
+        <h2>What to Notice</h2>
+        <ul id="notices"></ul>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fmt = new Intl.NumberFormat("en-US");
+    const fmt2 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+    const fmt3 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 });
+
+    const config = {
+      normal: {
+        name: "Normal",
+        params: [
+          { key: "mu", label: "Mean", min: -100, max: 200, step: 0.1, value: 50 },
+          { key: "sigma", label: "SD", min: 0.1, max: 30, step: 0.1, value: 10 }
+        ],
+        sample: (p) => p.mu + p.sigma * randNormal(),
+        stats: (p) => ({ mean: p.mu, variance: p.sigma * p.sigma })
+      },
+      uniform: {
+        name: "Uniform",
+        params: [
+          { key: "min", label: "Min", min: -100, max: 100, step: 0.1, value: 0 },
+          { key: "max", label: "Max", min: -100, max: 150, step: 0.1, value: 100 }
+        ],
+        sample: (p) => p.min + Math.random() * (p.max - p.min),
+        stats: (p) => ({ mean: (p.min + p.max) / 2, variance: ((p.max - p.min) ** 2) / 12 })
+      },
+      exponential: {
+        name: "Exponential",
+        params: [
+          { key: "rate", label: "Rate", min: 0.02, max: 3, step: 0.01, value: 0.2 }
+        ],
+        sample: (p) => -Math.log(1 - Math.random()) / p.rate,
+        stats: (p) => ({ mean: 1 / p.rate, variance: 1 / (p.rate * p.rate) })
+      },
+      gamma: {
+        name: "Gamma",
+        params: [
+          { key: "shape", label: "Shape", min: 0.1, max: 20, step: 0.1, value: 2 },
+          { key: "scale", label: "Scale", min: 0.1, max: 20, step: 0.1, value: 5 }
+        ],
+        sample: (p) => randGamma(p.shape) * p.scale,
+        stats: (p) => ({ mean: p.shape * p.scale, variance: p.shape * p.scale * p.scale })
+      }
+    };
+
+    const state = {
+      running: false,
+      dist: "normal",
+      params: {},
+      sampleSize: 30,
+      trialTarget: 10000,
+      speed: 600,
+      trials: 0,
+      latestSample: [],
+      latestSampleMean: 0,
+      latestSampleSd: 0,
+      means: [],
+      sums: [],
+      populationPreview: [],
+      meanStats: makeRunningStats(),
+      sumStats: makeRunningStats(),
+      raf: null
+    };
+
+    const canvases = {
+      population: $("populationCanvas"),
+      sample: $("sampleCanvas"),
+      mean: $("meanCanvas"),
+      sum: $("sumCanvas")
+    };
+
+    function makeRunningStats() {
+      return { n: 0, mean: 0, m2: 0 };
+    }
+
+    function pushStat(s, x) {
+      s.n++;
+      const delta = x - s.mean;
+      s.mean += delta / s.n;
+      s.m2 += delta * (x - s.mean);
+    }
+
+    function sd(s) {
+      return s.n > 1 ? Math.sqrt(s.m2 / (s.n - 1)) : 0;
+    }
+
+    function randNormal() {
+      let u = 0, v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    function randGamma(shape) {
+      if (shape < 1) {
+        return randGamma(shape + 1) * Math.pow(Math.random(), 1 / shape);
+      }
+      const d = shape - 1 / 3;
+      const c = 1 / Math.sqrt(9 * d);
+      while (true) {
+        let x = randNormal();
+        let v = 1 + c * x;
+        if (v <= 0) continue;
+        v = v * v * v;
+        const u = Math.random();
+        if (u < 1 - 0.0331 * x ** 4) return d * v;
+        if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+      }
+    }
+
+    function activeSpec() {
+      return config[state.dist];
+    }
+
+    function readParams() {
+      const spec = activeSpec();
+      state.params = {};
+      spec.params.forEach((def) => {
+        state.params[def.key] = Number($("param-" + def.key).value);
+      });
+      if (state.dist === "uniform" && state.params.max <= state.params.min) {
+        state.params.max = state.params.min + 1;
+        $("param-max").value = state.params.max;
+      }
+    }
+
+    function buildParams() {
+      const wrap = $("params");
+      wrap.innerHTML = "";
+      activeSpec().params.forEach((def) => {
+        const label = document.createElement("label");
+        label.textContent = def.label;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.id = "param-" + def.key;
+        input.min = def.min;
+        input.max = def.max;
+        input.step = def.step;
+        input.value = state.params[def.key] ?? def.value;
+        input.addEventListener("input", () => {
+          readParams();
+          reset(false);
+        });
+        label.appendChild(input);
+        wrap.appendChild(label);
+      });
+      readParams();
+    }
+
+    function sampleOne() {
+      const spec = activeSpec();
+      const sample = new Array(state.sampleSize);
+      let sum = 0;
+      let sumSquares = 0;
+      for (let i = 0; i < state.sampleSize; i++) {
+        const x = spec.sample(state.params);
+        sample[i] = x;
+        sum += x;
+        sumSquares += x * x;
+      }
+      sample.sort((a, b) => a - b);
+      const mean = sum / state.sampleSize;
+      const sampleVariance = state.sampleSize > 1
+        ? (sumSquares - state.sampleSize * mean * mean) / (state.sampleSize - 1)
+        : 0;
+      state.latestSample = sample;
+      state.latestSampleMean = mean;
+      state.latestSampleSd = Math.sqrt(Math.max(0, sampleVariance));
+      state.means.push(mean);
+      state.sums.push(sum);
+      pushStat(state.meanStats, mean);
+      pushStat(state.sumStats, sum);
+      state.trials++;
+    }
+
+    function generatePopulationPreview() {
+      state.populationPreview = [];
+      const spec = activeSpec();
+      const count = 16000;
+      for (let i = 0; i < count; i++) state.populationPreview.push(spec.sample(state.params));
+      state.populationPreview.sort((a, b) => a - b);
+    }
+
+    function reset(keepRunning) {
+      state.running = Boolean(keepRunning && state.running);
+      state.trials = 0;
+      state.latestSample = [];
+      state.latestSampleMean = 0;
+      state.latestSampleSd = 0;
+      state.means = [];
+      state.sums = [];
+      state.meanStats = makeRunningStats();
+      state.sumStats = makeRunningStats();
+      generatePopulationPreview();
+      drawAll();
+      updateUi();
+    }
+
+    function runFrame() {
+      if (!state.running) return;
+      const remaining = state.trialTarget - state.trials;
+      const batch = Math.min(remaining, state.speed);
+      for (let i = 0; i < batch; i++) sampleOne();
+      drawAll();
+      updateUi();
+      if (state.trials >= state.trialTarget) {
+        state.running = false;
+        updateUi();
+        return;
+      }
+      state.raf = requestAnimationFrame(runFrame);
+    }
+
+    function startPause() {
+      state.running = !state.running;
+      updateUi();
+      if (state.running) runFrame();
+    }
+
+    function step() {
+      if (state.trials < state.trialTarget) sampleOne();
+      drawAll();
+      updateUi();
+    }
+
+    function getRange(values, fallbackStats) {
+      if (!values.length) {
+        const mean = fallbackStats.mean;
+        const spread = Math.sqrt(Math.max(fallbackStats.variance, 1e-9));
+        return [mean - 4 * spread, mean + 4 * spread];
+      }
+      let min = values[0], max = values[values.length - 1];
+      const pad = Math.max((max - min) * 0.08, 1e-6);
+      return [min - pad, max + pad];
+    }
+
+    function setupCanvas(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(320, Math.round(rect.width * dpr));
+      const height = Math.max(220, Math.round(rect.height * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: width / dpr, h: height / dpr };
+    }
+
+    function clearChart(ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "rgba(255,255,255,0.58)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(23,32,42,0.08)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 5; i++) {
+        const y = 18 + (h - 52) * i / 5;
+        ctx.beginPath();
+        ctx.moveTo(42, y);
+        ctx.lineTo(w - 16, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawHistogram(canvas, values, options = {}) {
+      const { ctx, w, h } = setupCanvas(canvas);
+      clearChart(ctx, w, h);
+      const stats = options.stats ?? activeSpec().stats(state.params);
+      const [min, max] = options.range ?? getRange(values.slice().sort((a, b) => a - b), stats);
+      const bins = options.bins ?? 44;
+      const counts = new Array(bins).fill(0);
+      values.forEach((x) => {
+        const idx = Math.max(0, Math.min(bins - 1, Math.floor(((x - min) / (max - min)) * bins)));
+        counts[idx]++;
+      });
+      const maxCount = Math.max(1, ...counts);
+      const left = 42, right = w - 16, top = 18, bottom = h - 34;
+      const plotW = right - left;
+      const plotH = bottom - top;
+
+      counts.forEach((c, i) => {
+        const x = left + i * plotW / bins;
+        const bw = Math.max(1, plotW / bins - 1);
+        const bh = c / maxCount * plotH;
+        const hue = options.color ?? "#2f6bff";
+        const grad = ctx.createLinearGradient(0, bottom - bh, 0, bottom);
+        grad.addColorStop(0, hue);
+        grad.addColorStop(1, options.color2 ?? "rgba(0,168,200,0.72)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, bottom - bh, bw, bh);
+      });
+
+      if (options.overlayNormal && stats.variance > 0) {
+        const mu = options.normalMean ?? stats.mean;
+        const se = options.normalSd ?? Math.sqrt(stats.variance / state.sampleSize);
+        const binW = (max - min) / bins;
+        ctx.strokeStyle = "#e64b72";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let i = 0; i <= 180; i++) {
+          const xVal = min + (max - min) * i / 180;
+          const density = normalPdf(xVal, mu, se);
+          const expected = density * values.length * binW;
+          const x = left + ((xVal - min) / (max - min)) * plotW;
+          const y = bottom - Math.min(plotH, expected / maxCount * plotH);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      if (Number.isFinite(options.marker)) drawMarker(ctx, options.marker, min, max, left, right, top, bottom, "#f2aa25", options.markerLabel ?? "");
+      if (Number.isFinite(options.marker2)) drawMarker(ctx, options.marker2, min, max, left, right, top, bottom, "#e64b72", options.marker2Label ?? "");
+      if (Number.isFinite(options.fulcrum)) drawFulcrum(ctx, options.fulcrum, min, max, left, right, bottom);
+
+      drawAxis(ctx, min, max, left, right, bottom);
+      if (!values.length) drawEmpty(ctx, w, h, "Press Start to draw samples");
+    }
+
+    function normalPdf(x, mu, sd) {
+      return Math.exp(-0.5 * ((x - mu) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI));
+    }
+
+    function drawMarker(ctx, value, min, max, left, right, top, bottom, color, label) {
+      const x = left + ((value - min) / (max - min)) * (right - left);
+      if (x < left || x > right) return;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      ctx.stroke();
+      if (label) {
+        ctx.fillStyle = color;
+        ctx.font = "400 13px Excalifont, Comic Sans MS, sans-serif";
+        ctx.fillText(label, Math.min(right - 64, x + 5), top + 13);
+      }
+    }
+
+    function drawFulcrum(ctx, value, min, max, left, right, bottom) {
+      const x = left + ((value - min) / (max - min)) * (right - left);
+      if (x < left + 14 || x > right - 14) return;
+      const baseY = bottom + 25;
+      ctx.save();
+      ctx.strokeStyle = "#223044";
+      ctx.fillStyle = "rgba(242,170,37,0.9)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, bottom + 4);
+      ctx.lineTo(x - 13, baseY);
+      ctx.lineTo(x + 13, baseY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - 24, baseY);
+      ctx.lineTo(x + 24, baseY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+
+    function drawAxis(ctx, min, max, left, right, bottom) {
+      ctx.strokeStyle = "rgba(23,32,42,0.2)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(left, bottom);
+      ctx.lineTo(right, bottom);
+      ctx.stroke();
+      ctx.fillStyle = "#5f6f7d";
+      ctx.font = "400 13px Excalifont, Comic Sans MS, sans-serif";
+      ctx.fillText(fmt3.format(min), left, bottom + 20);
+      const maxText = fmt3.format(max);
+      ctx.fillText(maxText, right - ctx.measureText(maxText).width, bottom + 20);
+    }
+
+    function drawEmpty(ctx, w, h, text) {
+      ctx.fillStyle = "rgba(23,32,42,0.56)";
+      ctx.font = "400 18px Excalifont, Comic Sans MS, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(text, w / 2, h / 2);
+      ctx.textAlign = "left";
+    }
+
+    function drawSample() {
+      const stats = activeSpec().stats(state.params);
+      const range = getRange(state.populationPreview, stats);
+      const mean = state.latestSample.length ? state.latestSample.reduce((a, b) => a + b, 0) / state.latestSample.length : NaN;
+      drawHistogram(canvases.sample, state.latestSample, {
+        range,
+        bins: 36,
+        color: "#2f6bff",
+        color2: "rgba(47,107,255,0.48)",
+        marker: mean,
+        markerLabel: "mean"
+      });
+    }
+
+    function drawAll() {
+      const stats = activeSpec().stats(state.params);
+      const popRange = getRange(state.populationPreview, stats);
+      drawHistogram(canvases.population, state.populationPreview, {
+        range: popRange,
+        bins: 48,
+        color: "#00a8c8",
+        color2: "rgba(18,166,106,0.48)",
+        marker: stats.mean,
+        markerLabel: "mean",
+        fulcrum: stats.mean
+      });
+      drawSample();
+      drawHistogram(canvases.mean, state.means, {
+        bins: 46,
+        color: "#2f6bff",
+        color2: "rgba(0,168,200,0.62)",
+        stats,
+        marker: stats.mean,
+        markerLabel: "mu",
+        overlayNormal: true,
+        normalMean: stats.mean,
+        normalSd: Math.sqrt(stats.variance / state.sampleSize)
+      });
+      drawHistogram(canvases.sum, state.sums, {
+        bins: 46,
+        color: "#12a66a",
+        color2: "rgba(18,166,106,0.48)",
+        stats: { mean: stats.mean * state.sampleSize, variance: stats.variance * state.sampleSize },
+        marker: stats.mean * state.sampleSize,
+        markerLabel: "n x mu",
+        overlayNormal: true,
+        normalMean: stats.mean * state.sampleSize,
+        normalSd: Math.sqrt(stats.variance * state.sampleSize)
+      });
+    }
+
+    function updateUi() {
+      document.body.classList.toggle("running", state.running);
+      $("runState").textContent = state.running ? "Drawing" : "Paused";
+      $("startBtn").textContent = state.running ? "Pause" : "Start";
+      $("trialsDrawn").textContent = fmt.format(state.trials);
+      $("sampleSizeValue").textContent = fmt.format(state.sampleSize);
+      $("trialTargetValue").textContent = fmt.format(state.trialTarget);
+      $("speedValue").textContent = fmt.format(state.speed) + "/frame";
+      $("sampleTag").textContent = "n = " + fmt.format(state.sampleSize);
+      $("popTag").textContent = activeSpec().name;
+      const stats = activeSpec().stats(state.params);
+      const meanTheoryMean = stats.mean;
+      const meanTheorySd = Math.sqrt(stats.variance / state.sampleSize);
+      const sumTheoryMean = stats.mean * state.sampleSize;
+      const sumTheorySd = Math.sqrt(stats.variance * state.sampleSize);
+      $("popMean").textContent = fmt2.format(stats.mean);
+      $("lastSampleMean").textContent = fmt3.format(state.latestSampleMean);
+      $("lastSampleSd").textContent = fmt3.format(state.latestSampleSd);
+      $("meanAvg").textContent = fmt3.format(state.meanStats.mean);
+      $("meanSideSd").textContent = fmt3.format(sd(state.meanStats));
+      $("meanTheoryMean").textContent = fmt3.format(meanTheoryMean);
+      $("meanTheorySd").textContent = fmt3.format(meanTheorySd);
+      $("sumAvg").textContent = fmt3.format(state.sumStats.mean);
+      $("sumSideSd").textContent = fmt3.format(sd(state.sumStats));
+      $("sumTheoryMean").textContent = fmt3.format(sumTheoryMean);
+      $("sumTheorySd").textContent = fmt3.format(sumTheorySd);
+      updateLesson(stats);
+    }
+
+    function updateLesson(stats) {
+      const se = Math.sqrt(stats.variance / state.sampleSize);
+      const sumTheoryMean = stats.mean * state.sampleSize;
+      const sumTheorySd = Math.sqrt(stats.variance * state.sampleSize);
+      $("lessonText").textContent = state.dist === "exponential"
+        ? "A right-skewed population is perfect for seeing the CLT: the original shape stays skewed, while the means become more bell-shaped."
+        : "Change the sample size and trials to see whether the statistic settles down, spreads out, or becomes more normal-looking.";
+      const notices = [
+        "The population describes individual outcomes; the sampling distributions describe statistics calculated from repeated samples.",
+        "The theoretical mean of the sample mean is " + fmt3.format(stats.mean) + "; the theoretical mean of the sample sum is " + fmt3.format(sumTheoryMean) + ".",
+        "For the mean, the theoretical standard error is " + fmt3.format(se) + ", so larger samples should tighten the histogram.",
+        "The sum has theoretical standard deviation " + fmt3.format(sumTheorySd) + ". It spreads out as n grows, while the mean tightens."
+      ];
+      if (state.dist === "gamma") notices.push("The gamma shape control lets you move from strongly right-skewed data toward a more rounded population.");
+      if (state.sampleSize < 10) {
+        notices.push("With very small samples, the sampling distribution still carries a lot of the population's original personality.");
+      }
+      $("notices").innerHTML = notices.map((text) => "<li>" + text + "</li>").join("");
+    }
+
+    $("dist").addEventListener("change", (event) => {
+      state.dist = event.target.value;
+      state.params = {};
+      buildParams();
+      reset(false);
+    });
+
+    $("sampleSize").addEventListener("input", (event) => {
+      state.sampleSize = Number(event.target.value);
+      reset(false);
+    });
+
+    $("trialTarget").addEventListener("input", (event) => {
+      state.trialTarget = Number(event.target.value);
+      if (state.trials > state.trialTarget) reset(false);
+      updateUi();
+    });
+
+    $("speed").addEventListener("input", (event) => {
+      state.speed = Number(event.target.value);
+      updateUi();
+    });
+
+    $("startBtn").addEventListener("click", startPause);
+    $("stepBtn").addEventListener("click", step);
+    $("resetBtn").addEventListener("click", () => reset(false));
+    window.addEventListener("resize", drawAll);
+
+    buildParams();
+    reset(false);
+  </script>
+</body>
+</html>
