@@ -34,15 +34,18 @@ export default function App() {
         background: 'rgba(13,17,23,0.8)', backdropFilter: 'blur(12px)',
         flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span style={{
-            fontSize: 18, fontWeight: 700, letterSpacing: -0.5,
+            fontSize: 28, fontWeight: 800, letterSpacing: -1,
             background: 'linear-gradient(90deg, #38bdf8, #a78bfa)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            lineHeight: 1,
           }}>
-            StatBalance
+            StatBalance Lab
           </span>
-          <span style={{ fontSize: 12, color: '#4b5563' }}>mean · median · mode explorer</span>
+          <span style={{ fontSize: 11, color: '#4b5563', letterSpacing: 0.2 }}>
+            Designed by Luis Novoa and built using Claude Code · for educational purposes
+          </span>
         </div>
         <div style={{ fontSize: 11, color: '#374151', fontFamily: 'JetBrains Mono, monospace' }}>
           click beam to add · drag fulcrum to feel torque
