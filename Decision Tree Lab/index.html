@@ -1,0 +1,146 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Decision Tree EMV Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.cdnfonts.com/css/sreda" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260530-12">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="Decision tree workspace">
+        <header class="topbar">
+          <div class="brand-block">
+            <div class="brand-row">
+              <img class="tree-logo" src="tree.png" alt="" aria-hidden="true">
+              <div>
+                <h1>Decision Tree Studio</h1>
+                <p class="credit-line">Designed by Luis Novoa and built using Codex</p>
+              </div>
+            </div>
+          </div>
+          <div class="toolbar studio-ribbon" aria-label="Tree actions">
+            <div class="tool-group">
+              <span class="tool-label">Files</span>
+              <button id="saveTreeBtn" type="button" class="tool-button" title="Save this tree"><span class="tool-icon">S</span><span>Save Tree</span></button>
+              <button id="openTreeBtn" type="button" class="tool-button" title="Open a saved tree"><span class="tool-icon">O</span><span>Open Tree</span></button>
+            </div>
+            <div class="tool-group">
+              <span class="tool-label">Build</span>
+              <button id="newBtn" type="button" class="tool-button compact" title="Start a blank tree"><span class="tool-icon">+</span><span>New</span></button>
+              <button id="addDecisionBtn" type="button" class="tool-button" title="Define a decision node"><span class="tool-icon square-icon"></span><span>Decision node</span></button>
+              <button id="addChanceBtn" type="button" class="tool-button" title="Define a probabilistic node"><span class="tool-icon circle-icon"></span><span>Probabilistic node</span></button>
+              <button id="calcPayoffsBtn" type="button" class="tool-button" title="Calculate terminal payoffs"><span class="tool-icon">=</span><span>Calculate Payoffs</span></button>
+              <button id="copyNodeBtn" type="button" class="tool-button" title="Copy selected node and its children"><span class="tool-icon">C</span><span>Copy</span></button>
+              <button id="pasteNodeBtn" type="button" class="tool-button" title="Paste copied node onto selected end node"><span class="tool-icon">P</span><span>Paste</span></button>
+              <button id="deleteBtn" type="button" class="tool-button danger compact" title="Delete selected"><span class="tool-icon">x</span><span>Delete</span></button>
+            </div>
+            <div class="tool-group">
+              <span class="tool-label">Roll Back</span>
+              <button id="rollbackBtn" type="button" class="tool-button primary-tool" title="Roll back the tree step by step" disabled><span class="tool-icon">&larr;</span><span>Start Rollback</span></button>
+            </div>
+          </div>
+        </header>
+
+        <div class="canvas-frame">
+          <div id="policyBanner" class="policy-banner"></div>
+          <div id="rollbackCard" class="rollback-card" hidden></div>
+          <svg id="treeSvg" role="img" aria-label="Interactive decision tree"></svg>
+        </div>
+      </section>
+
+      <aside class="side-panel" aria-label="Editor and explanation">
+        <section class="panel-section selected-card">
+          <div class="panel-heading">
+            <h2 id="selectedTitle">Selected</h2>
+            <span id="selectedBadge">Root</span>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              Name
+              <input id="nodeName" type="text">
+            </label>
+            <label>
+              Type
+              <select id="nodeType" disabled>
+                <option value="decision">Decision node</option>
+                <option value="chance">Probabilistic node</option>
+                <option value="end">End</option>
+              </select>
+            </label>
+          </div>
+          <div id="branchEditor" class="branch-editor"></div>
+        </section>
+
+        <section class="panel-section">
+          <div class="panel-heading">
+            <h2>Risk Profile</h2>
+            <span>Outcome histogram</span>
+          </div>
+          <div id="riskProfile" class="risk-profile"></div>
+        </section>
+      </aside>
+    </main>
+
+    <dialog id="branchDialog" class="branch-dialog">
+      <form method="dialog" id="branchForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">Build before drawing</p>
+            <h2 id="dialogTitle">Define node</h2>
+          </div>
+          <button value="cancel" type="submit" title="Close">Close</button>
+        </div>
+
+        <div class="field-grid">
+          <label>
+            Node name
+            <input id="dialogNodeName" type="text" maxlength="32" required>
+          </label>
+          <label>
+            Number of branches
+            <input id="branchCount" type="number" min="2" max="6" step="1" value="2" required>
+          </label>
+        </div>
+
+        <p class="money-reminder">Costs are negative numbers. Revenues are positive numbers.</p>
+        <div id="branchRows" class="branch-rows"></div>
+
+        <div class="dialog-actions">
+          <button value="cancel" type="submit">Cancel</button>
+          <button id="createNodeBtn" value="default" type="submit">Draw node</button>
+        </div>
+      </form>
+    </dialog>
+    <input id="openTreeFile" type="file" accept=".dtree,application/json" hidden>
+
+    <script src="app.js?v=20260530-12"></script>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
