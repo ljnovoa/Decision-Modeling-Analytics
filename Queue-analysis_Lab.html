@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <title>Queuing Analysis Lab</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #6f82a3;
+      --soft: #9aaccc;
+      --line: #dfe7f1;
+      --paper: #f5f8fc;
+      --panel: #ffffff;
+      --input: #f3fffc;
+      --accent: #009b8f;
+      --accent-dark: #087f77;
+      --accent-2: #e26d00;
+      --accent-3: #1d4ed8;
+      --gold: #ff9f1c;
+      --shadow: 0 8px 18px rgba(23, 32, 51, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Archivo, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1560px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 0 0 28px;
+    }
+
+    .topbar {
+      width: 100%;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 2px 8px rgba(23, 32, 51, .04);
+    }
+
+    .topbar-inner {
+      width: min(1560px, calc(100% - 28px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(620px, 1fr) minmax(320px, auto) auto;
+      gap: 24px;
+      align-items: center;
+      min-height: 82px;
+    }
+
+    header {
+      display: contents;
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .logo {
+      width: 58px;
+      height: 58px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--accent);
+      box-shadow: 0 10px 22px rgba(0, 155, 143, .28);
+      padding: 9px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      color: var(--accent-dark);
+      font-size: clamp(1.8rem, 2.6vw, 2.55rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(.68rem, .72vw, .8rem);
+      max-width: none;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .status-pill {
+      display: none;
+    }
+
+    .status-pill strong {
+      display: block;
+      display: none;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 4px;
+    }
+
+    .status-pill span {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 18px;
+      overflow-x: auto;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      position: static;
+      z-index: 3;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tab {
+      border: 0;
+      border-radius: 999px;
+      color: #c4cfdf;
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      padding: 11px 18px;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .tab:focus {
+      outline: none;
+    }
+
+    .tab:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
+
+    .tab[aria-selected="true"] {
+      color: white;
+      background: var(--accent);
+      box-shadow: 0 7px 16px rgba(0, 155, 143, .24);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+      gap: 16px;
+      margin-top: 28px;
+      align-items: start;
+    }
+
+    .panel, .result-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 18px 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .panel h2, .result-panel h2 {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) max-content;
+      gap: 5px 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: .8rem;
+      color: var(--ink);
+      font-weight: 800;
+      letter-spacing: .06em;
+    }
+
+    input, select {
+      width: 7.25rem;
+      border: 2px solid #9ff3e8;
+      background: var(--input);
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font: inherit;
+      font-weight: 400;
+      min-height: 36px;
+      text-align: right;
+    }
+
+    input:focus, select:focus {
+      outline: 4px solid rgba(0, 155, 143, .16);
+      border-color: var(--accent);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: .78rem;
+      margin: 0;
+      line-height: 1.4;
+      grid-column: 1 / -1;
+    }
+
+    .panel > .hint {
+      font-size: .86rem;
+      margin: 0 0 16px;
+    }
+
+    .input-calcs {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 9px;
+    }
+
+    .calc-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 700;
+    }
+
+    .calc-line strong {
+      color: var(--accent-dark);
+      font-size: .92rem;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .relation-checks {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line);
+      display: grid;
+      gap: 12px;
+    }
+
+    .relation-title {
+      color: var(--ink);
+      font-size: .86rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .relation-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: baseline;
+      color: var(--ink);
+      font-size: .84rem;
+      line-height: 1.45;
+    }
+
+    .relation-row code {
+      color: inherit;
+      font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+      font-size: .84rem;
+    }
+
+    .relation-row > span:last-child {
+      color: inherit;
+      white-space: nowrap;
+    }
+
+    .frac {
+      display: inline-grid;
+      grid-template-rows: auto auto;
+      align-items: center;
+      justify-items: center;
+      vertical-align: middle;
+      line-height: 1;
+      margin: 0 3px;
+      min-width: 22px;
+    }
+
+    .frac > span:first-child {
+      border-bottom: 1.5px solid currentColor;
+      padding: 0 4px 2px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .frac > span:last-child {
+      padding-top: 2px;
+      text-align: center;
+    }
+
+    .result-panel {
+      padding: 0;
+      min-width: 0;
+      overflow: hidden;
+      font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .result-heading {
+      padding: 18px 22px 16px;
+      background: #f7f9fc;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .result-heading h2 {
+      margin: 0 0 4px;
+    }
+
+    .result-heading p {
+      margin: 0;
+      color: var(--soft);
+      font-weight: 700;
+      font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .results-top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: stretch;
+      padding: 20px 22px 0;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      align-content: start;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+      min-height: 96px;
+    }
+
+    .metric b {
+      display: block;
+      color: var(--muted);
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+
+    .metric span {
+      font-size: clamp(1.15rem, 2vw, 1.75rem);
+      font-weight: 400;
+      line-height: 1;
+      word-break: break-word;
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 700;
+      white-space: nowrap;
+      font-size: .76rem;
+    }
+
+    .message {
+      display: none;
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border-left: 5px solid var(--accent-2);
+      background: #fff0f0;
+      border-radius: 6px;
+      color: #8d2022;
+      font-weight: 750;
+    }
+
+    .message.show { display: block; }
+
+    .model-diagram {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 16px;
+      margin-bottom: 0;
+      overflow-x: auto;
+      min-height: 100%;
+    }
+
+    .model-diagram svg {
+      display: block;
+      width: 100%;
+      min-width: 560px;
+      height: 190px;
+      font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .viz-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 16px;
+      padding: 0 22px 22px;
+    }
+
+    .chart-box, .table-box, .cost-box {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    canvas {
+      width: 100%;
+      height: 230px;
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .92rem;
+      font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .prob-table-wrap {
+      overflow-x: auto;
+    }
+
+    .prob-table {
+      min-width: 900px;
+      font-size: .74rem;
+    }
+
+    .prob-table th, .prob-table td {
+      padding: 6px 8px;
+      text-align: center;
+      font-weight: 400;
+    }
+
+    .prob-table th:first-child, .prob-table td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: #fff;
+      text-align: left;
+      font-weight: 850;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 6px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    tr:last-child td { border-bottom: 0; }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: .92rem;
+      color: var(--muted);
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .cost-box {
+      margin: 16px 22px 0;
+      display: none;
+    }
+
+    .cost-box.show { display: block; }
+
+    .cost-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 2px solid var(--line);
+      font-weight: 400;
+    }
+
+    .formula-note {
+      margin-top: 14px;
+      padding: 0 22px 22px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: .92rem;
+      font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    @media (max-width: 900px) {
+      .topbar-inner, main, .viz-grid, .results-top { grid-template-columns: 1fr; }
+      .topbar-inner { gap: 12px; padding: 12px 0; }
+      .tabs { justify-content: flex-start; }
+      .panel { position: static; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .model-diagram svg { height: 180px; }
+    }
+
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1180px); padding-top: 10px; }
+      .topbar-inner { width: min(100% - 20px, 1180px); }
+      .brand { grid-template-columns: 48px 1fr; }
+      .logo { width: 48px; height: 48px; }
+      h1 { font-size: 1.65rem; }
+      .summary-grid { grid-template-columns: 1fr; }
+      canvas { height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <header>
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 72 72" role="img" aria-label="Queue logo">
+            <circle cx="22" cy="24" r="6" fill="#fff" opacity=".72"/>
+            <path d="M13 42c0-8 4-13 9-13s9 5 9 13v8H13z" fill="#fff" opacity=".72"/>
+            <circle cx="36" cy="22" r="7" fill="#fff" opacity=".88"/>
+            <path d="M25.5 43c0-9 4.7-15 10.5-15s10.5 6 10.5 15v10h-21z" fill="#fff" opacity=".88"/>
+            <circle cx="51" cy="20" r="7.5" fill="#fff"/>
+            <path d="M40 43c0-9.5 5-16 11-16s11 6.5 11 16v11H40z" fill="#fff"/>
+            <path d="M12 56h52" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".72"/>
+          </svg>
+          <div>
+            <h1>Queuing Analysis Lab</h1>
+            <p class="subtitle">Designed by Luis Novoa and built using Codex (replicates behavior of Excel Workbook from class)</p>
+          </div>
+        </div>
+
+        <nav class="tabs" role="tablist" aria-label="Queuing models">
+          <button class="tab" type="button" data-model="mms" aria-selected="true">M/M/s</button>
+          <button class="tab" type="button" data-model="finiteQueue" aria-selected="false">Finite Queue</button>
+          <button class="tab" type="button" data-model="mg1" aria-selected="false">M/G/1</button>
+        </nav>
+
+        <div class="status-pill">
+          <strong>Current model</strong>
+          <span id="currentModel">M/M/s</span>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <div class="shell">
+    <main>
+      <aside class="panel">
+        <h2 id="inputTitle">Inputs</h2>
+        <p class="hint" id="modelHint"></p>
+        <div id="fields"></div>
+        <div class="input-calcs" id="inputCalcs"></div>
+      </aside>
+
+      <section class="result-panel">
+        <p id="warning" class="message"></p>
+        <div class="result-heading">
+          <h2 id="resultTitle">Results</h2>
+          <p>Live model updates as you edit inputs</p>
+        </div>
+        <div class="results-top">
+          <div class="model-diagram" id="modelDiagram"></div>
+          <div class="summary-grid" id="metrics"></div>
+        </div>
+        <div class="cost-box" id="costBox">
+          <p class="section-title">Cost model</p>
+          <table>
+            <tbody id="costRows"></tbody>
+          </table>
+          <div class="cost-total"><span>Total cost per hour</span><span id="costTotal"></span></div>
+        </div>
+        <div class="viz-grid">
+          <div class="chart-box">
+            <p class="section-title">Probability distribution - number of units in the system</p>
+            <canvas id="chart" width="900" height="420"></canvas>
+          </div>
+          <div class="table-box">
+            <p class="section-title">First states</p>
+            <div class="prob-table-wrap">
+            <table class="prob-table">
+              <tbody id="probRows"></tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const models = {
+      mms: {
+        title: "M/M/s",
+        hint: "Poisson arrivals, exponential service times, unlimited queue capacity.",
+        defaults: { lambda: 4, mu: 6, servers: 2 },
+        note: "Uses the Erlang C model for multiple exponential service stations with unlimited waiting space."
+      },
+      finiteQueue: {
+        title: "M/M/s with Finite Queue",
+        hint: "Adds a maximum waiting-line length. Arrivals finding the system full balk.",
+        defaults: { lambda: 5, mu: 7, servers: 1, queueCap: 5 },
+        note: "Uses a truncated birth-death distribution over n = 0 through service stations + queue capacity."
+      },
+      mg1: {
+        title: "M/G/1",
+        hint: "Single service station with general service-time variation. Set standard deviation to 0 for deterministic service.",
+        defaults: { lambda: 10, avgServiceTime: 0.05, sdServiceTime: 0 },
+        note: "Uses the Pollaczek-Khinchine result for M/G/1: L<sub>q</sub> = (λ² σ² + ρ²) / (2(1 - ρ))."
+      }
+    };
+
+    const fieldDefs = {
+      mms: [
+        ["lambda", "Average arrival rate (λ)", "number", "per time unit"],
+        ["mu", "Average service rate (μ)", "number", "per time unit per server"],
+        ["servers", "Number of service stations (s)", "integer", ""]
+      ],
+      finiteQueue: [
+        ["lambda", "Average arrival rate (λ)", "number", "per time unit"],
+        ["mu", "Average service rate (μ)", "number", "per time unit per server"],
+        ["servers", "Number of service stations (s)", "integer", ""],
+        ["queueCap", "Maximum queue length", "integer", ""]
+      ],
+      mg1: [
+        ["lambda", "Average arrival rate (λ)", "number", "per time unit"],
+        ["avgServiceTime", "Average service time (1/μ)", "number", ""],
+        ["sdServiceTime", "Std. dev. of service time (σ)", "number", ""]
+      ]
+    };
+
+    const state = {
+      active: "mms",
+      values: Object.fromEntries(Object.entries(models).map(([key, model]) => [key, { ...model.defaults }]))
+    };
+
+    const fieldsEl = document.getElementById("fields");
+    const inputCalcsEl = document.getElementById("inputCalcs");
+    const metricsEl = document.getElementById("metrics");
+    const warningEl = document.getElementById("warning");
+    const probRowsEl = document.getElementById("probRows");
+    const modelDiagramEl = document.getElementById("modelDiagram");
+    const costBoxEl = document.getElementById("costBox");
+    const costRowsEl = document.getElementById("costRows");
+    const costTotalEl = document.getElementById("costTotal");
+    const chart = document.getElementById("chart");
+    const ctx = chart.getContext("2d");
+
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.active = button.dataset.model;
+        document.querySelectorAll(".tab").forEach((tab) => tab.setAttribute("aria-selected", String(tab === button)));
+        render();
+      });
+    });
+
+    function factorial(n) {
+      if (n < 0) return NaN;
+      let product = 1;
+      for (let i = 2; i <= n; i += 1) product *= i;
+      return product;
+    }
+
+    function distributionMMs(lambda, mu, servers, maxN = 40) {
+      const a = lambda / mu;
+      const terms = [];
+      let sum = 0;
+      for (let n = 0; n < servers; n += 1) {
+        const term = Math.pow(a, n) / factorial(n);
+        terms.push(term);
+        sum += term;
+      }
+      const tail = Math.pow(a, servers) / (factorial(servers) * (1 - a / servers));
+      const p0 = 1 / (sum + tail);
+      const pn = [];
+      for (let n = 0; n <= maxN; n += 1) {
+        const value = n < servers
+          ? p0 * Math.pow(a, n) / factorial(n)
+          : p0 * Math.pow(a, n) / (factorial(servers) * Math.pow(servers, n - servers));
+        pn.push(value);
+      }
+      return { p0, pn, a };
+    }
+
+    function calcMMs(v) {
+      const lambda = positive(v.lambda), mu = positive(v.mu), s = integer(v.servers);
+      if (!lambda || !mu || !s) return invalid("Enter positive rates and at least one service station.");
+      const rho = lambda / (mu * s);
+      if (rho >= 1) return invalid("The average arrival rate should be less than the overall average service rate.");
+      const { p0, pn, a } = distributionMMs(lambda, mu, s);
+      const waitProb = pn.slice(s).reduce((sum, p) => sum + p, 0);
+      const lq = p0 * Math.pow(a, s + 1) / (factorial(s - 1) * Math.pow(s - a, 2));
+      const L = lq + a;
+      return {
+        warning: s > 170 ? "The original workbook limited this model to 170 service stations." : "",
+        metrics: baseMetrics(rho, p0, lq, L, lq / lambda, lq / lambda + 1 / mu, waitProb),
+        probabilities: pn,
+        cost: null
+      };
+    }
+
+    function calcFiniteQueue(v) {
+      const lambda = positive(v.lambda), mu = positive(v.mu), s = integer(v.servers), q = integer(v.queueCap, true);
+      if (!lambda || !mu || !s || q < 0) return invalid("Enter positive rates, at least one service station, and a nonnegative queue length.");
+      const capacity = s + q;
+      if (capacity > 170) return invalid("The original workbook limited service stations plus queue capacity to 170.");
+      const weights = [1];
+      for (let n = 1; n <= capacity; n += 1) {
+        weights[n] = weights[n - 1] * lambda / (Math.min(n, s) * mu);
+      }
+      const p0 = 1 / weights.reduce((sum, weight) => sum + weight, 0);
+      const pn = weights.map((weight) => weight * p0);
+      const balk = pn[capacity] || 0;
+      const effectiveLambda = lambda * (1 - balk);
+      const L = pn.reduce((sum, p, n) => sum + n * p, 0);
+      const busyServers = pn.reduce((sum, p, n) => sum + Math.min(n, s) * p, 0);
+      const lq = pn.reduce((sum, p, n) => sum + Math.max(0, n - s) * p, 0);
+      const waitProb = q === 0 ? 0 : pn.reduce((sum, p, n) => sum + (n >= s ? p : 0), 0);
+      return {
+        warning: "",
+        metrics: [
+          metric("Utilization", busyServers / s, "proportion of time each service station is busy", true),
+          metric("P(0)", p0, "probability of system empty", true),
+          metric("L<sub>q</sub>", lq, "expected queue length"),
+          metric("L", L, "expected number in system"),
+          metric("W<sub>q</sub>", lq / effectiveLambda, "expected time in queue"),
+          metric("W", L / effectiveLambda, "expected time in system"),
+          metric("Probability waits", waitProb, "accepted arrival waits", true),
+          metric("Probability balks", balk, "arrival finds system full", true)
+        ],
+        probabilities: pn,
+        cost: null
+      };
+    }
+
+    function calcMG1(v) {
+      const lambda = positive(v.lambda), serviceTime = positive(v.avgServiceTime), sd = number(v.sdServiceTime);
+      if (!lambda || !serviceTime || sd < 0) return invalid("Enter a positive average arrival rate, positive service time, and nonnegative standard deviation.");
+      const serviceRate = 1 / serviceTime;
+      const rho = lambda * serviceTime;
+      if (rho >= 1) return invalid("The average arrival rate should be less than the average service rate.");
+      const p0 = 1 - rho;
+      const lq = (Math.pow(lambda, 2) * Math.pow(sd, 2) + Math.pow(rho, 2)) / (2 * (1 - rho));
+      const L = lq + rho;
+      const probs = approximateGeometric(p0, rho, 32);
+      return {
+        warning: "",
+        metrics: [
+          metric("Average service rate", serviceRate, "1 / average service time"),
+          metric("Utilization", rho, "proportion of time each service station is busy", true),
+          metric("P(0)", p0, "probability of system empty", true),
+          metric("L<sub>q</sub>", lq, "expected queue length"),
+          metric("L", L, "expected number in system"),
+          metric("W<sub>q</sub>", lq / lambda, "expected time in queue"),
+          metric("W", L / lambda, "expected time in system")
+        ],
+        probabilities: probs,
+        cost: null
+      };
+    }
+
+    function approximateGeometric(p0, rho, count) {
+      const out = [];
+      for (let n = 0; n <= count; n += 1) out.push(p0 * Math.pow(rho, n));
+      return out;
+    }
+
+    function baseMetrics(rho, p0, lq, L, wq, W, waitProb) {
+      return [
+        metric("Utilization", rho, "proportion of time each service station is busy", true),
+        metric("P(0)", p0, "probability of system empty", true),
+        metric("L<sub>q</sub>", lq, "expected queue length"),
+        metric("L", L, "expected number in system"),
+        metric("W<sub>q</sub>", wq, "expected time in queue"),
+        metric("W", W, "expected time in system"),
+        metric("Probability waits", waitProb, "probability that the next arrival waits", true)
+      ];
+    }
+
+    function metric(label, value, sub, percent = false) {
+      return { label, value, sub, percent };
+    }
+
+    function invalid(message) {
+      return { warning: message, metrics: [], probabilities: [], cost: null };
+    }
+
+    function positive(value) {
+      const n = Number(value);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    }
+
+    function number(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function integer(value, allowZero = false) {
+      const n = Math.floor(Number(value));
+      return Number.isFinite(n) && (allowZero ? n >= 0 : n > 0) ? n : 0;
+    }
+
+    function format(value, percent = false) {
+      if (!Number.isFinite(value)) return "n/a";
+      if (percent) return `${(value * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
+      if (Math.abs(value) >= 1000) return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      if (Math.abs(value) >= 10) return value.toLocaleString(undefined, { maximumFractionDigits: 4 });
+      return value.toLocaleString(undefined, { maximumFractionDigits: 6 });
+    }
+
+    function money(value) {
+      return value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+    }
+
+    function renderFields() {
+      const active = state.active;
+      fieldsEl.innerHTML = fieldDefs[active].map(([key, label, type, suffix]) => `
+        <div class="field">
+          <label for="${key}">${label}</label>
+          <input id="${key}" data-key="${key}" type="number" min="0" step="${type === "integer" ? "1" : "any"}" value="${state.values[active][key]}">
+          ${suffix ? `<div class="hint">${suffix}</div>` : ""}
+        </div>
+      `).join("");
+      fieldsEl.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("input", () => {
+          state.values[active][input.dataset.key] = input.value;
+          renderDiagram();
+          renderResults();
+          renderInputCalcs();
+        });
+      });
+      renderInputCalcs();
+    }
+
+    function renderInputCalcs() {
+      const active = state.active;
+      const v = state.values[active];
+      const rows = [];
+      const result = calculateModel(active, v);
+      if (active === "mg1") {
+        const serviceTime = positive(v.avgServiceTime);
+        rows.push(["Average service rate", serviceTime ? format(1 / serviceTime) : "n/a"]);
+      } else {
+        const mu = positive(v.mu);
+        rows.push(["Average service time", mu ? format(1 / mu) : "n/a"]);
+      }
+      if (active === "finiteQueue") {
+        const balk = result.metrics.find((item) => item.label === "Probability balks")?.value;
+        const lambda = positive(v.lambda);
+        rows.push(["Effective average arrival rate", Number.isFinite(balk) ? format(lambda * (1 - balk)) : "n/a"]);
+      }
+      inputCalcsEl.innerHTML = rows.map(([label, value]) => `
+        <div class="calc-line"><span>${label}</span><strong>${value}</strong></div>
+      `).join("") + renderRelationshipChecks(active, v, result);
+    }
+
+    function calculateModel(active, values) {
+      const calculators = { mms: calcMMs, finiteQueue: calcFiniteQueue, mg1: calcMG1 };
+      return calculators[active](values);
+    }
+
+    function getMetricValue(metrics, label) {
+      return metrics.find((item) => item.label === label)?.value;
+    }
+
+    function fraction(top, bottom) {
+      return `<span class="frac"><span>${top}</span><span>${bottom}</span></span>`;
+    }
+
+    function renderRelationshipChecks(active, v, result) {
+      if (!result.metrics.length) return "";
+      const lambda = positive(v.lambda);
+      const balk = getMetricValue(result.metrics, "Probability balks");
+      const lambdaEff = active === "finiteQueue" && Number.isFinite(balk) ? lambda * (1 - balk) : lambda;
+      const mu = active === "mg1" ? 1 / positive(v.avgServiceTime) : positive(v.mu);
+      const L = getMetricValue(result.metrics, "L");
+      const Lq = getMetricValue(result.metrics, "L<sub>q</sub>");
+      const W = getMetricValue(result.metrics, "W");
+      const Wq = getMetricValue(result.metrics, "W<sub>q</sub>");
+      if (![lambdaEff, mu, L, Lq, W, Wq].every(Number.isFinite) || !mu) return "";
+      const checks = [
+        [`L = L<sub>q</sub> + ${fraction("λ<sub>eff</sub>", "μ")}`, L, `${format(Lq)} + ${fraction(format(lambdaEff), format(mu))}`],
+        [`W = W<sub>q</sub> + ${fraction("1", "μ")}`, W, `${format(Wq)} + ${fraction("1", format(mu))}`],
+        ["L = λ<sub>eff</sub> × W", L, `${format(lambdaEff)} × ${format(W)}`],
+        ["L<sub>q</sub> = λ<sub>eff</sub> × W<sub>q</sub>", Lq, `${format(lambdaEff)} × ${format(Wq)}`],
+      ];
+      return `
+        <div class="relation-checks">
+          <div class="relation-title">Relationship checks</div>
+          ${checks.map(([equation, left, rightText]) => `
+            <div class="relation-row">
+              <code>${equation}</code>
+              <span>${format(left)} = ${rightText}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderResults() {
+      const result = calculateModel(state.active, state.values[state.active]);
+      warningEl.textContent = result.warning || "";
+      warningEl.classList.toggle("show", Boolean(result.warning));
+      metricsEl.innerHTML = result.metrics.map((item) => `
+        <div class="metric">
+          <b>${item.label}</b>
+          <span>${format(item.value, item.percent)}</span>
+          <small>${item.sub}</small>
+        </div>
+      `).join("");
+      renderProbTable(result.probabilities);
+      drawChart(result.probabilities);
+      renderCost(result.cost);
+    }
+
+    function renderProbTable(probabilities) {
+      const cells = probabilities.slice(0, 28);
+      if (!cells.length) {
+        probRowsEl.innerHTML = `<tr><th>n</th><td>Enter valid inputs</td></tr>`;
+        return;
+      }
+      probRowsEl.innerHTML = `
+        <tr><th>n in system</th>${cells.map((_, i) => `<td>${i}</td>`).join("")}</tr>
+        <tr><th>P(n)</th>${cells.map((p) => `<td>${format(p, true)}</td>`).join("")}</tr>
+      `;
+    }
+
+    function renderDiagram() {
+      const active = state.active;
+      const v = state.values[active];
+      const serviceCount = active === "mms" || active === "finiteQueue"
+        ? Math.max(1, integer(v.servers) || 1)
+        : 1;
+      const stationLabel = `${serviceCount} service station${serviceCount === 1 ? "" : "s"}`;
+      const queueLabel = active === "finiteQueue"
+        ? `L<tspan baseline-shift="sub" font-size="11">q</tspan><tspan x="246" dy="24" font-size="12">max queue length = ${integer(v.queueCap, true)}</tspan>`
+        : `L<tspan baseline-shift="sub" font-size="11">q</tspan>`;
+      const serviceArea = renderServiceArea(active, serviceCount);
+      const source = `<text x="18" y="116" font-size="20">λ</text>
+           <path d="M48 108h62" stroke="#111827" stroke-width="2.4" marker-end="url(#arrow)"/>`;
+      modelDiagramEl.innerHTML = `
+        <svg viewBox="0 0 780 250" aria-label="${models[active].title} queue diagram">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L8,3 z" fill="#111827"/>
+            </marker>
+          </defs>
+          ${source}
+          <circle cx="164" cy="108" r="16" fill="#fff" stroke="#111827" stroke-width="2.4"/>
+          <circle cx="228" cy="108" r="16" fill="#fff" stroke="#111827" stroke-width="2.4"/>
+          <circle cx="292" cy="108" r="16" fill="#fff" stroke="#111827" stroke-width="2.4"/>
+          <path d="M128 36h342m0 0v7m-342-7v7" stroke="#111827" stroke-width="1.8"/>
+          <text x="299" y="26" text-anchor="middle" font-size="17">L</text>
+          <path d="M128 164h236m0 0v-7m-236 7v-7" stroke="#111827" stroke-width="1.8"/>
+          <text x="246" y="191" text-anchor="middle" font-size="17">${queueLabel}</text>
+          <path d="M320 108h42" stroke="#111827" stroke-width="2.4"/>
+          ${serviceArea}
+          <text x="650" y="72" font-size="12">${stationLabel}</text>
+          <path d="M580 108h126" stroke="#111827" stroke-width="2.4" marker-end="url(#arrow)"/>
+        </svg>
+      `;
+    }
+
+    function renderServiceArea(active, serviceCount) {
+      if (active === "mg1") {
+        return `<rect x="392" y="66" width="70" height="88" fill="#fff7d6" stroke="#111827" stroke-width="2.4"/>
+          <path d="M412 110c8-24 18 24 28 0" fill="none" stroke="#0f766e" stroke-width="2.8"/>
+          <text x="427" y="91" text-anchor="middle" font-size="14">μ</text>
+          <path d="M362 108h30" stroke="#111827" stroke-width="2.4" marker-end="url(#arrow)"/>
+          <path d="M462 108h118" stroke="#111827" stroke-width="2.4"/>
+          <text x="427" y="178" text-anchor="middle" font-size="13">general service</text>`;
+      }
+      const visible = Math.min(serviceCount, 3);
+      const centers = visible === 1 ? [118] : visible === 2 ? [88, 148] : [78, 128, 178];
+      const startX = 402;
+      const boxes = [];
+      const splitX = 362;
+      const inX = 402;
+      const outX = 470;
+      const mergeX = 580;
+      for (let i = 0; i < visible; i += 1) {
+        const cy = centers[i];
+        boxes.push(`
+          <path d="M${splitX} 108 C380 108 380 ${cy} ${inX} ${cy}" fill="none" stroke="#111827" stroke-width="2.1" marker-end="url(#arrow)"/>
+          <rect x="${inX}" y="${cy - 22}" width="68" height="44" fill="#fff7d6" stroke="#111827" stroke-width="2.2"/>
+          <text x="${inX + 34}" y="${cy + 5}" text-anchor="middle" font-size="14">μ</text>
+          <path d="M${outX} ${cy} C500 ${cy} 520 108 ${mergeX} 108" fill="none" stroke="#111827" stroke-width="2.1"/>
+        `);
+      }
+      const more = serviceCount > visible ? `<text x="500" y="226" font-size="12">+${serviceCount - visible} more in parallel</text>` : "";
+      return `${boxes.join("")}${more}<circle cx="${splitX}" cy="108" r="4" fill="#111827"/><circle cx="${mergeX}" cy="108" r="4" fill="#111827"/>`;
+    }
+
+    function renderCost(cost) {
+      costBoxEl.classList.toggle("show", Boolean(cost));
+      if (!cost) return;
+      costRowsEl.innerHTML = cost.rows.map(([label, unit, total]) => `
+        <tr><td>${label}</td><td>${money(unit)}</td><td>${money(total)}</td></tr>
+      `).join("");
+      costTotalEl.textContent = money(cost.total);
+    }
+
+    function drawChart(probabilities) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = chart.getBoundingClientRect();
+      chart.width = Math.max(320, Math.floor(rect.width * dpr));
+      chart.height = Math.max(220, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, rect.width, rect.height);
+      if (!probabilities.length) {
+        ctx.fillStyle = "#667085";
+        ctx.font = "600 16px Archivo, system-ui";
+        ctx.fillText("Enter valid inputs to view probabilities.", 24, 46);
+        return;
+      }
+      const data = probabilities.slice(0, Math.min(14, probabilities.length));
+      const max = Math.max(...data, .000001);
+      const pad = { l: 34, r: 18, t: 38, b: 54 };
+      const width = rect.width - pad.l - pad.r;
+      const height = rect.height - pad.t - pad.b;
+      const baseY = pad.t + height;
+      const colors = ["#7d95a3", "#0ea5b7", "#2dbb9f", "#ef3f1f", "#f7a51d", "#44546a", "#00a3a3", "#36c37d", "#f15a24", "#ffbd2e", "#617c8c", "#23b7d3", "#43c59e", "#f36d21"];
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad.l - 4, baseY);
+      ctx.lineTo(pad.l + width + 4, baseY);
+      ctx.stroke();
+      const slotW = width / data.length;
+      const barW = Math.max(10, Math.min(34, slotW * .42));
+      data.forEach((value, i) => {
+        const h = Math.max(3, height * value / max);
+        const x = pad.l + i * slotW + (slotW - barW) / 2;
+        const y = pad.t + height - h;
+        ctx.fillStyle = colors[i % colors.length];
+        roundedRect(ctx, x, y, barW, h, Math.min(7, barW / 4));
+        ctx.fill();
+        ctx.fillStyle = "#374151";
+        ctx.font = "400 13px Archivo, system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(format(value, true), x + barW / 2, Math.max(16, y - 10));
+        ctx.fillStyle = "#475569";
+        ctx.font = "400 12px Archivo, system-ui";
+        ctx.fillText(String(i), x + barW / 2, baseY + 20);
+      });
+      ctx.textAlign = "left";
+    }
+
+    function roundedRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height);
+      ctx.lineTo(x, y + height);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function render() {
+      const model = models[state.active];
+      document.getElementById("currentModel").textContent = model.title;
+      document.getElementById("inputTitle").textContent = `${model.title} Inputs`;
+      document.getElementById("resultTitle").textContent = `${model.title} Results`;
+      document.getElementById("modelHint").textContent = model.hint;
+      renderFields();
+      renderDiagram();
+      renderResults();
+    }
+
+    window.addEventListener("resize", () => drawChart((window.lastProbabilities || [])));
+    const originalDraw = drawChart;
+    drawChart = function(probabilities) {
+      window.lastProbabilities = probabilities;
+      originalDraw(probabilities);
+    };
+
+    render();
+  </script>
+</body>
+</html>
