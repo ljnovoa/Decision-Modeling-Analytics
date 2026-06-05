@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OktoMask LP — 3D Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            background: #f0f4f8;
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        #header {
+            background: #1e3a5f;
+            color: #fff;
+            padding: 10px 20px;
+            flex-shrink: 0;
+        }
+        #header h1 { font-size: 16px; font-weight: 700; }
+        #header p  { font-size: 11.5px; color: #a8c8f0; margin-top: 2px; }
+
+        /* ── Body layout ── */
+        #body { display: flex; flex: 1; overflow: hidden; }
+
+        /* ── Sidebar ── */
+        #sidebar {
+            width: 265px;
+            background: #fff;
+            border-right: 1px solid #d8e2ec;
+            padding: 14px;
+            overflow-y: auto;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+
+        .sb-section { margin-bottom: 18px; }
+        .sb-section h3 {
+            font-size: 10px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            color: #8899aa; margin-bottom: 8px;
+            padding-bottom: 4px; border-bottom: 1px solid #e8edf2;
+        }
+
+        .obj-card {
+            background: linear-gradient(135deg, #1e3a5f, #2980b9);
+            color: #fff; padding: 10px 12px; border-radius: 6px;
+        }
+        .obj-card .formula { font-size: 14px; font-weight: 700; }
+        .obj-card .label   { font-size: 10px; color: #acd0f0; margin-top: 2px; }
+
+        .c-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+        .c-swatch { width: 10px; height: 10px; border-radius: 2px; margin-top: 2px; flex-shrink: 0; }
+        .c-row .name { font-weight: 700; color: #445566; font-size: 11px; }
+        .c-row .expr { color: #334455; }
+        .c-row .desc { color: #889aaa; font-size: 10.5px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 4px 6px; text-align: right; font-size: 11px; }
+        th { background: #eef2f6; font-weight: 700; }
+        td:first-child, th:first-child { text-align: left; }
+        tr:nth-child(even) td { background: #f8fafc; }
+
+        .note { font-size: 10.5px; color: #889; font-style: italic; margin-top: 5px; line-height: 1.5; }
+
+        /* ── Chart area ── */
+        #chart-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #chart { flex: 1; }
+
+        /* ── Control bar ── */
+        #controls {
+            background: #fff; border-top: 1px solid #d8e2ec;
+            padding: 10px 20px; display: flex;
+            align-items: center; gap: 14px; flex-shrink: 0;
+        }
+
+        #play-btn {
+            background: #e74c3c; color: #fff; border: none;
+            padding: 7px 18px; border-radius: 20px;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            min-width: 88px; transition: background 0.15s, transform 0.1s;
+        }
+        #play-btn:hover  { background: #c0392b; transform: scale(1.03); }
+        #play-btn:active { transform: scale(0.97); }
+
+        #reset-btn {
+            background: none; border: 1px solid #ccd5de;
+            padding: 6px 13px; border-radius: 4px;
+            font-size: 12px; color: #445; cursor: pointer;
+        }
+        #reset-btn:hover { background: #f0f4f8; }
+
+        .ctrl-label { font-size: 11px; color: #7788; white-space: nowrap; }
+
+        input[type=range] { flex: 1; accent-color: #e74c3c; cursor: pointer; }
+
+        #z-readout {
+            font-size: 15px; font-weight: 800; color: #e74c3c;
+            min-width: 140px; text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <h1>OktoMask Production — Linear Program in 3D</h1>
+    <p>Maximize Profit = 4X<sub>v</sub> + 3X<sub>p</sub> &nbsp;·&nbsp;
+       Drag to rotate &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp;
+       Use ▶ Play or the slider to sweep the objective plane upward</p>
+</div>
+
+<div id="body">
+
+    <!-- ── Sidebar ── -->
+    <div id="sidebar">
+
+        <div class="sb-section">
+            <h3>Objective</h3>
+            <div class="obj-card">
+                <div class="formula">Maximize Profit = 4X<sub>v</sub> + 3X<sub>p</sub></div>
+                <div class="label">Profit Maximization</div>
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <h3>Constraints</h3>
+
+            <div class="c-row">
+                <div class="c-swatch" style="background:#e74c3c;"></div>
+                <div>
+                    <div class="name">C1 — Valves</div>
+                    <div class="expr">2X<sub>v</sub> ≤ 1,000</div>
+                    <div class="desc">(X<sub>v</sub> ≤ 500)</div>
+                </div>
+            </div>
+
+            <div class="c-row">
+                <div class="c-swatch" style="background:#e67e22;"></div>
+                <div>
+                    <div class="name">C2 — Labor Hours</div>
+                    <div class="expr">2.5X<sub>v</sub> + X<sub>p</sub> ≤ 1,600</div>
+                </div>
+            </div>
+
+            <div class="c-row">
+                <div class="c-swatch" style="background:#27ae60;"></div>
+                <div>
+                    <div class="name">C3 — Fabric (sq. ft.)</div>
+                    <div class="expr">2.7X<sub>v</sub> + 3X<sub>p</sub> ≤ 2,688</div>
+                </div>
+            </div>
+
+            <div class="c-row">
+                <div class="c-swatch" style="background:#8e44ad;"></div>
+                <div>
+                    <div class="name">C4 — OktoPrint Limit</div>
+                    <div class="expr">X<sub>p</sub> − X<sub>v</sub> ≤ 200</div>
+                </div>
+            </div>
+
+            <div class="c-row">
+                <div class="c-swatch" style="background:#2980b9;"></div>
+                <div>
+                    <div class="name">C5 — Min. Demand</div>
+                    <div class="expr">X<sub>v</sub> + X<sub>p</sub> ≥ 100</div>
+                </div>
+            </div>
+
+        </div><!-- end Constraints -->
+
+        <div class="sb-section">
+            <h3>Extreme Points</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>X<sub>v</sub></th>
+                        <th>X<sub>p</sub></th>
+                        <th>Profit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>100</td><td>0</td><td>400</td></tr>
+                    <tr><td>500</td><td>0</td><td>2,000</td></tr>
+                    <tr><td>500</td><td>350</td><td>3,050</td></tr>
+                    <tr><td>440</td><td>500</td><td>3,260</td></tr>
+                    <tr><td>366</td><td>566</td><td>3,164</td></tr>
+                    <tr><td>0</td><td>200</td><td>600</td></tr>
+                    <tr><td>0</td><td>100</td><td>300</td></tr>
+                </tbody>
+            </table>
+            <p class="note">Extreme-point theorem: the optimal solution is always at a vertex of the feasible region.</p>
+        </div>
+
+        <div class="sb-section">
+            <h3>How to Use</h3>
+            <p class="note">
+                The <strong style="color:#c8a000;">gold plane</strong> sweeps upward as Profit increases.<br><br>
+                The <strong>colored surface</strong> (purple → yellow) shows Profit lifted above the feasible region.<br><br>
+                The <strong>white dotted line</strong> on the floor is the isoprofit level curve — all feasible mixes with the same profit value.<br><br>
+                Watch which extreme point the plane <em>last</em> touches — that is the optimal solution.
+            </p>
+        </div>
+
+    </div><!-- end sidebar -->
+
+    <!-- ── Chart + controls ── -->
+    <div id="chart-wrap">
+        <div id="chart"></div>
+        <div id="controls">
+            <button id="play-btn">▶ Play</button>
+            <button id="reset-btn">↺ Reset</button>
+            <span class="ctrl-label">Profit&nbsp;=&nbsp;0</span>
+            <input type="range" id="z-slider" min="0" max="3260" value="0" step="5">
+            <span class="ctrl-label">Profit&nbsp;=&nbsp;3,260</span>
+            <div id="z-readout">Profit&nbsp;=&nbsp;0</div>
+        </div>
+    </div>
+
+</div><!-- end body -->
+
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Feasible-region vertices in CCW order [Xv, Xp]
+const V = [
+    [100,          0              ],  // 0: C5 ∩ Xp=0
+    [500,          0              ],  // 1: C1 ∩ Xp=0
+    [500,          350            ],  // 2: C1 ∩ C2
+    [440,          500            ],  // 3: C2 ∩ C3  ← optimal
+    [2088 / 5.7,   2088/5.7 + 200],  // 4: C3 ∩ C4  ≈ (366.3, 566.3)
+    [0,            200            ],  // 5: C4 ∩ Xv=0
+    [0,            100            ],  // 6: C5 ∩ Xv=0
+];
+
+const obj   = ([xv, xp]) => 4 * xv + 3 * xp;
+const Vz    = V.map(obj);
+const MAX_Z = Math.max(...Vz);   // 3260
+const MIN_Z = Math.min(...Vz);   // 300
+
+// Fan triangulation from vertex 0
+const iT = [], jT = [], kT = [];
+for (let t = 1; t < V.length - 1; t++) {
+    iT.push(0); jT.push(t); kT.push(t + 1);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LEVEL-CURVE HELPER
+// Returns the [p1, p2] intersection of 4Xv+3Xp=profit with the feasible polygon.
+// Returns [] if outside the profit range of the feasible region.
+// ─────────────────────────────────────────────────────────────────────────────
+function levelCurveSegment(profit) {
+    const pts = [];
+    const n = V.length;
+    for (let i = 0; i < n; i++) {
+        const a  = V[i], b = V[(i + 1) % n];
+        const fa = obj(a), fb = obj(b);
+        if (fa === profit && pts.every(p => !(Math.abs(p[0]-a[0])<0.01 && Math.abs(p[1]-a[1])<0.01))) {
+            pts.push([a[0], a[1]]);
+        } else if ((fa < profit && profit < fb) || (fb < profit && profit < fa)) {
+            const t = (profit - fa) / (fb - fa);
+            pts.push([a[0] + t*(b[0]-a[0]), a[1] + t*(b[1]-a[1])]);
+        }
+    }
+    return pts;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TRACE HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function lineTrace(name, color, pts, zElev = 2) {
+    return {
+        type: 'scatter3d', mode: 'lines',
+        x: pts.map(p => p[0]),
+        y: pts.map(p => p[1]),
+        z: pts.map(() => zElev),
+        line: { color, width: 3 },
+        name, showlegend: true, hoverinfo: 'name',
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GRADIENT ARROW  ∇(4Xv + 3Xp) = (4, 3)
+// ─────────────────────────────────────────────────────────────────────────────
+(function buildGradientArrow() {
+    // intentionally scoped — result stored in traceGrad below
+})();
+
+const GRAD_MAG  = Math.sqrt(4*4 + 3*3);           // 5
+const gUx = 4 / GRAD_MAG, gUy = 3 / GRAD_MAG;    // unit vector (0.8, 0.6)
+const SHAFT_LEN = 120;
+const HEAD_LEN  = 26;
+const HEAD_ANG  = 0.42;
+
+const tipX = gUx * SHAFT_LEN;  // 96
+const tipY = gUy * SHAFT_LEN;  // 72
+
+// Back-direction unit vector (from tip toward origin)
+const bx = -gUx, by = -gUy;
+const cosA = Math.cos(HEAD_ANG), sinA = Math.sin(HEAD_ANG);
+
+// Rotate back direction by ±HEAD_ANG, scale by HEAD_LEN
+const h1x = (bx*cosA - by*sinA) * HEAD_LEN;
+const h1y = (bx*sinA + by*cosA) * HEAD_LEN;
+const h2x = (bx*cosA + by*sinA) * HEAD_LEN;
+const h2y = (-bx*sinA + by*cosA) * HEAD_LEN;
+
+const traceGrad = {
+    type: 'scatter3d', mode: 'lines',
+    x: [0, tipX, null, tipX, tipX + h1x, null, tipX, tipX + h2x],
+    y: [0, tipY, null, tipY, tipY + h1y, null, tipY, tipY + h2y],
+    z: [0, 0,    null, 0,    0,          null, 0,    0          ],
+    line: { color: 'black', width: 5 },
+    name: 'Gradient of Profit',
+    showlegend: true,
+    hoverinfo: 'name',
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TRACES
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 1. Feasible-region base polygon (flat on z = 0)
+const traceFeasBase = {
+    type: 'mesh3d',
+    x: V.map(v => v[0]),
+    y: V.map(v => v[1]),
+    z: V.map(() => 0),
+    i: iT, j: jT, k: kT,
+    color: 'rgba(41, 128, 185, 0.22)',
+    flatshading: true,
+    showscale: false,
+    name: 'Feasible Region',
+    hovertemplate: 'Feasible Region<extra></extra>',
+    showlegend: true,
+};
+
+// 2. Profit surface: Profit = 4Xv + 3Xp restricted to the feasible polygon
+const traceProfitSurf = {
+    type: 'mesh3d',
+    x: V.map(v => v[0]),
+    y: V.map(v => v[1]),
+    z: Vz,
+    i: iT, j: jT, k: kT,
+    intensity: Vz,
+    colorscale: 'Viridis',
+    showscale: true,
+    colorbar: {
+        title: { text: 'Profit ($)', side: 'right', font: { size: 11 } },
+        len: 0.42, y: 0.78, x: 1.01, thickness: 10,
+        tickfont: { size: 9 },
+    },
+    opacity: 0.88,
+    name: 'Profit Surface',
+    hovertemplate: 'Xv = %{x:.0f}<br>Xp = %{y:.0f}<br>Profit = %{z:.0f}<extra>Profit Surface</extra>',
+    showlegend: true,
+};
+
+// 3. Feasible-region boundary outline on z = 1
+const ox = [...V.map(v => v[0]), V[0][0]];
+const oy = [...V.map(v => v[1]), V[0][1]];
+const traceFeasOutline = {
+    type: 'scatter3d', mode: 'lines',
+    x: ox, y: oy, z: ox.map(() => 1),
+    line: { color: '#2471a3', width: 4 },
+    name: 'Feasible Boundary',
+    hoverinfo: 'skip', showlegend: true,
+};
+
+// 4. Constraint boundary lines — solid, elevated to z = 2
+const traceC1 = lineTrace('C1 — Valve Capacity',   '#e74c3c', [[500, -30],  [500, 660]]);
+const traceC2 = lineTrace('C2 — Labor Hours',       '#e67e22', [[0,   1600], [640, 0]]);
+const traceC3 = lineTrace('C3 — Fabric',            '#27ae60', [[0,   896],  [994, 0]]);
+const traceC4 = lineTrace('C4 — OktoPrint Limit',   '#8e44ad', [[-30, 170],  [490, 690]]);
+const traceC5 = lineTrace('C5 — Min. Demand',       '#2980b9', [[-20, 120],  [120, -20]]);
+
+// 5. Extreme-point dots on the profit surface
+const traceExtPts = {
+    type: 'scatter3d', mode: 'markers',
+    x: V.map(v => v[0]),
+    y: V.map(v => v[1]),
+    z: Vz,
+    marker: { size: 6, color: '#fff', symbol: 'circle', line: { color: '#222', width: 2 } },
+    name: 'Extreme Points',
+    hovertemplate: 'Xv = %{x:.0f}<br>Xp = %{y:.0f}<br>Profit = %{z:.0f}<extra>Extreme Point</extra>',
+    showlegend: true,
+};
+
+// 6. Vertical curtain lines: base → profit surface at each extreme point
+const traceCurtains = V.map((v, i) => ({
+    type: 'scatter3d', mode: 'lines',
+    x: [v[0], v[0]], y: [v[1], v[1]], z: [0, Vz[i]],
+    line: { color: 'rgba(110, 120, 140, 0.38)', width: 1.5, dash: 'dot' },
+    showlegend: false, hoverinfo: 'skip', name: '_curtain',
+}));
+
+// 7. Animated sweep plane (gold, starts at z = 0)
+const SX = [-20, 560];
+const SY = [-20, 670];
+const traceSweep = {
+    type: 'surface',
+    x: SX, y: SY,
+    z: [[0, 0], [0, 0]],
+    colorscale: [[0, 'rgba(255,210,0,0.38)'], [1, 'rgba(255,210,0,0.38)']],
+    showscale: false, opacity: 0.52,
+    name: 'Objective Plane',
+    hoverinfo: 'skip', showlegend: true,
+    lighting: { ambient: 1, diffuse: 0, specular: 0 },
+    contours: { x: { show: false }, y: { show: false }, z: { show: false } },
+};
+
+// 8. Isoprofit level curve on z = 1 (animated, initially invisible)
+const traceLevelCurve = {
+    type: 'scatter3d', mode: 'lines',
+    x: [], y: [], z: [],
+    line: { color: 'black', width: 8, dash: 'dot' },
+    name: 'Isoprofit Level Curve',
+    showlegend: true,
+    hoverinfo: 'name',
+    visible: false,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ASSEMBLE TRACES
+// ─────────────────────────────────────────────────────────────────────────────
+const allTraces = [
+    traceFeasBase,       // 0
+    traceProfitSurf,     // 1
+    traceFeasOutline,    // 2
+    traceC1,             // 3
+    traceC2,             // 4
+    traceC3,             // 5
+    traceC4,             // 6
+    traceC5,             // 7
+    traceExtPts,         // 8
+    ...traceCurtains,    // 9–15
+    traceSweep,          // 16
+    traceLevelCurve,     // 17
+    traceGrad,           // 18
+];
+
+const SWEEP_IDX = 16;
+const LEVEL_IDX = 17;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LAYOUT
+// ─────────────────────────────────────────────────────────────────────────────
+const layout = {
+    scene: {
+        xaxis: {
+            title: { text: 'Xv  (OktoValve masks)', font: { size: 12 } },
+            range: [-20, 570],
+            showgrid: true, gridcolor: '#ccd6e0',
+            zeroline: true, zerolinecolor: '#888', zerolinewidth: 2,
+            tickfont: { size: 11 },
+        },
+        yaxis: {
+            title: { text: 'Xp  (OktoPrint masks)', font: { size: 12 } },
+            range: [-20, 680],
+            showgrid: true, gridcolor: '#ccd6e0',
+            zeroline: true, zerolinecolor: '#888', zerolinewidth: 2,
+            tickfont: { size: 11 },
+        },
+        zaxis: {
+            title: { text: 'Profit ($)', font: { size: 12 } },
+            range: [0, 3500],
+            showgrid: true, gridcolor: '#ccd6e0',
+            tickfont: { size: 11 },
+        },
+        bgcolor: 'rgba(244, 248, 253, 1)',
+        camera: { eye: { x: 1.55, y: -1.9, z: 1.25 } },
+        aspectratio: { x: 1.0, y: 1.1, z: 0.88 },
+    },
+    paper_bgcolor: 'rgba(240, 244, 248, 1)',
+    showlegend: true,
+    legend: {
+        x: 0.01, y: 0.56,
+        bgcolor: 'rgba(255,255,255,0.88)',
+        bordercolor: '#c0ccd8', borderwidth: 1,
+        font: { size: 11 }, tracegroupgap: 2,
+    },
+    margin: { l: 0, r: 0, t: 0, b: 0 },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────────────────────
+Plotly.newPlot('chart', allTraces, layout, {
+    responsive: true,
+    displayModeBar: true,
+    modeBarButtonsToRemove: ['toImage'],
+    displaylogo: false,
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANIMATION CONTROLS
+// ─────────────────────────────────────────────────────────────────────────────
+const slider   = document.getElementById('z-slider');
+const readout  = document.getElementById('z-readout');
+const playBtn  = document.getElementById('play-btn');
+const resetBtn = document.getElementById('reset-btn');
+
+let rafId   = null;
+let curZ    = 0;
+let lastTs  = null;
+const SWEEP_DURATION = 9000;  // ms for full sweep 0 → MAX_Z
+
+function setZ(z) {
+    curZ = Math.max(0, Math.min(MAX_Z, z));
+    const profit = Math.round(curZ);
+    slider.value = profit;
+    readout.textContent = 'Profit = ' + profit.toLocaleString();
+
+    // Update sweep plane height
+    Plotly.restyle('chart',
+        { z: [[[profit, profit], [profit, profit]]] },
+        [SWEEP_IDX]
+    );
+
+    // Update isoprofit level curve on the x-y floor
+    const lcPts = levelCurveSegment(profit);
+    if (lcPts.length >= 2) {
+        Plotly.restyle('chart', {
+            x: [[lcPts[0][0], lcPts[1][0]]],
+            y: [[lcPts[0][1], lcPts[1][1]]],
+            z: [[1, 1]],
+            visible: [true],
+        }, [LEVEL_IDX]);
+    } else {
+        Plotly.restyle('chart', { visible: [false] }, [LEVEL_IDX]);
+    }
+}
+
+function stopAnim() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    playBtn.textContent = '▶ Play';
+    lastTs = null;
+}
+
+function animStep(ts) {
+    if (!lastTs) lastTs = ts;
+    const dt = ts - lastTs;
+    lastTs = ts;
+    setZ(curZ + (dt / SWEEP_DURATION) * MAX_Z);
+    if (curZ < MAX_Z) {
+        rafId = requestAnimationFrame(animStep);
+    } else {
+        stopAnim();
+    }
+}
+
+playBtn.addEventListener('click', () => {
+    if (rafId) {
+        stopAnim();
+    } else {
+        if (curZ >= MAX_Z) setZ(0);
+        playBtn.textContent = '⏸ Pause';
+        rafId = requestAnimationFrame(animStep);
+    }
+});
+
+resetBtn.addEventListener('click', () => { stopAnim(); setZ(0); });
+
+slider.addEventListener('input', () => {
+    stopAnim();
+    setZ(parseInt(slider.value, 10));
+});
+</script>
+
+</body>
+</html>
