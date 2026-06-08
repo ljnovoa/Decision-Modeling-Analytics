@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Probability Distribution Explorer</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #09090f;
+    --sidebar-bg: #0f0f1c;
+    --panel-bg: #13131f;
+    --card-bg: #1a1a2e;
+    --border: #252540;
+    --border-bright: #35355a;
+    --text: #e2e2f0;
+    --text-dim: #7878a0;
+    --text-muted: #4a4a6a;
+    --accent-discrete: #f97316;
+    --accent-discrete-dim: rgba(249,115,22,0.15);
+    --accent-continuous: #818cf8;
+    --accent-continuous-dim: rgba(129,140,248,0.15);
+    --accent-stat: #22d3ee;
+    --green: #4ade80;
+    --red: #f87171;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 210px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  #sidebar-header {
+    padding: 18px 14px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dist-group-label {
+    padding: 14px 14px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .dist-group-label.discrete { color: var(--accent-discrete); opacity: 0.8; }
+  .dist-group-label.continuous { color: var(--accent-continuous); opacity: 0.8; }
+
+  .dist-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-family: inherit;
+    width: 100%;
+    text-align: left;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .dist-btn:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+
+  .dist-btn.active.discrete {
+    background: var(--accent-discrete-dim);
+    border-left-color: var(--accent-discrete);
+    color: #fde68a;
+    font-weight: 600;
+  }
+
+  .dist-btn.active.continuous {
+    background: var(--accent-continuous-dim);
+    border-left-color: var(--accent-continuous);
+    color: #c7d2fe;
+    font-weight: 600;
+  }
+
+  .dist-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .discrete .dist-dot { background: var(--accent-discrete); }
+  .continuous .dist-dot { background: var(--accent-continuous); }
+
+  /* ── MAIN ── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #top-bar {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  #dist-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  #dist-title .dist-type-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  .badge-discrete {
+    background: var(--accent-discrete-dim);
+    color: var(--accent-discrete);
+    border: 1px solid rgba(249,115,22,0.3);
+  }
+
+  .badge-continuous {
+    background: var(--accent-continuous-dim);
+    color: var(--accent-continuous);
+    border: 1px solid rgba(129,140,248,0.3);
+  }
+
+  #toggle-group {
+    display: flex;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .toggle-btn {
+    padding: 6px 16px;
+    border: none;
+    background: none;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+
+  .toggle-btn.active {
+    background: var(--border-bright);
+    color: var(--text);
+  }
+
+  /* ── CONTENT GRID ── */
+  #content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    grid-template-rows: 1fr auto;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  #chart-area {
+    padding: 20px 20px 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #chart-wrap {
+    width: 100%;
+    height: 100%;
+    max-height: 340px;
+    position: relative;
+  }
+
+  #right-panel {
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* ── PARAMS SECTION ── */
+  #params-section {
+    grid-column: 1;
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    align-items: flex-start;
+  }
+
+  .param-block {
+    min-width: 220px;
+    flex: 1;
+  }
+
+  .param-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .param-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .param-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: var(--accent-stat);
+  }
+
+  .param-range {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 5px;
+    -webkit-appearance: none;
+    background: var(--border-bright);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-stat);
+    box-shadow: 0 0 8px rgba(34,211,238,0.5);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  input[type=range].discrete-slider::-webkit-slider-thumb {
+    background: var(--accent-discrete);
+    box-shadow: 0 0 8px rgba(249,115,22,0.5);
+  }
+
+  input[type=range].continuous-slider::-webkit-slider-thumb {
+    background: var(--accent-continuous);
+    box-shadow: 0 0 8px rgba(129,140,248,0.5);
+  }
+
+  /* ── RIGHT PANEL SECTIONS ── */
+  .rp-section {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rp-section:last-child { border-bottom: none; }
+
+  .rp-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .stat-card-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+
+  .stat-card-value {
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: var(--accent-stat);
+  }
+
+  /* Description */
+  #dist-desc {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-dim);
+  }
+
+  /* Use cases */
+  .use-case-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .use-case-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  .use-case-list li::before {
+    content: '▸';
+    color: var(--accent-stat);
+    flex-shrink: 0;
+    font-size: 11px;
+    margin-top: 1px;
+  }
+
+  /* Formula box */
+  .formula-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #a5b4fc;
+    line-height: 1.7;
+  }
+
+  /* Footer note */
+  #formula-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div id="sidebar-header">📊 Distributions</div>
+
+  <div class="dist-group-label discrete">Discrete</div>
+  <button class="dist-btn discrete" data-key="bernoulli"><span class="dist-dot"></span>Bernoulli</button>
+  <button class="dist-btn discrete" data-key="binomial"><span class="dist-dot"></span>Binomial</button>
+  <button class="dist-btn discrete" data-key="geometric"><span class="dist-dot"></span>Geometric</button>
+  <button class="dist-btn discrete" data-key="duniform"><span class="dist-dot"></span>Discrete Uniform</button>
+  <button class="dist-btn discrete" data-key="poisson"><span class="dist-dot"></span>Poisson</button>
+  <button class="dist-btn discrete" data-key="negbinom"><span class="dist-dot"></span>Negative Binomial</button>
+
+  <div class="dist-group-label continuous">Continuous</div>
+  <button class="dist-btn continuous" data-key="normal"><span class="dist-dot"></span>Normal</button>
+  <button class="dist-btn continuous" data-key="cuniform"><span class="dist-dot"></span>Uniform</button>
+  <button class="dist-btn continuous" data-key="gamma"><span class="dist-dot"></span>Gamma</button>
+  <button class="dist-btn continuous" data-key="lognormal"><span class="dist-dot"></span>Lognormal</button>
+  <button class="dist-btn continuous" data-key="triangular"><span class="dist-dot"></span>Triangular</button>
+  <button class="dist-btn continuous" data-key="exponential"><span class="dist-dot"></span>Exponential</button>
+</nav>
+
+<div id="main">
+  <div id="top-bar">
+    <div id="dist-title">
+      <span id="title-name">Normal</span>
+      <span id="dist-type-badge" class="dist-type-badge badge-continuous">Continuous</span>
+    </div>
+    <div id="toggle-group">
+      <button class="toggle-btn active" id="btn-pdf" onclick="setMode('pdf')">PDF / PMF</button>
+      <button class="toggle-btn" id="btn-cdf" onclick="setMode('cdf')">CDF</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <div id="chart-area">
+      <div id="chart-wrap">
+        <canvas id="myChart"></canvas>
+      </div>
+    </div>
+
+    <div id="right-panel">
+      <div class="rp-section">
+        <div class="rp-title">Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-label">Mean (μ)</div>
+            <div class="stat-card-value" id="stat-mean">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Variance (σ²)</div>
+            <div class="stat-card-value" id="stat-var">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Std Dev (σ)</div>
+            <div class="stat-card-value" id="stat-std">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Mode</div>
+            <div class="stat-card-value" id="stat-mode">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rp-section">
+        <div class="rp-title">Description</div>
+        <p id="dist-desc"></p>
+      </div>
+
+      <div class="rp-section">
+        <div id="formula-label">PMF / PDF Formula</div>
+        <div class="formula-box" id="dist-formula"></div>
+      </div>
+
+      <div class="rp-section">
+        <div class="rp-title">Real-world Use Cases</div>
+        <ul class="use-case-list" id="dist-usecases"></ul>
+      </div>
+    </div>
+
+    <div id="params-section"></div>
+  </div>
+</div>
+
+<script>
+// ── MATH HELPERS ──────────────────────────────────────────────
+function logFactorial(n) {
+  if (n <= 1) return 0;
+  let s = 0;
+  for (let i = 2; i <= n; i++) s += Math.log(i);
+  return s;
+}
+
+function logGamma(z) {
+  // Lanczos approximation
+  if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - logGamma(1 - z);
+  z -= 1;
+  const g = 7;
+  const c = [0.99999999999980993,676.5203681218851,-1259.1392167224028,
+             771.32342877765313,-176.61502916214059,12.507343278686905,
+             -0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  let x = c[0];
+  for (let i = 1; i < g + 2; i++) x += c[i] / (z + i);
+  const t = z + g + 0.5;
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+
+function logComb(n, k) {
+  if (k < 0 || k > n) return -Infinity;
+  return logFactorial(n) - logFactorial(k) - logFactorial(n - k);
+}
+
+function comb(n, k) { return Math.exp(logComb(n, k)); }
+
+// Error function approximation (Abramowitz & Stegun)
+function erf(x) {
+  const sign = x >= 0 ? 1 : -1;
+  x = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * x);
+  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+  return sign * (1 - poly * Math.exp(-x * x));
+}
+
+function normalCDF(x, mu=0, sigma=1) {
+  return 0.5 * (1 + erf((x - mu) / (sigma * Math.SQRT2)));
+}
+
+// Numerical integration (Simpson's rule, n must be even)
+function integrate(f, a, b, n=500) {
+  if (n % 2 !== 0) n++;
+  const h = (b - a) / n;
+  let sum = f(a) + f(b);
+  for (let i = 1; i < n; i++) {
+    sum += (i % 2 === 0 ? 2 : 4) * f(a + i * h);
+  }
+  return sum * h / 3;
+}
+
+function fmt(v) {
+  if (!isFinite(v)) return '∞';
+  if (Math.abs(v) >= 1000) return v.toExponential(2);
+  const dec = Math.abs(v) < 0.01 ? 4 : Math.abs(v) < 1 ? 3 : 2;
+  return parseFloat(v.toFixed(dec)).toString();
+}
+
+// ── DISTRIBUTION DEFINITIONS ─────────────────────────────────
+const DISTS = {
+  bernoulli: {
+    name: 'Bernoulli(p)',
+    type: 'discrete',
+    params: [
+      { id:'p', label:'p — success probability', symbol:'p', min:0.01, max:0.99, step:0.01, def:0.5 }
+    ],
+    desc: 'The simplest discrete distribution — a single trial that succeeds with probability p or fails with probability 1−p. It is the building block for the Binomial distribution.',
+    formula: 'P(X=1) = p\nP(X=0) = 1 − p',
+    useCases: ['Coin flip (heads = success)', 'Customer converts or not', 'Pass/fail quality test', 'Spam vs. not spam classification'],
+    support: (p) => [0, 1],
+    pmf: (x, {p}) => x === 0 ? 1-p : x === 1 ? p : 0,
+    mean: ({p}) => p,
+    variance: ({p}) => p*(1-p),
+    mode: ({p}) => p > 0.5 ? '1' : p < 0.5 ? '0' : '0 or 1',
+  },
+  binomial: {
+    name: 'Binomial(n, p)',
+    type: 'discrete',
+    params: [
+      { id:'n', label:'n — number of trials', symbol:'n', min:1, max:60, step:1, def:10 },
+      { id:'p', label:'p — success probability', symbol:'p', min:0.01, max:0.99, step:0.01, def:0.4 }
+    ],
+    desc: 'Counts the number of successes in n independent Bernoulli trials. Symmetric when p=0.5, right-skewed for small p, left-skewed for large p.',
+    formula: 'P(X=k) = C(n,k) · pᵏ · (1−p)ⁿ⁻ᵏ\nfor k = 0, 1, ..., n',
+    useCases: ['Number of defective items in a batch of n', 'Number of heads in n coin flips', 'Customers who click an ad out of n shown', 'Students passing a multiple-choice exam'],
+    support: ({n}) => Array.from({length: n+1}, (_,i) => i),
+    pmf: (x, {n, p}) => {
+      if (x < 0 || x > n || !Number.isInteger(x)) return 0;
+      return Math.exp(logComb(n,x) + x*Math.log(p) + (n-x)*Math.log(1-p));
+    },
+    mean: ({n,p}) => n*p,
+    variance: ({n,p}) => n*p*(1-p),
+    mode: ({n,p}) => fmt(Math.floor((n+1)*p)),
+  },
+  geometric: {
+    name: 'Geometric(p)',
+    type: 'discrete',
+    params: [
+      { id:'p', label:'p — success probability', symbol:'p', min:0.01, max:0.99, step:0.01, def:0.3 }
+    ],
+    desc: 'Number of independent Bernoulli trials up to and including the first success. It has the memoryless property: the distribution of remaining trials is the same regardless of how many failures have occurred.',
+    formula: 'P(X=k) = (1−p)^(k−1) · p\nfor k = 1, 2, 3, ...',
+    useCases: ['Number of calls until a customer answers', 'Number of attempts to pass a driving test', 'Number of rolls until a six appears', 'Time to first equipment failure in discrete cycles'],
+    support: ({p}) => Array.from({length: Math.min(60, Math.ceil(6/p))}, (_,i) => i+1),
+    pmf: (x, {p}) => x >= 1 ? Math.pow(1-p, x-1) * p : 0,
+    mean: ({p}) => 1/p,
+    variance: ({p}) => (1-p)/(p*p),
+    mode: ({p}) => '1',
+  },
+  duniform: {
+    name: 'Discrete Uniform(a, b)',
+    type: 'discrete',
+    params: [
+      { id:'a', label:'a — minimum value', symbol:'a', min:-10, max:18, step:1, def:0 },
+      { id:'b', label:'b — maximum value', symbol:'b', min:-9, max:20, step:1, def:9 }
+    ],
+    desc: 'All integer values in [a, b] are equally likely. Used when there is no reason to prefer one outcome over another in a finite set.',
+    formula: 'P(X=k) = 1 / (b − a + 1)\nfor k = a, a+1, ..., b',
+    useCases: ['Roll of a fair die (a=1, b=6)', 'Random day of the week', 'Lottery ticket number selection', 'Randomly selecting a floor in a building'],
+    support: ({a, b}) => { const s=[]; for(let i=Math.min(a,b); i<=Math.max(a,b); i++) s.push(i); return s; },
+    pmf: (x, {a, b}) => { const lo=Math.min(a,b), hi=Math.max(a,b); return x>=lo&&x<=hi ? 1/(hi-lo+1) : 0; },
+    mean: ({a,b}) => (a+b)/2,
+    variance: ({a,b}) => { const n=Math.abs(b-a)+1; return (n*n-1)/12; },
+    mode: ({a,b}) => 'any value',
+  },
+  poisson: {
+    name: 'Poisson(λ)',
+    type: 'discrete',
+    params: [
+      { id:'lambda', label:'λ — average arrival rate', symbol:'λ', min:0.1, max:20, step:0.1, def:4 }
+    ],
+    desc: 'Counts the number of events occurring in a fixed interval of time or space, given a known average rate λ and independence between events. Approximates Binomial when n is large and p is small.',
+    formula: 'P(X=k) = e^(−λ) · λᵏ / k!\nfor k = 0, 1, 2, ...',
+    useCases: ['Number of customers arriving per hour', 'Number of defects per unit area', 'Number of calls to a call center per minute', 'Number of accidents at an intersection per month'],
+    support: ({lambda}) => Array.from({length: Math.ceil(lambda + 5*Math.sqrt(lambda)) + 2}, (_,i) => i),
+    pmf: (x, {lambda}) => x < 0 ? 0 : Math.exp(-lambda + x*Math.log(lambda) - logFactorial(x)),
+    mean: ({lambda}) => lambda,
+    variance: ({lambda}) => lambda,
+    mode: ({lambda}) => fmt(Math.floor(lambda)),
+  },
+  negbinom: {
+    name: 'Negative Binomial(r, p)',
+    type: 'discrete',
+    params: [
+      { id:'r', label:'r — number of successes', symbol:'r', min:1, max:20, step:1, def:5 },
+      { id:'p', label:'p — success probability', symbol:'p', min:0.05, max:0.95, step:0.01, def:0.4 }
+    ],
+    desc: 'Number of independent Bernoulli trials needed to achieve exactly r successes. Generalizes the Geometric distribution (r=1). Has heavier tails than the Binomial.',
+    formula: 'P(X=k) = C(k−1, r−1) · pʳ · (1−p)^(k−r)\nfor k = r, r+1, r+2, ...',
+    useCases: ['Number of sales calls to close r deals', 'Number of parts inspected to find r defects', 'Number of patients enrolled until r respond', 'Modeling overdispersed count data'],
+    support: ({r, p}) => Array.from({length: Math.min(80, Math.ceil(r/p + 6*Math.sqrt(r*(1-p)/p/p)))}, (_,i) => i+r),
+    pmf: (x, {r, p}) => {
+      if (x < r) return 0;
+      return Math.exp(logComb(x-1, r-1) + r*Math.log(p) + (x-r)*Math.log(1-p));
+    },
+    mean: ({r,p}) => r/p,
+    variance: ({r,p}) => r*(1-p)/(p*p),
+    mode: ({r,p}) => r > 1 ? fmt(Math.floor((r-1)/p)) : '1',
+  },
+
+  // ── CONTINUOUS ──────────────────────────────────────────────
+  normal: {
+    name: 'Normal(μ, σ)',
+    type: 'continuous',
+    params: [
+      { id:'mu', label:'μ — mean', symbol:'μ', min:-5, max:5, step:0.1, def:0 },
+      { id:'sigma', label:'σ — standard deviation', symbol:'σ', min:0.1, max:4, step:0.1, def:1 }
+    ],
+    desc: 'The bell-shaped distribution symmetric around the mean μ, with spread controlled by σ. By the Central Limit Theorem, the sum of many independent variables tends toward Normal regardless of their original distribution.',
+    formula: 'f(x) = (1 / σ√2π) · exp(−(x−μ)² / 2σ²)\nfor x ∈ (−∞, +∞)',
+    useCases: ['Heights and weights in a population', 'Measurement errors in instruments', 'IQ scores standardized to N(100,15)', 'Stock returns (approximately) over short periods'],
+    xRange: ({mu, sigma}) => [mu - 4.5*sigma, mu + 4.5*sigma],
+    pdf: (x, {mu, sigma}) => Math.exp(-0.5*((x-mu)/sigma)**2) / (sigma * Math.sqrt(2*Math.PI)),
+    cdf: (x, {mu, sigma}) => normalCDF(x, mu, sigma),
+    mean: ({mu}) => mu,
+    variance: ({sigma}) => sigma*sigma,
+    mode: ({mu}) => fmt(mu),
+  },
+  cuniform: {
+    name: 'Uniform(a, b)',
+    type: 'continuous',
+    params: [
+      { id:'a', label:'a — minimum', symbol:'a', min:-5, max:8, step:0.1, def:0 },
+      { id:'b', label:'b — maximum', symbol:'b', min:-4, max:10, step:0.1, def:5 }
+    ],
+    desc: 'Every value in [a, b] is equally likely. Used to model complete ignorance about where a value falls within a range, or as a simple baseline model.',
+    formula: 'f(x) = 1 / (b − a)   for x ∈ [a, b]\nf(x) = 0           otherwise',
+    useCases: ['Modeling prior ignorance in Bayesian inference', 'Random number generation', 'Arrival time within a known window', 'Rounding error (uniform on [−0.5, 0.5])'],
+    xRange: ({a, b}) => { const lo=Math.min(a,b), hi=Math.max(a,b), pad=(hi-lo)*0.25; return [lo-pad, hi+pad]; },
+    pdf: (x, {a, b}) => { const lo=Math.min(a,b), hi=Math.max(a,b); return x>=lo&&x<=hi ? 1/(hi-lo) : 0; },
+    cdf: (x, {a, b}) => { const lo=Math.min(a,b), hi=Math.max(a,b); if(x<lo) return 0; if(x>hi) return 1; return (x-lo)/(hi-lo); },
+    mean: ({a,b}) => (a+b)/2,
+    variance: ({a,b}) => Math.pow(b-a,2)/12,
+    mode: ({a,b}) => 'any value',
+  },
+  gamma: {
+    name: 'Gamma(α, β)',
+    type: 'continuous',
+    params: [
+      { id:'alpha', label:'α — shape', symbol:'α', min:0.5, max:10, step:0.1, def:2 },
+      { id:'beta', label:'β — scale', symbol:'β', min:0.1, max:5, step:0.1, def:2 }
+    ],
+    desc: 'A flexible right-skewed distribution for positive values. Shape α controls the form (exponential at α=1, bell-shaped for large α). Scale β stretches or compresses the distribution horizontally.',
+    formula: 'f(x) = x^(α−1) · e^(−x/β) / (βᵅ · Γ(α))\nfor x > 0',
+    useCases: ['Time until rth event in a Poisson process', 'Insurance claim amounts', 'Precipitation amounts', 'CPU processing times and queuing models'],
+    xRange: ({alpha, beta}) => [0, (alpha + 4*Math.sqrt(alpha)) * beta * 1.1],
+    pdf: (x, {alpha, beta}) => {
+      if (x <= 0) return 0;
+      return Math.exp((alpha-1)*Math.log(x) - x/beta - alpha*Math.log(beta) - logGamma(alpha));
+    },
+    cdf: (x, {alpha, beta}) => {
+      if (x <= 0) return 0;
+      const f = (t) => Math.exp((alpha-1)*Math.log(t+1e-300) - t/beta - alpha*Math.log(beta) - logGamma(alpha));
+      return Math.min(1, integrate(f, 0, x, 600));
+    },
+    mean: ({alpha, beta}) => alpha*beta,
+    variance: ({alpha, beta}) => alpha*beta*beta,
+    mode: ({alpha, beta}) => alpha >= 1 ? fmt((alpha-1)*beta) : '0',
+  },
+  lognormal: {
+    name: 'Lognormal(μ, σ)',
+    type: 'continuous',
+    params: [
+      { id:'mu', label:'μ — log-mean', symbol:'μ', min:-1, max:3, step:0.1, def:0 },
+      { id:'sigma', label:'σ — log-std dev', symbol:'σ', min:0.1, max:2, step:0.05, def:0.5 }
+    ],
+    desc: 'A variable X is Lognormal if ln(X) ~ N(μ, σ²). Note: μ and σ are NOT the mean and std dev of X itself — they are parameters of the underlying normal. Produces right-skewed distributions on positive values.',
+    formula: 'f(x) = exp(−(ln x − μ)² / 2σ²) / (xσ√2π)\nfor x > 0',
+    useCases: ['Stock prices and financial returns', 'Biological measurements (organism sizes)', 'Oil and gas reserves estimation', 'Failure times in reliability engineering'],
+    xRange: ({mu, sigma}) => [0, Math.exp(mu + 3.5*sigma) * 1.1],
+    pdf: (x, {mu, sigma}) => {
+      if (x <= 0) return 0;
+      return Math.exp(-0.5*((Math.log(x)-mu)/sigma)**2) / (x * sigma * Math.sqrt(2*Math.PI));
+    },
+    cdf: (x, {mu, sigma}) => {
+      if (x <= 0) return 0;
+      return normalCDF(Math.log(x), mu, sigma);
+    },
+    mean: ({mu, sigma}) => Math.exp(mu + sigma*sigma/2),
+    variance: ({mu, sigma}) => (Math.exp(sigma*sigma)-1)*Math.exp(2*mu + sigma*sigma),
+    mode: ({mu, sigma}) => fmt(Math.exp(mu - sigma*sigma)),
+  },
+  triangular: {
+    name: 'Triangular(a, c, b)',
+    type: 'continuous',
+    params: [
+      { id:'a', label:'a — minimum', symbol:'a', min:-5, max:8, step:0.1, def:0 },
+      { id:'c', label:'c — mode (most likely)', symbol:'c', min:-4, max:9, step:0.1, def:2 },
+      { id:'b', label:'b — maximum', symbol:'b', min:-3, max:10, step:0.1, def:5 }
+    ],
+    desc: 'Defined by minimum a, maximum b, and most likely value c. Especially useful in project management and simulation when only expert estimates for min, max, and most likely values are available.',
+    formula: 'f(x) = 2(x−a)/[(b−a)(c−a)]  for a ≤ x ≤ c\nf(x) = 2(b−x)/[(b−a)(b−c)]  for c < x ≤ b',
+    useCases: ['PERT project duration estimation', 'Cost estimation with expert opinion', 'Simulation input when data is limited', 'Risk analysis in decision modeling'],
+    xRange: ({a, b, c}) => { const lo=Math.min(a,b,c), hi=Math.max(a,b,c), pad=(hi-lo)*0.15; return [lo-pad, hi+pad]; },
+    pdf: (x, {a, b, c}) => {
+      const lo=Math.min(a,b), hi=Math.max(a,b), m=Math.min(Math.max(c,lo+1e-9),hi-1e-9);
+      if (x < lo || x > hi) return 0;
+      if (x <= m) return 2*(x-lo)/((hi-lo)*(m-lo));
+      return 2*(hi-x)/((hi-lo)*(hi-m));
+    },
+    cdf: (x, {a, b, c}) => {
+      const lo=Math.min(a,b), hi=Math.max(a,b), m=Math.min(Math.max(c,lo+1e-9),hi-1e-9);
+      if (x <= lo) return 0;
+      if (x >= hi) return 1;
+      if (x <= m) return (x-lo)**2/((hi-lo)*(m-lo));
+      return 1 - (hi-x)**2/((hi-lo)*(hi-m));
+    },
+    mean: ({a,b,c}) => (a+b+c)/3,
+    variance: ({a,b,c}) => (a*a+b*b+c*c-a*b-a*c-b*c)/18,
+    mode: ({a,b,c}) => fmt(Math.min(Math.max(c, Math.min(a,b)), Math.max(a,b))),
+  },
+  exponential: {
+    name: 'Exponential(λ)',
+    type: 'continuous',
+    params: [
+      { id:'lambda', label:'λ — rate (avg arrivals per unit time)', symbol:'λ', min:0.1, max:5, step:0.1, def:1 }
+    ],
+    desc: 'Models the time between events in a Poisson process. Has the memoryless property: P(X > s+t | X > s) = P(X > t). It is a special case of the Gamma distribution with α=1.',
+    formula: 'f(x) = λ · e^(−λx)   for x ≥ 0\nF(x) = 1 − e^(−λx)',
+    useCases: ['Interarrival times between customers', 'Time until next equipment failure', 'Duration of phone calls', 'Radioactive decay times'],
+    xRange: ({lambda}) => [0, 6/lambda],
+    pdf: (x, {lambda}) => x >= 0 ? lambda * Math.exp(-lambda*x) : 0,
+    cdf: (x, {lambda}) => x >= 0 ? 1 - Math.exp(-lambda*x) : 0,
+    mean: ({lambda}) => 1/lambda,
+    variance: ({lambda}) => 1/(lambda*lambda),
+    mode: ({lambda}) => '0',
+  },
+};
+
+// ── APP STATE ────────────────────────────────────────────────
+let currentKey = 'normal';
+let currentMode = 'pdf'; // 'pdf' or 'cdf'
+let paramValues = {};
+let chart = null;
+
+// ── CHART SETUP ──────────────────────────────────────────────
+function initChart() {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: [], datasets: [{ data: [] }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a2e',
+          borderColor: '#35355a',
+          borderWidth: 1,
+          titleColor: '#e2e2f0',
+          bodyColor: '#a0a0c0',
+          callbacks: {
+            title: ctx => `x = ${parseFloat(ctx[0].label).toFixed(3)}`,
+            label: ctx => ` ${currentMode === 'cdf' ? 'F(x)' : 'f(x)'} = ${ctx.raw.toFixed(4)}`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#7878a0', maxTicksLimit: 10, font: {size:11} },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          border: { color: '#252540' },
+        },
+        y: {
+          min: 0,
+          ticks: { color: '#7878a0', font: {size:11} },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          border: { color: '#252540' },
+        }
+      }
+    }
+  });
+}
+
+// ── RENDER ───────────────────────────────────────────────────
+function getAccent(type) {
+  return type === 'discrete' ? '#f97316' : '#818cf8';
+}
+
+function buildChartData(dist, params) {
+  const type = dist.type;
+  const isCDF = currentMode === 'cdf';
+
+  if (type === 'discrete') {
+    const support = dist.support(params);
+    const labels = support.map(String);
+    let data;
+    if (isCDF) {
+      let cum = 0;
+      data = support.map(x => { cum += dist.pmf(x, params); return Math.min(1, cum); });
+      return { labels, data, chartType: 'line', stepped: true };
+    } else {
+      data = support.map(x => dist.pmf(x, params));
+    }
+    return { labels, data, chartType: 'bar', stepped: false };
+  } else {
+    const [lo, hi] = dist.xRange(params);
+    const N = 300;
+    const step = (hi - lo) / N;
+    const labels = [], data = [];
+    if (isCDF) {
+      for (let i = 0; i <= N; i++) {
+        const x = lo + i * step;
+        labels.push(x.toFixed(3));
+        data.push(dist.cdf(x, params));
+      }
+    } else {
+      for (let i = 0; i <= N; i++) {
+        const x = lo + i * step;
+        labels.push(x.toFixed(3));
+        data.push(dist.pdf(x, params));
+      }
+    }
+    return { labels, data, chartType: 'line' };
+  }
+}
+
+function updateChart() {
+  const dist = DISTS[currentKey];
+  const params = getParams();
+  const accent = getAccent(dist.type);
+  const { labels, data, chartType, stepped } = buildChartData(dist, params);
+
+  chart.config.type = chartType;
+  chart.data.labels = labels;
+
+  const isDiscrete = dist.type === 'discrete';
+  const isStepCDF = stepped === true;
+
+  chart.data.datasets = [{
+    data,
+    backgroundColor: isDiscrete && !isStepCDF
+      ? `rgba(249,115,22,0.7)`
+      : isStepCDF
+        ? `rgba(249,115,22,0.0)`
+        : createGradient(accent),
+    borderColor: accent,
+    borderWidth: isDiscrete && !isStepCDF ? 0 : 2,
+    borderRadius: isDiscrete && !isStepCDF ? 3 : 0,
+    fill: !isDiscrete && !isStepCDF,
+    tension: 0,
+    pointRadius: 0,
+    stepped: isStepCDF ? 'after' : false,
+  }];
+
+  chart.options.scales.y.max = currentMode === 'cdf' ? 1.05 : undefined;
+  chart.options.scales.x.ticks.maxTicksLimit = isDiscrete && labels.length <= 15 ? labels.length : 10;
+
+  chart.update('active');
+}
+
+function createGradient(color) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 340);
+  if (color === '#818cf8') {
+    grad.addColorStop(0, 'rgba(129,140,248,0.55)');
+    grad.addColorStop(1, 'rgba(129,140,248,0.0)');
+  } else {
+    grad.addColorStop(0, 'rgba(249,115,22,0.55)');
+    grad.addColorStop(1, 'rgba(249,115,22,0.0)');
+  }
+  return grad;
+}
+
+function updateStats() {
+  const dist = DISTS[currentKey];
+  const params = getParams();
+  const mean = dist.mean(params);
+  const variance = dist.variance(params);
+  const std = Math.sqrt(Math.abs(variance));
+  const mode = dist.mode ? dist.mode(params) : '—';
+  document.getElementById('stat-mean').textContent = fmt(mean);
+  document.getElementById('stat-var').textContent = fmt(variance);
+  document.getElementById('stat-std').textContent = fmt(std);
+  document.getElementById('stat-mode').textContent = mode;
+}
+
+function updateInfo() {
+  const dist = DISTS[currentKey];
+  const type = dist.type;
+
+  document.getElementById('title-name').textContent = dist.name;
+  const badge = document.getElementById('dist-type-badge');
+  badge.textContent = type === 'discrete' ? 'Discrete' : 'Continuous';
+  badge.className = `dist-type-badge ${type === 'discrete' ? 'badge-discrete' : 'badge-continuous'}`;
+
+  document.getElementById('dist-desc').textContent = dist.desc;
+  document.getElementById('dist-formula').textContent = dist.formula;
+
+  const ul = document.getElementById('dist-usecases');
+  ul.innerHTML = dist.useCases.map(u => `<li>${u}</li>`).join('');
+
+  document.getElementById('formula-label').textContent =
+    type === 'discrete' ? 'PMF Formula' : (currentMode === 'cdf' ? 'PDF Formula' : 'PDF Formula');
+}
+
+// ── PARAMS UI ────────────────────────────────────────────────
+function getParams() {
+  const dist = DISTS[currentKey];
+  const out = {};
+  for (const p of dist.params) {
+    const el = document.getElementById(`param-${p.id}`);
+    out[p.id] = el ? parseFloat(el.value) : p.def;
+  }
+  return out;
+}
+
+function buildParamsUI() {
+  const dist = DISTS[currentKey];
+  const container = document.getElementById('params-section');
+  container.innerHTML = '';
+
+  for (const p of dist.params) {
+    const block = document.createElement('div');
+    block.className = 'param-block';
+
+    const labelRow = document.createElement('div');
+    labelRow.className = 'param-label';
+    const nameEl = document.createElement('span');
+    nameEl.className = 'param-name';
+    nameEl.textContent = p.label;
+    const valEl = document.createElement('span');
+    valEl.className = 'param-value';
+    valEl.id = `pval-${p.id}`;
+    valEl.textContent = paramValues[p.id] !== undefined ? paramValues[p.id] : p.def;
+    labelRow.append(nameEl, valEl);
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.id = `param-${p.id}`;
+    slider.min = p.min;
+    slider.max = p.max;
+    slider.step = p.step;
+    slider.value = paramValues[p.id] !== undefined ? paramValues[p.id] : p.def;
+    slider.className = dist.type === 'discrete' ? 'discrete-slider' : 'continuous-slider';
+
+    slider.addEventListener('input', () => {
+      valEl.textContent = slider.value;
+      paramValues[p.id] = parseFloat(slider.value);
+      refresh();
+    });
+
+    const rangeRow = document.createElement('div');
+    rangeRow.className = 'param-range';
+    rangeRow.innerHTML = `<span>${p.min}</span><span>${p.max}</span>`;
+
+    block.append(labelRow, slider, rangeRow);
+    container.appendChild(block);
+  }
+}
+
+// ── SIDEBAR ACTIVATION ───────────────────────────────────────
+function selectDist(key) {
+  currentKey = key;
+  paramValues = {};
+  const dist = DISTS[key];
+  for (const p of dist.params) paramValues[p.id] = p.def;
+
+  document.querySelectorAll('.dist-btn').forEach(b => {
+    b.classList.remove('active');
+    if (b.dataset.key === key) b.classList.add('active');
+  });
+
+  buildParamsUI();
+  updateInfo();
+  updateStats();
+  updateChart();
+}
+
+// ── MODE TOGGLE ──────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('btn-pdf').classList.toggle('active', mode === 'pdf');
+  document.getElementById('btn-cdf').classList.toggle('active', mode === 'cdf');
+  refresh();
+}
+
+function refresh() {
+  updateStats();
+  updateChart();
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+initChart();
+selectDist('normal');
+</script>
+</body>
+</html>
