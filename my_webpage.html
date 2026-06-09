@@ -79,10 +79,12 @@
   .hero-visual { position: relative; z-index: 2; display: flex; justify-content: center; align-items: center; opacity: 0; animation: fadeIn 1s 0.6s forwards; }
   #polytopeCanvas { display: block; }
 
-  .floating-formula { position: absolute; font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); white-space: nowrap; animation: floatFormula 6s ease-in-out infinite; }
-  .ff1 { top: 5%; left: 60%; animation-delay: 0s; color: rgba(0,229,255,0.6); }
-  .ff2 { bottom: 10%; right: 5%; animation-delay: 2s; color: rgba(255,61,107,0.6); }
-  .ff3 { top: 35%; left: -10%; animation-delay: 4s; color: rgba(184,255,61,0.6); }
+  .floating-formula { position: absolute; font-family: 'Space Mono', monospace; font-size: 1.05rem; color: var(--muted); white-space: nowrap; animation: floatFormula 6s ease-in-out infinite; }
+  .ff1 { top: 1%; left: -5%; animation-delay: 0s; color: rgba(0,229,255,0.6); }
+  .ff2 { bottom: 20%; right: 25%; animation-delay: 2s; color: rgba(255,61,107,0.6); }
+  .ff3 { top: 35%; left: -15%; animation-delay: 4s; color: rgba(184,255,61,0.6); }
+  .ff4 { top: 35%; left: 55%; animation-delay: 4s; color: rgba(265,55,61,0.6); }
+  .ff5 { bottom: 25%; right: 65%; animation-delay: 4s; color: rgba(0,270,61,0.6); }
   @keyframes floatFormula { 0%,100%{transform:translateY(0);opacity:.6}50%{transform:translateY(-12px);opacity:1} }
 
   /* STATS */
@@ -216,6 +218,8 @@
     .about-inner { flex-direction: column; align-items: center; text-align: center; }
     .tags-row { justify-content: center; }
   }
+  
+  
 </style>
 </head>
 <body>
@@ -237,7 +241,7 @@
       <span class="line3">Decide.</span>
     </h1>
     <p class="hero-desc">
-      tools for understanding basic optimization, probability, and statistics for decision making under uncertainty at the minimum cognitive load
+      Tools for understanding basic optimization, probability, and statistics for decision making under uncertainty at the minimum cognitive load
     </p>
     <div class="hero-cta">
       <a href="#apps" class="btn-primary">↓ Browse Tools</a>
@@ -246,17 +250,19 @@
   </div>
 
   <div class="hero-visual">
-    <canvas id="polytopeCanvas" width="340" height="340"></canvas>
-    <span class="floating-formula ff1">maximize cᵀx</span>
+    <canvas id="polytopeCanvas" width="640" height="640"></canvas>
+    <span class="floating-formula ff4">maximize cᵀx</span>
     <span class="floating-formula ff2">\( P(H|E) \propto P(E|H)P(H) \)</span>
-    <span class="floating-formula ff3">∇f(x) = 0</span>
+    <span class="floating-formula ff1">∇f(x) = 0</span>
+	<span class="floating-formula ff3">\( f_{X}(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2} \)</span>
+	<span class="floating-formula ff5">\( \Gamma(z) = \int_{0}^{\infty} t^{z-1} e^{-t} \, dt\)</span>
   </div>
 </section>
 
 <section class="section" id="apps">
   <div class="section-header reveal">
     <div>
-      <p class="section-label">// My tools</p>
+      <p class="section-label">// My tools -- For an optimal experience open the tools on a large screen</p>
       <h2 class="section-title">Pedagogical<br>Applications</h2>
     </div>
     <a href="#contact" class="btn-secondary">Request a Tool</a>
@@ -268,7 +274,7 @@
 
     <a href="https://ljnovoa.github.io/Decision-Modeling-Analytics/LP_3D_lab.html" target="_blank" rel="noopener" class="app-card reveal">
       <span class="app-tag">Optimization</span>
-      <svg class="app-icon-svg" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="app-icon-svg" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
         <!-- polytope: icosahedron-like wireframe projected in 2D -->
         <!-- outer hexagon -->
         <polygon points="26,4 44,14 44,34 26,46 8,34 8,14" fill="none" stroke="#00e5ff" stroke-width="1.2" opacity="0.7"/>
@@ -582,7 +588,7 @@
       <div>
         <p>Hi! I'm an educator specializing in <strong>Analytics for Decision Making under Uncertainty</strong> — the art of making better choices under uncertainty using math as a compass.</p>
         <p>Each tool here was born in a real classroom, refined through real feedback, and designed with one goal: making the lightbulb moment happen <strong>faster and more often</strong>.</p>
-        <p>All tools are <strong>free, open-access</strong> — no login required. Just click and learn. For an optimal experience, open the tools on a large screen</p>
+        <p>All tools are <strong>free, open-access</strong> — no login required. Just click and learn. For an optimal experience open the tools on a large screen</p>
         <div class="tags-row">
           <span class="tag">Optimization</span>
           <span class="tag">Probability &amp; Statistics</span>
