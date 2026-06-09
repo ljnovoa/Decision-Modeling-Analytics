@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Probability Distribution Lab — The Prom Dance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+  :root {
+    --bg: #f0f2f9;
+    --card-bg: #ffffff;
+    --sidebar-bg: #ffffff;
+    --border: #dde1f0;
+    --border-soft: #e8eaf4;
+    --text: #1a1a35;
+    --text-dim: #454568;
+    --text-muted: #8888aa;
+    --accent-d: #2563eb;
+    --accent-d-dim: rgba(37,99,235,0.08);
+    --accent-c: #5b21b6;
+    --accent-c-dim: rgba(91,33,182,0.08);
+    --accent-stat: #0e7490;
+    --card-radius: 12px;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden; font-size: 15px;
+  }
+
+  /* ── APP HEADER ── */
+  #app-header {
+    background: var(--card-bg); border-bottom: 1px solid var(--border);
+    padding: 9px 22px; flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  #app-title { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+  .t-prob { color: #f97316; }
+  .t-dist { color: #5b21b6; }
+  .t-prom { color: var(--text-muted); font-size: 17px; font-weight: 600; }
+  #app-subtitle { font-size: 11px; font-weight: 500; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── BODY ── */
+  #app-body { flex: 1; display: flex; overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 250px; background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  #sidebar-header {
+    padding: 13px 14px 9px; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .dist-group-label {
+    padding: 12px 14px 2px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .dist-group-label.discrete   { color: var(--accent-d); }
+  .dist-group-label.continuous { color: var(--accent-c); }
+  .dist-group-desc {
+    padding: 1px 14px 8px; font-size: 11.5px; font-style: italic;
+    color: var(--text-muted); line-height: 1.5; font-weight: 500;
+  }
+  .dist-btn {
+    display: flex; align-items: center; gap: 8px; padding: 7px 14px;
+    cursor: pointer; border: none; background: none; color: var(--text-dim);
+    font-size: 14.5px; font-family: inherit; font-weight: 500; width: 100%;
+    text-align: left; border-left: 3px solid transparent;
+    transition: background 0.13s, color 0.13s;
+  }
+  .dist-btn:hover { background: rgba(0,0,0,0.03); color: var(--text); }
+  .dist-btn.active.discrete   { background: var(--accent-d-dim); border-left-color: var(--accent-d); color: #1e40af; font-weight: 700; }
+  .dist-btn.active.continuous { background: var(--accent-c-dim); border-left-color: var(--accent-c); color: #4c1d95; font-weight: 700; }
+  .dist-emoji { font-size: 15px; flex-shrink: 0; line-height: 1; }
+
+  /* ── MAIN ── */
+  #main {
+    flex: 1; overflow-y: auto; padding: 14px 16px 24px;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  /* ── SECTION CARD ── */
+  .s-card {
+    background: var(--card-bg); border-radius: var(--card-radius);
+    border: 1px solid var(--border-soft); box-shadow: var(--card-shadow);
+    padding: 14px 18px; overflow: hidden;
+  }
+  .s-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
+  }
+
+  /* ── DIST HEADER CARD ── */
+  #dist-header { display: flex; align-items: flex-start; gap: 11px; }
+  #char-emoji-big { font-size: 38px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+  #dist-header-text { flex: 1; min-width: 0; }
+  .dist-name-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  #dist-title { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+  .dist-type-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+  }
+  .badge-discrete   { background: var(--accent-d-dim); color: var(--accent-d); border: 1px solid rgba(37,99,235,0.22); }
+  .badge-continuous { background: var(--accent-c-dim); color: var(--accent-c); border: 1px solid rgba(91,33,182,0.22); }
+  .char-row { margin-top: 5px; display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+  #char-name { font-size: 15px; font-weight: 800; color: var(--text); }
+  #char-tagline { font-size: 13.5px; font-weight: 500; font-style: italic; color: var(--text-dim); line-height: 1.5; }
+
+  /* ── FORMULA CARD ── */
+  #formula-type-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 3px; }
+  #formula-notation { font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 7px; }
+  .formula-box {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; overflow-x: auto;
+    text-align: center; margin-bottom: 11px;
+  }
+  .formula-box .katex { font-size: 1.12em !important; }
+  .formula-box .katex-display { margin: 0 !important; }
+  .mv-row { display: flex; gap: 8px; }
+  .mv-card {
+    flex: 1; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; text-align: center; min-width: 0; overflow: hidden;
+  }
+  .mv-card-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+  .mv-card .katex { font-size: 0.9em !important; }
+  .mv-card .katex-display { margin: 0 !important; }
+
+  /* ── DESCRIPTION CARD ── */
+  #desc-text { font-size: 14px; line-height: 1.8; color: var(--text-dim); font-weight: 500; }
+
+  /* ── PARAMS CARD ── */
+  #params-inner { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+  .param-block { min-width: 195px; flex: 1; }
+  .param-label { margin-bottom: 5px; }
+  .param-name { font-size: 13px; font-weight: 600; color: var(--text-dim); }
+  .slider-row { display: flex; align-items: center; gap: 9px; margin-top: 5px; }
+  .slider-row input[type=range] { flex: 1; }
+  .param-num-input {
+    width: 66px; padding: 5px 7px; border: 1px solid var(--border); border-radius: 7px;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    color: var(--text); background: var(--bg); text-align: center;
+    outline: none; transition: border-color 0.15s;
+  }
+  .param-num-input:focus { border-color: var(--accent-c); background: #fff; }
+  .param-num-input.discrete-num:focus { border-color: var(--accent-d); }
+  .param-range { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
+  input[type=range] {
+    height: 4px; -webkit-appearance: none;
+    background: var(--border); border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+    background: var(--accent-stat); box-shadow: 0 0 0 3px rgba(14,116,144,0.18);
+    cursor: pointer; transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  input[type=range].discrete-slider::-webkit-slider-thumb   { background: var(--accent-d); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+  input[type=range].continuous-slider::-webkit-slider-thumb { background: var(--accent-c); box-shadow: 0 0 0 3px rgba(91,33,182,0.2); }
+
+  /* ── CHART CARD ── */
+  #chart-wrap { width: 100%; height: 300px; position: relative; }
+
+  /* ── FOOTER 3-COL ── */
+  #footer-row { display: grid; grid-template-columns: 260px 1fr 1fr; gap: 10px; }
+
+  /* Stats */
+  .stats-list { display: flex; flex-direction: column; gap: 8px; }
+  .stat-row { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .stat-sym { font-size: 14px; color: var(--text-muted); flex-shrink: 0; min-width: 32px; }
+  .stat-sym .katex { font-size: 1em !important; }
+  .stat-label-text { font-size: 14px; color: var(--text-muted); flex-shrink: 0; }
+  .stat-value { font-size: 15px; font-weight: 800; color: var(--accent-stat); font-variant-numeric: tabular-nums; word-break: break-word; }
+
+  /* Why the name */
+  .name-origin-list { list-style: none; display: flex; flex-direction: column; gap: 8px; padding: 0; }
+  .name-origin-list li { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; font-weight: 500; color: var(--text-dim); line-height: 1.6; }
+  .name-origin-list li::before { content: '•'; color: var(--accent-c); flex-shrink: 0; font-size: 16px; line-height: 1.2; }
+  .name-origin-list a { color: var(--accent-c); text-decoration: none; font-weight: 700; }
+  .name-origin-list a:hover { text-decoration: underline; }
+  #footer-row.is-discrete .name-origin-list li::before { color: var(--accent-d); }
+  #footer-row.is-discrete .name-origin-list a { color: var(--accent-d); }
+
+  /* Use cases */
+  .use-case-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .use-case-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-dim); line-height: 1.55; }
+  .use-case-list li::before { content: '▸'; color: var(--accent-c); flex-shrink: 0; font-size: 11px; margin-top: 2px; }
+  #footer-row.is-discrete .use-case-list li::before { color: var(--accent-d); }
+</style>
+</head>
+<body>
+
+<header id="app-header">
+  <div id="app-title">
+    The&nbsp;<span class="t-prob">Probability</span>&nbsp;<span class="t-dist">Distribution</span>&nbsp;Lab
+    &nbsp;<span class="t-prom">— The Prom Dance</span>
+  </div>
+  <div id="app-subtitle">Designed by Luis Novoa &nbsp;·&nbsp; Built with Claude Code &nbsp;·&nbsp; For educational purposes</div>
+</header>
+
+<div id="app-body">
+  <nav id="sidebar">
+    <div id="sidebar-header">The Usual Suspects</div>
+
+    <div class="dist-group-label discrete">Discrete</div>
+    <div class="dist-group-desc">those for which we can enumerate the possible outcomes</div>
+    <button class="dist-btn discrete" data-key="bernoulli"><span class="dist-emoji">🪙</span>Bernoulli</button>
+    <button class="dist-btn discrete" data-key="binomial"><span class="dist-emoji">🎯</span>Binomial</button>
+    <button class="dist-btn discrete" data-key="geometric"><span class="dist-emoji">🔁</span>Geometric</button>
+    <button class="dist-btn discrete" data-key="duniform"><span class="dist-emoji">🎲</span>Discrete Uniform</button>
+    <button class="dist-btn discrete" data-key="poisson"><span class="dist-emoji">🦋</span>Poisson</button>
+    <button class="dist-btn discrete" data-key="negbinom"><span class="dist-emoji">🏅</span>Neg. Binomial</button>
+
+    <div class="dist-group-label continuous">Continuous</div>
+    <div class="dist-group-desc">those whose possible outcomes are not enumerable</div>
+    <button class="dist-btn continuous" data-key="normal"><span class="dist-emoji">👑</span>Normal</button>
+    <button class="dist-btn continuous" data-key="cuniform"><span class="dist-emoji">📏</span>Uniform</button>
+    <button class="dist-btn continuous" data-key="gamma"><span class="dist-emoji">🕺</span>Gamma</button>
+    <button class="dist-btn continuous" data-key="lognormal"><span class="dist-emoji">📈</span>Lognormal</button>
+    <button class="dist-btn continuous" data-key="triangular"><span class="dist-emoji">📋</span>Triangular</button>
+    <button class="dist-btn continuous" data-key="exponential"><span class="dist-emoji">👻</span>Exponential</button>
+  </nav>
+
+  <div id="main">
+
+    <!-- 1. Distribution header card -->
+    <div class="s-card" id="dist-header-card">
+      <div id="dist-header">
+        <span id="char-emoji-big">👑</span>
+        <div id="dist-header-text">
+          <div class="dist-name-row">
+            <span id="dist-title">Normal(μ, σ)</span>
+            <span id="dist-type-badge" class="dist-type-badge badge-continuous">Continuous</span>
+          </div>
+          <div class="char-row">
+            <span id="char-name">The Prom Queen</span>
+            <span id="char-tagline">— Perfectly symmetric bell-shaped dress. Dances side-to-side with μ, billows or tightens with σ.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Formula card -->
+    <div class="s-card">
+      <div class="s-title" id="formula-type-label">Probability Density Function (PDF)</div>
+      <div id="formula-notation"></div>
+      <div class="formula-box" id="dist-formula"></div>
+      <div class="mv-row">
+        <div class="mv-card"><div class="mv-card-label">Mean</div><div id="mv-mean"></div></div>
+        <div class="mv-card"><div class="mv-card-label">Std Dev</div><div id="mv-sigma"></div></div>
+        <div class="mv-card"><div class="mv-card-label">Median</div><div id="mv-median"></div></div>
+      </div>
+    </div>
+
+    <!-- 3. Description card -->
+    <div class="s-card">
+      <div class="s-title">Description</div>
+      <div id="desc-text"></div>
+    </div>
+
+    <!-- 4. Parameters card -->
+    <div class="s-card">
+      <div class="s-title">Parameters</div>
+      <div id="params-inner"></div>
+    </div>
+
+    <!-- 5. Chart card -->
+    <div class="s-card">
+      <div class="s-title">Distribution's Graphical Representation</div>
+      <div id="chart-wrap"><canvas id="myChart"></canvas></div>
+    </div>
+
+    <!-- 6. Footer row of 3 cards -->
+    <div id="footer-row">
+      <div class="s-card">
+        <div class="s-title">Numerical Parameters</div>
+        <div class="stats-list" id="stats-list"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-title">Why the name &amp; fun facts</div>
+        <ul class="name-origin-list" id="dist-nameorigin"></ul>
+      </div>
+      <div class="s-card">
+        <div class="s-title">Real-world Use Cases</div>
+        <ul class="use-case-list" id="dist-usecases"></ul>
+      </div>
+    </div>
+
+  </div><!-- /#main -->
+</div><!-- /#app-body -->
+
+<script>
+// ── MATH HELPERS ──────────────────────────────────────────────
+function logFactorial(n) {
+  if (n <= 1) return 0;
+  let s = 0; for (let i = 2; i <= n; i++) s += Math.log(i); return s;
+}
+function logGamma(z) {
+  if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - logGamma(1 - z);
+  z -= 1;
+  const c = [0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,
+             -176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  let x = c[0]; for (let i = 1; i < 9; i++) x += c[i] / (z + i);
+  const t = z + 7.5;
+  return 0.5*Math.log(2*Math.PI) + (z+0.5)*Math.log(t) - t + Math.log(x);
+}
+function logComb(n, k) {
+  if (k < 0 || k > n) return -Infinity;
+  return logFactorial(n) - logFactorial(k) - logFactorial(n - k);
+}
+function erf(x) {
+  const s = x >= 0 ? 1 : -1; x = Math.abs(x);
+  const t = 1/(1+0.3275911*x);
+  const p = t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))));
+  return s*(1 - p*Math.exp(-x*x));
+}
+function fmt(v) {
+  if (typeof v === 'string') return v;
+  if (!isFinite(v)) return '∞';
+  if (Math.abs(v) >= 10000) return v.toExponential(2);
+  return parseFloat(v.toFixed(Math.abs(v) < 0.01 ? 4 : Math.abs(v) < 1 ? 3 : 2)).toString();
+}
+
+// ── DISTRIBUTIONS ─────────────────────────────────────────────
+const DISTS = {
+  bernoulli: {
+    name:'Bernoulli(p)', type:'discrete',
+    character:{emoji:'🪙',name:'The Wallflower',tagline:'— One decision all night: dance or don\'t. Every other dancer started here.'},
+    params:[{id:'p',label:'p — success probability',min:0.01,max:0.99,step:0.01,def:0.5}],
+    desc:'The simplest discrete distribution — a single trial that succeeds with probability p or fails with probability 1−p. It is the fundamental building block for the Binomial, Geometric, and Negative Binomial distributions.',
+    latex:'P(X=1)=p,\\quad P(X=0)=1-p',
+    ifNotation:'If X ~ Bernoulli(p) then',
+    meanLatex:'p',
+    sigmaLatex:'\\sqrt{p(1-p)}',
+    medianLatex:'\\begin{cases}0 & p<0.5\\\\1 & p>0.5\\end{cases}',
+    nameOrigin:[
+      'Named after <a href="https://en.wikipedia.org/wiki/Jacob_Bernoulli" target="_blank">Jacob Bernoulli</a> (1654–1705), who systematically analyzed binary trials in <em>Ars Conjectandi</em> (1713).',
+      'A single success/failure experiment is called a "Bernoulli trial" in his honor — the atom of all classical probability.',
+      'Building block: the Binomial, Geometric, and Negative Binomial distributions are all derived directly from repeated Bernoulli trials.',
+    ],
+    useCases:['Coin flip (heads = success)','Customer converts or not','Pass/fail quality inspection','Spam vs. not-spam classification'],
+    support:()=>[0,1],
+    pmf:(x,{p})=>x===0?1-p:x===1?p:0,
+    mean:({p})=>p,
+    variance:({p})=>p*(1-p),
+    median:({p})=>p<0.5?0:p>0.5?1:0.5,
+    mode:({p})=>p>0.5?'1':p<0.5?'0':'0 or 1',
+  },
+  binomial: {
+    name:'Binomial(n, p)', type:'discrete',
+    character:{emoji:'🎯',name:'The Team Captain',tagline:'— Brought n friends to the floor. Counts how many actually danced.'},
+    params:[
+      {id:'n',label:'n — number of trials',min:1,max:60,step:1,def:10},
+      {id:'p',label:'p — success probability',min:0.01,max:0.99,step:0.01,def:0.4}
+    ],
+    desc:'Counts the number of successes in n independent Bernoulli trials with the same probability p. Symmetric when p = 0.5, right-skewed for small p, left-skewed for large p. Approximates the Normal for large n.',
+    latex:'P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k},\\quad k=0,\\ldots,n',
+    ifNotation:'If X ~ Bin(n, p) then',
+    meanLatex:'np',
+    sigmaLatex:'\\sqrt{np(1-p)}',
+    medianLatex:'\\lfloor np \\rfloor \\text{ or } \\lceil np \\rceil',
+    nameOrigin:[
+      'From Latin <em>binomium</em> ("two terms"). <a href="https://en.wikipedia.org/wiki/Binomial_theorem" target="_blank">Newton\'s binomial theorem</a> — (p+q)ⁿ — produces the PMF coefficients directly.',
+      'Studied by <a href="https://en.wikipedia.org/wiki/Jacob_Bernoulli" target="_blank">Jacob Bernoulli</a> and formalized by <a href="https://en.wikipedia.org/wiki/Abraham_de_Moivre" target="_blank">Abraham de Moivre</a> (1718).',
+      'Fun fact: the Normal distribution is a limiting case of the Binomial — <a href="https://en.wikipedia.org/wiki/De_Moivre%E2%80%93Laplace_theorem" target="_blank">de Moivre–Laplace theorem</a>.',
+    ],
+    useCases:['Defective items in a batch of n','Number of heads in n coin flips','Customers clicking an ad out of n shown','Students passing a multiple-choice exam'],
+    support:({n})=>Array.from({length:n+1},(_,i)=>i),
+    pmf:(x,{n,p})=>{if(x<0||x>n||!Number.isInteger(x))return 0;return Math.exp(logComb(n,x)+x*Math.log(p)+(n-x)*Math.log(1-p));},
+    mean:({n,p})=>n*p,
+    variance:({n,p})=>n*p*(1-p),
+    median:({n,p})=>Math.floor(n*p),
+    mode:({n,p})=>fmt(Math.floor((n+1)*p)),
+  },
+  geometric: {
+    name:'Geometric(p)', type:'discrete',
+    character:{emoji:'🔁',name:'The Persistent Suitor',tagline:'— Keeps asking to dance, failing each time, until finally on try k someone says yes.'},
+    params:[{id:'p',label:'p — success probability',min:0.01,max:0.99,step:0.01,def:0.3}],
+    desc:'Number of independent Bernoulli trials up to and including the first success. Has the memoryless property: the distribution of remaining trials does not depend on how many failures have already occurred.',
+    latex:'P(X=k)=(1-p)^{k-1}p,\\quad k=1,2,3,\\ldots',
+    ifNotation:'If X ~ Geom(p) then',
+    meanLatex:'\\dfrac{1}{p}',
+    sigmaLatex:'\\dfrac{\\sqrt{1-p}}{p}',
+    medianLatex:'\\left\\lceil \\dfrac{-1}{\\log_2(1-p)} \\right\\rceil',
+    nameOrigin:[
+      'Named for the <a href="https://en.wikipedia.org/wiki/Geometric_series" target="_blank">geometric series</a>: successive probabilities p, p(1−p), p(1−p)², … form a geometric progression with ratio (1−p).',
+      'The <em>memoryless property</em> — past failures give no information about future trials — is unique among all discrete distributions.',
+      'Fun fact: the Geometric is the discrete counterpart of the <a href="https://en.wikipedia.org/wiki/Exponential_distribution" target="_blank">Exponential distribution</a>, which is also memoryless.',
+    ],
+    useCases:['Calls until a customer answers','Attempts to pass a driving test','Rolls until a six appears on a die','Trials until first successful experiment'],
+    support:({p})=>Array.from({length:Math.min(60,Math.ceil(6/p))},(_,i)=>i+1),
+    pmf:(x,{p})=>x>=1?Math.pow(1-p,x-1)*p:0,
+    mean:({p})=>1/p,
+    variance:({p})=>(1-p)/(p*p),
+    median:({p})=>Math.ceil(-1/Math.log2(1-p)),
+    mode:()=>'1',
+  },
+  duniform: {
+    name:'Discrete Uniform(a, b)', type:'discrete',
+    character:{emoji:'🎲',name:'The Fair Judge',tagline:'— decides between the possible dance partners with equal chance.'},
+    params:[
+      {id:'a',label:'a — minimum value',min:-10,max:18,step:1,def:0},
+      {id:'b',label:'b — maximum value',min:-9,max:20,step:1,def:9}
+    ],
+    desc:'All integers in [a, b] are equally likely. Used when there is no reason to prefer one outcome over another in a finite set — the discrete embodiment of the "principle of insufficient reason."',
+    latex:'P(X=k)=\\dfrac{1}{b-a+1},\\quad k=a,a{+}1,\\ldots,b',
+    ifNotation:'If X ~ DUnif(a, b) then',
+    meanLatex:'\\dfrac{a+b}{2}',
+    sigmaLatex:'\\sqrt{\\dfrac{(b-a+1)^2-1}{12}}',
+    medianLatex:'\\left\\lfloor \\dfrac{a+b}{2} \\right\\rfloor',
+    nameOrigin:[
+      'From Latin <em>uniformis</em> ("one form"). Equal-probability outcomes formalized by <a href="https://en.wikipedia.org/wiki/Pierre-Simon_Laplace" target="_blank">Laplace</a> as the "principle of insufficient reason."',
+      'The idea that equal possibilities deserve equal probabilities is the foundation of <a href="https://en.wikipedia.org/wiki/Classical_definition_of_probability" target="_blank">classical probability theory</a>.',
+      'Fun fact: rolling a fair die is Discrete Uniform(1, 6) — humanity\'s oldest random device and the most universal sampling method in history.',
+    ],
+    useCases:['Roll of a fair die (a=1, b=6)','Randomly selecting a day of the week','Lottery ticket number generation','Selecting a random floor in a building'],
+    support:({a,b})=>{const s=[];for(let i=Math.min(a,b);i<=Math.max(a,b);i++)s.push(i);return s;},
+    pmf:(x,{a,b})=>{const lo=Math.min(a,b),hi=Math.max(a,b);return x>=lo&&x<=hi?1/(hi-lo+1):0;},
+    mean:({a,b})=>(a+b)/2,
+    variance:({a,b})=>{const n=Math.abs(b-a)+1;return(n*n-1)/12;},
+    median:({a,b})=>Math.floor((a+b)/2),
+    mode:({a,b})=>`any value in [${Math.min(a,b)}, ${Math.max(a,b)}]`,
+  },
+  poisson: {
+    name:'Poisson(λ)', type:'discrete',
+    character:{emoji:'🦋',name:'The Social Butterfly',tagline:'— Arrives in bursts; sometimes with friends at once, then leaves and comes back, possibly with other friends.'},
+    params:[{id:'lambda',label:'λ — average event rate',min:0.1,max:20,step:0.1,def:4}],
+    desc:'Counts events occurring in a fixed interval when they happen at constant average rate λ, independently of each other. Approximates the Binomial when n is large and p is small (np = λ).',
+    latex:'P(X=k)=\\dfrac{e^{-\\lambda}\\,\\lambda^k}{k!},\\quad k=0,1,2,\\ldots',
+    ifNotation:'If X ~ Poisson(λ) then',
+    meanLatex:'\\lambda',
+    sigmaLatex:'\\sqrt{\\lambda}',
+    medianLatex:'\\approx \\lfloor \\lambda + \\tfrac{1}{3} \\rfloor',
+    nameOrigin:[
+      'Named after <a href="https://en.wikipedia.org/wiki/Sim%C3%A9on_Denis_Poisson" target="_blank">Siméon Denis Poisson</a> (1781–1840), who derived it in his 1837 treatise on criminal trial probability.',
+      'Originally a limiting approximation to the Binomial for large n and very small p — the "law of rare events."',
+      'Fun fact: <a href="https://en.wikipedia.org/wiki/Ladislaus_Bortkiewicz" target="_blank">Bortkiewicz</a> (1898) modeled Prussian cavalry deaths by horse kick as Poisson — one of statistics\' most celebrated datasets.',
+    ],
+    useCases:['Customers arriving per hour','Defects per unit area in manufacturing','Calls to a call center per minute','Accidents at an intersection per month'],
+    support:({lambda})=>Array.from({length:Math.ceil(lambda+5*Math.sqrt(lambda))+2},(_,i)=>i),
+    pmf:(x,{lambda})=>x<0?0:Math.exp(-lambda+x*Math.log(lambda)-logFactorial(x)),
+    mean:({lambda})=>lambda,
+    variance:({lambda})=>lambda,
+    median:({lambda})=>Math.floor(lambda+1/3),
+    mode:({lambda})=>fmt(Math.floor(lambda)),
+  },
+  negbinom: {
+    name:'Negative Binomial(r, p)', type:'discrete',
+    character:{emoji:'🏅',name:'The Overachiever',tagline:'— Won\'t leave until collecting r dance partners. Usually done by midnight; sometimes still there at 3am.'},
+    params:[
+      {id:'r',label:'r — target successes',min:1,max:20,step:1,def:5},
+      {id:'p',label:'p — success probability',min:0.05,max:0.95,step:0.01,def:0.4}
+    ],
+    desc:'Number of independent Bernoulli trials needed to achieve exactly r successes. Generalizes the Geometric (r = 1) and models overdispersed count data where variance exceeds the mean — unlike Poisson.',
+    latex:'P(X=k)=\\binom{k-1}{r-1}p^r(1-p)^{k-r},\\quad k=r,r{+}1,\\ldots',
+    ifNotation:'If X ~ NegBin(r, p) then',
+    meanLatex:'\\dfrac{r}{p}',
+    sigmaLatex:'\\dfrac{\\sqrt{r(1-p)}}{p}',
+    medianLatex:'\\approx \\left\\lfloor \\dfrac{r}{p} \\right\\rfloor',
+    nameOrigin:[
+      'Named for the <a href="https://en.wikipedia.org/wiki/Negative_binomial_distribution" target="_blank">negative binomial series</a>: (1−q)⁻ʳ expands to give the PMF coefficients. The "negative" refers to the negative exponent.',
+      'Generalizes the Geometric (r = 1) and models <em>overdispersed</em> counts where Var(X) > E(X), unlike Poisson.',
+      'Fun fact: widely used in <a href="https://en.wikipedia.org/wiki/RNA-Seq" target="_blank">RNA-seq genomics</a> to model gene expression counts, which are naturally overdispersed.',
+    ],
+    useCases:['Sales calls needed to close r deals','Parts inspected to find r defects','Patients enrolled until r respond to treatment','Modeling overdispersed count data'],
+    support:({r,p})=>Array.from({length:Math.min(80,Math.ceil(r/p+6*Math.sqrt(r*(1-p)/p/p)))},(_,i)=>i+r),
+    pmf:(x,{r,p})=>{if(x<r)return 0;return Math.exp(logComb(x-1,r-1)+r*Math.log(p)+(x-r)*Math.log(1-p));},
+    mean:({r,p})=>r/p,
+    variance:({r,p})=>r*(1-p)/(p*p),
+    median:({r,p})=>Math.floor(r/p),
+    mode:({r,p})=>r>1?fmt(Math.floor((r-1)/p)):'1',
+  },
+
+  normal: {
+    name:'Normal(μ, σ)', type:'continuous',
+    character:{emoji:'👑',name:'The Prom Queen',tagline:'— Perfectly symmetric bell-shaped dress. Dances side-to-side with μ, billows or tightens with σ.'},
+    params:[
+      {id:'mu',label:'μ — mean',min:-5,max:5,step:0.1,def:0},
+      {id:'sigma',label:'σ — standard deviation',min:0.1,max:4,step:0.1,def:1}
+    ],
+    desc:'The iconic bell-shaped distribution, symmetric about μ with spread controlled by σ. By the Central Limit Theorem, the sum of many independent random variables converges to Normal regardless of the original distribution.',
+    latex:'f_X(x)=\\dfrac{1}{\\sigma\\sqrt{2\\pi}}\\exp\\!\\left(-\\dfrac{(x-\\mu)^2}{2\\sigma^2}\\right)',
+    ifNotation:'If X ~ N(μ, σ²) then',
+    meanLatex:'\\mu',
+    sigmaLatex:'\\sigma',
+    medianLatex:'\\mu',
+    nameOrigin:[
+      '"Normal curve" popularized by <a href="https://en.wikipedia.org/wiki/Karl_Pearson" target="_blank">Karl Pearson</a> (1895), though he later regretted it — implying other distributions are "abnormal."',
+      '<a href="https://en.wikipedia.org/wiki/Carl_Friedrich_Gauss" target="_blank">Carl Friedrich Gauss</a> used it to model astronomical errors (1809) — hence the alias <em>Gaussian distribution</em>.',
+      'Fun fact: the <a href="https://en.wikipedia.org/wiki/Central_limit_theorem" target="_blank">Central Limit Theorem</a> explains its ubiquity — sums of independent variables converge to Normal regardless of their original shape.',
+    ],
+    useCases:['Heights and weights in a population','Measurement errors in precision instruments','IQ scores standardized to N(100, 15)','Stock returns (approximately) over short periods'],
+    fixedRange:[-6,6],
+    pdf:(x,{mu,sigma})=>Math.exp(-0.5*((x-mu)/sigma)**2)/(sigma*Math.sqrt(2*Math.PI)),
+    mean:({mu})=>mu,
+    variance:({sigma})=>sigma*sigma,
+    median:({mu})=>mu,
+    mode:({mu})=>fmt(mu),
+  },
+  cuniform: {
+    name:'Uniform(a, b)', type:'continuous',
+    noAnimation:true,
+    character:{emoji:'📏',name:'The Hipster',tagline:'— Equally likely everywhere in [a, b]. Refuses to cluster — ironically the hardest to find at the party.'},
+    params:[
+      {id:'a',label:'a — minimum',min:-5,max:8,step:0.1,def:0},
+      {id:'b',label:'b — maximum',min:-4,max:10,step:0.1,def:5}
+    ],
+    desc:'Every value in [a, b] is equally likely. Models complete ignorance about where a value falls within a known range, or serves as the default uninformative prior when no other information is available.',
+    latex:'f_X(x)=\\dfrac{1}{b-a},\\quad a\\le x\\le b',
+    ifNotation:'If X ~ Unif(a, b) then',
+    meanLatex:'\\dfrac{a+b}{2}',
+    sigmaLatex:'\\dfrac{b-a}{2\\sqrt{3}}',
+    medianLatex:'\\dfrac{a+b}{2}',
+    nameOrigin:[
+      'Also called the <em>rectangular distribution</em> — its PDF is a perfect rectangle. From Latin <em>uniformis</em> ("one form").',
+      '<a href="https://en.wikipedia.org/wiki/Pierre-Simon_Laplace" target="_blank">Laplace</a> formalized it as the default uninformative prior in Bayesian inference: equal probability to all values in range.',
+      'Fun fact: every random number generator produces (pseudo) Uniform(0,1) samples — all other distributions are derived from it via transformations.',
+    ],
+    useCases:['Modeling prior ignorance in Bayesian inference','Pseudo-random number generation','Arrival time uniformly within a known window','Rounding error (Uniform on [−0.5, 0.5])'],
+    pdf:(x,{a,b})=>{const lo=Math.min(a,b),hi=Math.max(a,b);return x>=lo&&x<=hi?1/(hi-lo):0;},
+    mean:({a,b})=>(a+b)/2,
+    variance:({a,b})=>Math.pow(Math.abs(b-a),2)/12,
+    median:({a,b})=>(a+b)/2,
+    mode:({a,b})=>`any value in [${Math.min(a,b)}, ${Math.max(a,b)}]`,
+  },
+  gamma: {
+    name:'Gamma(α, β)', type:'continuous',
+    character:{emoji:'🕺',name:'The Break-dancer',tagline:'— Wildly different moves depending on α. Pure chaos hard moves at α=1, graceful arc moves at α=5, nearly queen bell-shaped for large α.'},
+    params:[
+      {id:'alpha',label:'α — shape',min:0.5,max:10,step:0.1,def:2},
+      {id:'beta',label:'β — scale',min:0.1,max:5,step:0.1,def:2}
+    ],
+    desc:'A flexible right-skewed distribution for positive values. Shape α controls the form: exponential when α = 1, increasingly symmetric as α grows. Scale β stretches or compresses horizontally. Special cases: Exponential (α=1), Chi-squared (β=2).',
+    latex:'f_X(x)=\\dfrac{x^{\\alpha-1}e^{-x/\\beta}}{\\beta^{\\alpha}\\,\\Gamma(\\alpha)},\\quad x>0',
+    ifNotation:'If X ~ Gamma(α, β) then',
+    meanLatex:'\\alpha\\beta',
+    sigmaLatex:'\\sqrt{\\alpha}\\,\\beta',
+    medianLatex:'\\approx\\alpha\\beta\\!\\left(1-\\tfrac{1}{9\\alpha}\\right)^{\\!3}',
+    nameOrigin:[
+      'Named for the <a href="https://en.wikipedia.org/wiki/Gamma_function" target="_blank">Gamma function</a> Γ(α) = ∫₀^∞ tᵅ⁻¹e⁻ᵗdt, introduced by <a href="https://en.wikipedia.org/wiki/Leonhard_Euler" target="_blank">Euler</a> (1729) as a continuous generalization of the factorial.',
+      '<a href="https://en.wikipedia.org/wiki/Adrien-Marie_Legendre" target="_blank">Legendre</a> introduced the Γ notation in 1811. The distribution arises as the waiting time until the α-th Poisson event.',
+      'Fun fact: the Gamma is the conjugate prior for the Poisson rate in Bayesian inference — a reason it appears throughout statistics and machine learning.',
+    ],
+    useCases:['Waiting time until the r-th Poisson event','Insurance claim amounts','Precipitation amounts in hydrology','CPU processing times and queueing models'],
+    fixedRange:[0,30],
+    pdf:(x,{alpha,beta})=>{if(x<=0)return 0;return Math.exp((alpha-1)*Math.log(x)-x/beta-alpha*Math.log(beta)-logGamma(alpha));},
+    mean:({alpha,beta})=>alpha*beta,
+    variance:({alpha,beta})=>alpha*beta*beta,
+    median:({alpha,beta})=>{const v=1-1/(9*alpha);return alpha*beta*v*v*v;},
+    mode:({alpha,beta})=>alpha>=1?fmt((alpha-1)*beta):'0',
+  },
+  lognormal: {
+    name:'Lognormal(μ, σ)', type:'continuous',
+    character:{emoji:'📈',name:'The Influencer',tagline:'— Posting party pics. Normal in their own world (log scale). In real life? Wildly right-skewed — most posts get 12 likes, one goes viral.'},
+    params:[
+      {id:'mu',label:'μ — log-mean',min:-1,max:3,step:0.1,def:0},
+      {id:'sigma',label:'σ — log-std dev',min:0.1,max:2,step:0.05,def:0.5}
+    ],
+    desc:'X is lognormal if ln(X) ~ N(μ, σ²). Note: μ and σ are parameters of the underlying normal, not the mean and std dev of X itself. Models strictly positive, right-skewed quantities arising from multiplicative processes.',
+    latex:'f_X(x)=\\dfrac{1}{x\\sigma\\sqrt{2\\pi}}\\exp\\!\\left(-\\dfrac{(\\ln x-\\mu)^2}{2\\sigma^2}\\right),\\;x>0',
+    ifNotation:'If X ~ LogNormal(μ, σ) then',
+    meanLatex:'e^{\\mu+\\sigma^2/2}',
+    sigmaLatex:'e^{\\mu+\\sigma^2/2}\\sqrt{e^{\\sigma^2}-1}',
+    medianLatex:'e^{\\mu}',
+    nameOrigin:[
+      'Purely descriptive: X is lognormal if <em>ln(X)</em> follows a <a href="https://en.wikipedia.org/wiki/Normal_distribution" target="_blank">Normal distribution</a>.',
+      '<a href="https://en.wikipedia.org/wiki/Francis_Galton" target="_blank">Francis Galton</a> (1879) first studied it as the "geometric mean distribution"; "lognormal" was formalized by McAlister.',
+      'Fun fact: incomes, city sizes, and internet traffic all follow lognormal-like distributions — a natural consequence of multiplicative (percentage) growth processes.',
+    ],
+    useCases:['Stock prices and financial asset returns','Biological measurements (organ sizes, lifespans)','Oil and gas reserve estimation','Failure times in reliability engineering'],
+    fixedRange:[0,12],
+    pdf:(x,{mu,sigma})=>{if(x<=0)return 0;return Math.exp(-0.5*((Math.log(x)-mu)/sigma)**2)/(x*sigma*Math.sqrt(2*Math.PI));},
+    mean:({mu,sigma})=>Math.exp(mu+sigma*sigma/2),
+    variance:({mu,sigma})=>(Math.exp(sigma*sigma)-1)*Math.exp(2*mu+sigma*sigma),
+    median:({mu})=>Math.exp(mu),
+    mode:({mu,sigma})=>fmt(Math.exp(mu-sigma*sigma)),
+  },
+  triangular: {
+    name:'Triangular(a, c, b)', type:'continuous',
+    character:{emoji:'📋',name:'The Project Manager',tagline:'— Dances to songs between three genres: best (a), worst (b), most likely (c).'},
+    params:[
+      {id:'a',label:'a — minimum',min:-5,max:8,step:0.1,def:0},
+      {id:'c',label:'c — mode (most likely)',min:-4,max:9,step:0.1,def:2},
+      {id:'b',label:'b — maximum',min:-3,max:10,step:0.1,def:5}
+    ],
+    desc:'Defined by minimum a, maximum b, and most likely value c (with a ≤ c ≤ b). Used in project management and risk analysis when only expert estimates for best, worst, and most likely scenarios are available.',
+    latex:'f_X(x)=\\begin{cases}\\dfrac{2(x-a)}{(b-a)(c-a)}&a\\le x\\le c\\\\[6pt]\\dfrac{2(b-x)}{(b-a)(b-c)}&c<x\\le b\\end{cases}',
+    ifNotation:'If X ~ Tri(a, c, b) then',
+    meanLatex:'\\dfrac{a+b+c}{3}',
+    sigmaLatex:'\\sqrt{\\dfrac{a^2+b^2+c^2-ab-ac-bc}{18}}',
+    medianLatex:'\\text{(piecewise, depends on }c\\text{)}',
+    nameOrigin:[
+      'Named for the <em>triangular shape</em> of its PDF — the simplest piecewise-linear density with a single interior mode point.',
+      'Core to <a href="https://en.wikipedia.org/wiki/Program_evaluation_and_review_technique" target="_blank">PERT</a> project scheduling (1950s): best case a, worst case b, most likely c — no historical data required.',
+      'Fun fact: the only standard distribution fully defined by three human-interpretable point estimates — ideal when data is scarce or the situation is novel.',
+    ],
+    useCases:['PERT project duration estimation','Cost estimation with expert opinion','Simulation inputs when data is limited','Risk analysis in decision and scenario modeling'],
+    fixedRange:[-3,8],
+    pdf:(x,{a,b,c})=>{
+      const lo=Math.min(a,b),hi=Math.max(a,b),m=Math.min(Math.max(c,lo+1e-9),hi-1e-9);
+      if(x<lo||x>hi)return 0;
+      if(x<=m)return 2*(x-lo)/((hi-lo)*(m-lo));
+      return 2*(hi-x)/((hi-lo)*(hi-m));
+    },
+    mean:({a,b,c})=>(a+b+c)/3,
+    variance:({a,b,c})=>(a*a+b*b+c*c-a*b-a*c-b*c)/18,
+    median:({a,b,c})=>{
+      const lo=Math.min(a,b),hi=Math.max(a,b),m=Math.min(Math.max(c,lo),hi);
+      if(m>=(lo+hi)/2)return lo+Math.sqrt((hi-lo)*(m-lo)/2);
+      return hi-Math.sqrt((hi-lo)*(hi-m)/2);
+    },
+    mode:({a,b,c})=>fmt(Math.min(Math.max(c,Math.min(a,b)),Math.max(a,b))),
+  },
+  exponential: {
+    name:'Exponential(λ)', type:'continuous',
+    character:{emoji:'👻',name:'The Ghost',tagline:'— Memoryless. Could vanish any moment, and every second still there it\'s as if they just arrived.'},
+    params:[{id:'lambda',label:'λ — rate (events per unit)',min:0.1,max:5,step:0.1,def:1}],
+    desc:'Models the time between consecutive events in a Poisson process. Has the unique memoryless property: P(X > s+t | X > s) = P(X > t). It is the continuous counterpart of the Geometric distribution and a special case of Gamma with α = 1.',
+    latex:'f_X(x)=\\lambda\\,e^{-\\lambda x},\\quad x\\ge 0',
+    ifNotation:'If X ~ Exp(λ) then',
+    meanLatex:'\\dfrac{1}{\\lambda}',
+    sigmaLatex:'\\dfrac{1}{\\lambda}',
+    medianLatex:'\\dfrac{\\ln 2}{\\lambda}',
+    nameOrigin:[
+      'Named for the <em>exponential function</em> e^(−λx) at the core of its PDF and CDF.',
+      '<a href="https://en.wikipedia.org/wiki/Agner_Krarup_Erlang" target="_blank">Agner Krarup Erlang</a> (1909) studied it deeply in telephone call-center modeling — founding <a href="https://en.wikipedia.org/wiki/Queueing_theory" target="_blank">queueing theory</a>.',
+      'Fun fact: the <em>memoryless property</em> — P(X>s+t|X>s) = P(X>t) — is unique among continuous distributions and models well how radioactive atoms don\'t "remember" how old they are.',
+    ],
+    useCases:['Interarrival times between customers','Time until next equipment failure','Duration of telephone calls','Radioactive decay times'],
+    fixedRange:[0,10],
+    pdf:(x,{lambda})=>x>=0?lambda*Math.exp(-lambda*x):0,
+    mean:({lambda})=>1/lambda,
+    variance:({lambda})=>1/(lambda*lambda),
+    median:({lambda})=>Math.LN2/lambda,
+    mode:()=>'0',
+  },
+};
+
+// ── PARAMETER CONSTRAINTS ─────────────────────────────────────
+const PARAM_CONSTRAINTS = {
+  duniform: p => p.a >= p.b ? {...p, b: p.a+1} : p,
+  cuniform: p => {
+    if (p.a >= p.b) return {...p, b: parseFloat((p.a+0.1).toFixed(1))};
+    return p;
+  },
+  triangular: p => {
+    const lo = Math.min(p.a, p.b), hi = Math.max(p.a, p.b);
+    const c = Math.max(lo, Math.min(p.c, hi));
+    return {...p, c: parseFloat(c.toFixed(1))};
+  },
+};
+
+function applyConstraintsAndUpdateUI() {
+  const fn = PARAM_CONSTRAINTS[currentKey];
+  if (!fn) return;
+  const constrained = fn({...paramValues});
+  for (const [id, val] of Object.entries(constrained)) {
+    if (Math.abs((val||0)-(paramValues[id]||0)) > 1e-9) {
+      paramValues[id] = val;
+      const sl = document.getElementById(`param-${id}`);
+      const ni = document.getElementById(`num-${id}`);
+      if (sl) sl.value = val;
+      if (ni) ni.value = val;
+    }
+  }
+}
+
+// ── APP STATE ─────────────────────────────────────────────────
+let currentKey    = 'normal';
+let paramValues   = {};
+let chart         = null;
+let chartIsLinear = null;
+
+// Smooth animation state — allocated ONCE per distribution selection
+let fixedXs      = null;
+let fixedData    = null;
+let fixedDataset = null;   // NEVER replaced on slider moves
+
+// ─────────────────────────────────────────────────────────────
+// MEAN / MEDIAN OVERLAY PLUGIN
+//
+// Mean  → fulcrum (filled triangle, apex UP touching x-axis from below)
+// Median → dashed vertical line with label
+// ─────────────────────────────────────────────────────────────
+const meanMedianPlugin = {
+  id: 'meanMedian',
+  afterDraw(chartInstance) {
+    const dist = DISTS[currentKey];
+    if (!dist) return;
+    const params = getParams();
+    const meanVal = dist.mean(params);
+    const medVal  = typeof dist.median === 'function' ? dist.median(params) : meanVal;
+
+    if (!isFinite(meanVal) && !isFinite(medVal)) return;
+
+    const ctx2   = chartInstance.ctx;
+    const xScale = chartInstance.scales.x;
+    const yScale = chartInstance.scales.y;
+    const yBottom = yScale.bottom;  // pixel y-coordinate of y=0 (the x-axis)
+    const yTop    = yScale.top;
+    const xLeft   = xScale.left;
+    const xRight  = xScale.right;
+
+    // ── Helper: get canvas x-pixel for a numeric value ────────
+    // Works for both linear (continuous) and category (discrete) scales
+    function xPixel(val) {
+      if (!isFinite(val)) return null;
+      if (xScale.type === 'linear') {
+        const px = xScale.getPixelForValue(val);
+        return (px >= xLeft - 1 && px <= xRight + 1) ? px : null;
+      }
+      // Category scale: labels are strings of consecutive integers
+      const labels = chartInstance.data.labels;
+      if (!labels || labels.length < 1) return null;
+      const nums = labels.map(Number);
+      const first = nums[0], last = nums[nums.length - 1];
+      // Clamp slightly so we show for out-of-range but near-boundary means
+      if (val < first - 0.5 || val > last + 0.5) return null;
+      const clamped = Math.max(0, Math.min(nums.length - 1,
+        (val - first) / (nums.length > 1 ? (last - first) / (nums.length - 1) : 1)));
+      // Interpolate between surrounding integer indices
+      const loIdx = Math.floor(clamped);
+      const hiIdx = Math.min(nums.length - 1, loIdx + 1);
+      const t     = clamped - loIdx;
+      const p0    = xScale.getPixelForValue(loIdx);
+      const p1    = xScale.getPixelForValue(hiIdx);
+      const px    = p0 + t * (p1 - p0);
+      return (px >= xLeft - 1 && px <= xRight + 1) ? px : null;
+    }
+
+    const meanPx = xPixel(meanVal);
+    const medPx  = xPixel(medVal);
+
+    ctx2.save();
+
+    // ── MEDIAN: dashed vertical line ──────────────────────────
+    if (medPx !== null) {
+      ctx2.strokeStyle = 'rgba(91,33,182,0.80)';
+      ctx2.lineWidth   = 1.8;
+      ctx2.setLineDash([6, 4]);
+      ctx2.beginPath();
+      ctx2.moveTo(medPx, yTop);
+      ctx2.lineTo(medPx, yBottom);
+      ctx2.stroke();
+      ctx2.setLineDash([]);
+
+      // Label — anchored at the foot of the dashed line, just above x-axis.
+      // A white background rect ensures it remains readable over any curve shape.
+      const medLabel = 'Md=' + fmt(medVal);
+      ctx2.font      = '600 10px Montserrat, sans-serif';
+      const lblW     = ctx2.measureText(medLabel).width;
+      const lblPad   = 3;
+      // Prefer right side; flip to left if too close to right edge
+      const lblX     = (medPx + 5 + lblW + lblPad <= xRight) ? medPx + 5 : medPx - 5 - lblW - lblPad;
+      const lblY     = (yTop + yBottom) / 2;   // middle of the vertical line
+      ctx2.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx2.fillRect(lblX - lblPad, lblY - 11, lblW + lblPad * 2, 14);
+      ctx2.fillStyle = '#5b21b6';
+      ctx2.textAlign = 'left';
+      ctx2.fillText(medLabel, lblX, lblY);
+    }
+
+    // ── MEAN: fulcrum triangle (apex at x-axis, pointing up, body below) ──
+    if (meanPx !== null) {
+      const tH = 12, tW = 10;  // triangle height and half-base-width
+      ctx2.fillStyle = 'rgba(14,116,144,0.88)';
+      ctx2.beginPath();
+      ctx2.moveTo(meanPx,       yBottom);        // apex — touches x-axis
+      ctx2.lineTo(meanPx - tW, yBottom + tH);    // bottom-left
+      ctx2.lineTo(meanPx + tW, yBottom + tH);    // bottom-right
+      ctx2.closePath();
+      ctx2.fill();
+
+      // Small horizontal base line for the fulcrum stand
+      ctx2.strokeStyle = 'rgba(14,116,144,0.88)';
+      ctx2.lineWidth   = 2;
+      ctx2.beginPath();
+      ctx2.moveTo(meanPx - tW - 2, yBottom + tH + 1);
+      ctx2.lineTo(meanPx + tW + 2, yBottom + tH + 1);
+      ctx2.stroke();
+
+      // Mean label below the base
+      const meanLabel = 'μ=' + fmt(meanVal);
+      ctx2.font      = '600 10px Montserrat, sans-serif';
+      ctx2.fillStyle = '#0e7490';
+      ctx2.textAlign = 'center';
+      ctx2.fillText(meanLabel, meanPx, yBottom + tH + 13);
+    }
+
+    ctx2.restore();
+  }
+};
+
+// ── CHART ─────────────────────────────────────────────────────
+function initChart(isLinear) {
+  chartIsLinear = isLinear;
+  const ctx = document.getElementById('myChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: isLinear ? 'line' : 'bar',
+    data: { labels: [], datasets: [{ data: [] }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 20, bottom: 34 } },  // room for fulcrum below axis
+      animation: { duration: 300, easing: 'easeInOutSine' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a35', borderColor: '#5b21b6', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#c8c8e0', padding: 10,
+          callbacks: {
+            title: arr => DISTS[currentKey].type === 'discrete'
+              ? `x = ${arr[0].label}`
+              : `x = ${arr[0].parsed.x.toFixed(3)}`,
+            label: arr => ` f(x) = ${arr[0].parsed.y.toFixed(5)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: isLinear ? 'linear' : 'category',
+          ticks: { color:'#8888aa', maxTicksLimit:10, font:{size:11,family:'Montserrat'} },
+          grid: { color:'rgba(0,0,0,0.05)' }, border: { color:'#dde1f0' },
+        },
+        y: {
+          min: 0,
+          ticks: { color:'#8888aa', font:{size:11,family:'Montserrat'} },
+          grid: { color:'rgba(0,0,0,0.05)' }, border: { color:'#dde1f0' },
+        }
+      }
+    },
+    plugins: [meanMedianPlugin],
+  });
+}
+
+function ensureChart(isLinear) {
+  if (chart && chartIsLinear === isLinear) return;
+  if (chart) chart.destroy();
+  initChart(isLinear);
+}
+
+function makeGradient(r, g, b) {
+  const canvas = document.getElementById('myChart');
+  const ctx    = canvas.getContext('2d');
+  const h      = canvas.offsetHeight || 300;
+  const gr     = ctx.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, `rgba(${r},${g},${b},0.48)`);
+  gr.addColorStop(1, `rgba(${r},${g},${b},0.02)`);
+  return gr;
+}
+
+// ──────────────────────────────────────────────────────────────
+// initFixedData — allocate fixedData & fixedDataset ONCE per dist
+// ──────────────────────────────────────────────────────────────
+function initFixedData(dist, initParams) {
+  if (dist.type !== 'continuous' || !dist.fixedRange || currentKey === 'cuniform') {
+    fixedXs = null; fixedData = null; fixedDataset = null;
+    return;
+  }
+  const [lo, hi] = dist.fixedRange;
+  const N = 400;
+  fixedXs  = Array.from({length: N+1}, (_, i) => lo + i*(hi-lo)/N);
+  fixedData = fixedXs.map(x => ({x, y: dist.pdf(x, initParams)}));
+  fixedDataset = {
+    data: fixedData,
+    backgroundColor: makeGradient(91, 33, 182),
+    borderColor: '#5b21b6',
+    borderWidth: 2.5,
+    fill: true,
+    tension: 0,
+    pointRadius: 0,
+    stepped: false,
+  };
+}
+
+// Exact edge-point data for Continuous Uniform (vertical walls on linear scale)
+function buildUniformData(params) {
+  const {a, b} = params;
+  const lo = Math.min(a,b), hi = Math.max(a,b);
+  if (Math.abs(hi-lo) < 1e-6) return [{x:lo,y:0}];
+  const pad = (hi-lo)*0.4, val = 1/(hi-lo);
+  return [{x:lo-pad,y:0},{x:lo,y:0},{x:lo,y:val},{x:hi,y:val},{x:hi,y:0},{x:hi+pad,y:0}];
+}
+
+// ──────────────────────────────────────────────────────────────
+// updateChart
+//
+// SMOOTH PATH: continuous non-uniform — mutate .y in-place only
+//   chart.data.datasets[0] is fixedDataset — never replaced here
+//
+// REPLACE PATH: discrete + uniform — replace dataset, no smooth anim
+// ──────────────────────────────────────────────────────────────
+function updateChart(instant) {
+  const dist   = DISTS[currentKey];
+  const params = getParams();
+
+  if (fixedData && fixedDataset) {
+    // ── SMOOTH PATH ──────────────────────────────────────────
+    for (let i = 0; i < fixedData.length; i++) {
+      fixedData[i].y = dist.pdf(fixedXs[i], params);
+    }
+    // DO NOT touch chart.data.datasets[0] — it IS fixedDataset
+    chart.update(instant ? 'none' : undefined);
+    return;
+  }
+
+  // ── REPLACE PATH ─────────────────────────────────────────────
+  const isDiscrete = dist.type === 'discrete';
+
+  if (isDiscrete) {
+    const support = dist.support(params);
+    const labels  = support.map(String);
+    const values  = support.map(x => dist.pmf(x, params));
+    const n       = support.length;
+    chart.config.type = 'bar';
+    chart.data.labels = labels;
+    chart.data.datasets[0] = {
+      data: values,
+      backgroundColor: 'rgba(37,99,235,0.70)',
+      borderColor: '#2563eb',
+      borderWidth: 0,
+      borderRadius: 3,
+      barPercentage: 0.35,
+      categoryPercentage: 1.0,
+      maxBarThickness: n <= 2 ? 22 : n <= 6 ? 32 : 44,
+    };
+    chart.options.scales.x.ticks.maxTicksLimit = Math.min(n, 20);
+  } else {
+    // cuniform
+    chart.config.type = 'line';
+    chart.data.labels = [];
+    chart.data.datasets[0] = {
+      data: buildUniformData(params),
+      backgroundColor: makeGradient(37, 99, 235),
+      borderColor: '#2563eb',
+      borderWidth: 2.5,
+      fill: true,
+      tension: 0,
+      pointRadius: 0,
+    };
+    chart.options.scales.x.ticks.maxTicksLimit = 10;
+  }
+  chart.update('none');
+}
+
+// ── KATEX HELPER ─────────────────────────────────────────────
+function renderKatex(el, latex, display) {
+  if (!el) return;
+  try { katex.render(latex, el, { throwOnError: false, displayMode: !!display }); }
+  catch(e) { el.textContent = latex; }
+}
+
+// ── STATS PANEL ──────────────────────────────────────────────
+function updateStats() {
+  const dist = DISTS[currentKey], p = getParams();
+  const mean = dist.mean(p);
+  const std  = Math.sqrt(Math.abs(dist.variance(p)));
+  const med  = dist.median ? dist.median(p) : mean;
+  const mode = dist.mode   ? dist.mode(p)   : '—';
+
+  const list = document.getElementById('stats-list');
+  list.innerHTML = `
+    <div class="stat-row">
+      <span class="stat-sym" id="sl-mu"></span>
+      <span class="stat-value">${fmt(mean)}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-sym" id="sl-sig"></span>
+      <span class="stat-value">${fmt(std)}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label-text">Median</span>
+      <span class="stat-value">${fmt(med)}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label-text">Mode</span>
+      <span class="stat-value" style="font-size:13px;white-space:normal;line-height:1.4">${mode}</span>
+    </div>
+  `;
+  renderKatex(document.getElementById('sl-mu'),  '\\mu',    false);
+  renderKatex(document.getElementById('sl-sig'), '\\sigma', false);
+}
+
+// ── INFO PANEL ───────────────────────────────────────────────
+function updateInfo() {
+  const dist = DISTS[currentKey];
+  const { type, character } = dist;
+  const isDiscrete = type === 'discrete';
+
+  document.getElementById('char-emoji-big').textContent = character.emoji;
+  document.getElementById('dist-title').textContent     = dist.name;
+  const badge = document.getElementById('dist-type-badge');
+  badge.textContent = isDiscrete ? 'Discrete' : 'Continuous';
+  badge.className   = `dist-type-badge ${isDiscrete ? 'badge-discrete' : 'badge-continuous'}`;
+  document.getElementById('char-name').textContent    = character.name;
+  document.getElementById('char-tagline').textContent = character.tagline;
+
+  document.getElementById('formula-type-label').textContent =
+    isDiscrete ? 'Probability Mass Function (PMF)' : 'Probability Density Function (PDF)';
+  document.getElementById('formula-notation').textContent = dist.ifNotation;
+
+  renderKatex(document.getElementById('dist-formula'), dist.latex,       true);
+  renderKatex(document.getElementById('mv-mean'),      dist.meanLatex,   true);
+  renderKatex(document.getElementById('mv-sigma'),     dist.sigmaLatex,  true);
+  renderKatex(document.getElementById('mv-median'),    dist.medianLatex, true);
+
+  document.getElementById('desc-text').textContent = dist.desc;
+  document.getElementById('footer-row').className  = isDiscrete ? 'is-discrete' : '';
+
+  document.getElementById('dist-nameorigin').innerHTML =
+    dist.nameOrigin.map(b => `<li><span>${b}</span></li>`).join('');
+  document.getElementById('dist-usecases').innerHTML =
+    dist.useCases.map(u => `<li>${u}</li>`).join('');
+}
+
+// ── PARAMS UI ────────────────────────────────────────────────
+function getParams() {
+  const dist = DISTS[currentKey], out = {};
+  for (const p of dist.params) {
+    const el = document.getElementById(`param-${p.id}`);
+    out[p.id] = el ? parseFloat(el.value) : p.def;
+  }
+  return out;
+}
+
+function buildParamsUI() {
+  const dist      = DISTS[currentKey];
+  const container = document.getElementById('params-inner');
+  container.innerHTML = '';
+  const isDisc = dist.type === 'discrete';
+
+  for (const p of dist.params) {
+    const initVal = paramValues[p.id] !== undefined ? paramValues[p.id] : p.def;
+    const block   = document.createElement('div');
+    block.className = 'param-block';
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'param-label';
+    labelEl.innerHTML = `<span class="param-name">${p.label}</span>`;
+
+    const sliderRow = document.createElement('div');
+    sliderRow.className = 'slider-row';
+
+    const slider = document.createElement('input');
+    slider.type  = 'range';
+    slider.id    = `param-${p.id}`;
+    slider.min = p.min; slider.max = p.max; slider.step = p.step; slider.value = initVal;
+    slider.className = isDisc ? 'discrete-slider' : 'continuous-slider';
+
+    const numInput = document.createElement('input');
+    numInput.type  = 'number';
+    numInput.id    = `num-${p.id}`;
+    numInput.className = 'param-num-input' + (isDisc ? ' discrete-num' : '');
+    numInput.min = p.min; numInput.max = p.max; numInput.step = p.step; numInput.value = initVal;
+
+    function applyVal(raw) {
+      let val = parseFloat(raw);
+      if (isNaN(val)) val = p.def;
+      val = Math.min(p.max, Math.max(p.min, val));
+      const dec = p.step < 1 ? String(p.step).split('.')[1].length : 0;
+      val = parseFloat(val.toFixed(dec));
+      slider.value   = val;
+      numInput.value = val;
+      paramValues[p.id] = val;
+      applyConstraintsAndUpdateUI();
+    }
+
+    slider.addEventListener('input',    () => { applyVal(slider.value);    refresh(); });
+    numInput.addEventListener('change', () => { applyVal(numInput.value);  refresh(); });
+    numInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { applyVal(numInput.value); refresh(); numInput.blur(); }
+    });
+
+    sliderRow.append(slider, numInput);
+
+    const rangeRow = document.createElement('div');
+    rangeRow.className = 'param-range';
+    rangeRow.innerHTML = `<span>${p.min}</span><span>${p.max}</span>`;
+
+    block.append(labelEl, sliderRow, rangeRow);
+    container.appendChild(block);
+  }
+}
+
+// ── SELECT DISTRIBUTION ───────────────────────────────────────
+function selectDist(key) {
+  currentKey  = key;
+  paramValues = {};
+  const dist  = DISTS[key];
+  const params = {};
+  for (const p of dist.params) { paramValues[p.id] = p.def; params[p.id] = p.def; }
+
+  ensureChart(dist.type === 'continuous');
+
+  // Allocate fixedData/fixedDataset once for this distribution
+  initFixedData(dist, params);
+
+  // Wire fixedDataset into chart ONCE — never replaced on slider moves
+  if (fixedDataset) {
+    chart.data.labels = [];
+    chart.data.datasets[0] = fixedDataset;
+  }
+
+  document.querySelectorAll('.dist-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.key === key);
+  });
+
+  buildParamsUI();
+  updateInfo();
+  updateStats();
+  updateChart(true);
+}
+
+function refresh() {
+  updateStats();
+  updateChart(DISTS[currentKey].noAnimation === true);
+}
+
+// ── WIRE SIDEBAR ──────────────────────────────────────────────
+document.querySelectorAll('.dist-btn').forEach(btn =>
+  btn.addEventListener('click', () => selectDist(btn.dataset.key))
+);
+
+// ── BOOT ──────────────────────────────────────────────────────
+selectDist('normal');
+</script>
+</body>
+</html>
