@@ -3,16 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="app-version" content="2026-06-10-doto-title" />
   <title>Sampling Distribution Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Doto:wght@700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
-    @font-face {
-      font-family: "Excalifont";
-      src: url("./Excalifont-Regular.woff2") format("woff2");
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-
     :root {
       color-scheme: light;
       --ink: #17202a;
@@ -27,17 +23,19 @@
       --green: #12a66a;
       --shadow: 0 18px 50px rgba(26, 35, 58, 0.15);
       --radius: 8px;
-      font-family: "Excalifont", "Comic Sans MS", "Segoe Print", ui-sans-serif, system-ui, sans-serif;
+      font-family: "Space Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
     }
 
     * {
       box-sizing: border-box;
+      font-family: inherit;
     }
 
     body {
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
+      font-family: "Space Mono", ui-monospace, "Cascadia Mono", Consolas, monospace !important;
       background:
         radial-gradient(circle at 10% 0%, rgba(0, 168, 200, 0.16), transparent 26rem),
         radial-gradient(circle at 86% 4%, rgba(242, 170, 37, 0.18), transparent 25rem),
@@ -56,10 +54,13 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(1.75rem, 3.8vw, 4.4rem);
-      line-height: 0.96;
+      font-family: "Doto", "Space Mono", monospace;
+      font-size: 3.6rem;
+      font-weight: 700;
+      line-height: 1;
       letter-spacing: 0;
-      max-width: 980px;
+      max-width: none;
+      white-space: nowrap;
     }
 
     .subtitle {
@@ -220,6 +221,12 @@
       font-weight: 850;
       cursor: pointer;
       transition: transform 0.16s ease, filter 0.16s ease;
+    }
+
+    input,
+    select,
+    button {
+      font-family: "Space Mono", ui-monospace, "Cascadia Mono", Consolas, monospace !important;
     }
 
     button:hover {
@@ -431,6 +438,10 @@
     .swatch.green { background: var(--green); }
 
     @media (max-width: 1120px) {
+      h1 {
+        font-size: 2.7rem;
+      }
+
       main {
         grid-template-columns: 1fr;
       }
@@ -443,6 +454,10 @@
     @media (max-width: 760px) {
       header {
         grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 1.75rem;
       }
 
       .status-pill {
@@ -472,12 +487,18 @@
         padding: 0 0.85rem 0.85rem;
       }
     }
+
+    @media (max-width: 420px) {
+      h1 {
+        font-size: 1.35rem;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <h1>Sampling Lab -- LJNLAB</h1>
+      <h1>Sampling Distribution Lab</h1>
       <p class="subtitle">
         <span class="subtitle-main">Draw repeated samples from a population and watch the means and sums build their own distributions.</span>
         <span class="subtitle-credit">Designed by Luis Novoa and implemented using Codex - for educational purposes.</span>
@@ -992,7 +1013,7 @@
       ctx.stroke();
       if (label) {
         ctx.fillStyle = color;
-        ctx.font = "400 13px Excalifont, Comic Sans MS, sans-serif";
+        ctx.font = "12px 'Space Mono', monospace";
         ctx.fillText(label, Math.min(right - 64, x + 5), top + 13);
       }
     }
@@ -1028,7 +1049,7 @@
       ctx.lineTo(right, bottom);
       ctx.stroke();
       ctx.fillStyle = "#5f6f7d";
-      ctx.font = "400 13px Excalifont, Comic Sans MS, sans-serif";
+      ctx.font = "12px 'Space Mono', monospace";
       ctx.fillText(fmt3.format(min), left, bottom + 20);
       const maxText = fmt3.format(max);
       ctx.fillText(maxText, right - ctx.measureText(maxText).width, bottom + 20);
@@ -1036,7 +1057,7 @@
 
     function drawEmpty(ctx, w, h, text) {
       ctx.fillStyle = "rgba(23,32,42,0.56)";
-      ctx.font = "400 18px Excalifont, Comic Sans MS, sans-serif";
+      ctx.font = "700 16px 'Space Mono', monospace";
       ctx.textAlign = "center";
       ctx.fillText(text, w / 2, h / 2);
       ctx.textAlign = "left";
@@ -1172,6 +1193,7 @@
 
     buildParams();
     reset(false);
+    if (document.fonts?.ready) document.fonts.ready.then(drawAll);
   </script>
 </body>
 </html>
