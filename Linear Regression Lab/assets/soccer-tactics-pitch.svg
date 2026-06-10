@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc">
+  <title id="title">Soccer tactics pitch</title>
+  <desc id="desc">Top-down green soccer pitch with navy player markers and black directional arrows near the left penalty area.</desc>
+  <defs>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3fa91f"/>
+      <stop offset="1" stop-color="#258915"/>
+    </linearGradient>
+    <pattern id="stripes" width="160" height="560" patternUnits="userSpaceOnUse">
+      <rect width="80" height="560" fill="rgba(255,255,255,0.045)"/>
+      <rect x="80" width="80" height="560" fill="rgba(0,0,0,0.035)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="5.2" markerHeight="5.2" refX="4.4" refY="2.6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0L5.2 2.6L0 5.2Z" fill="#111827"/>
+    </marker>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect width="960" height="560" rx="18" fill="url(#grass)"/>
+  <rect width="960" height="560" rx="18" fill="url(#stripes)"/>
+
+  <g fill="none" stroke="#fff" stroke-width="7" opacity="0.96">
+    <rect x="22" y="22" width="916" height="516" rx="3"/>
+    <path d="M480 22V538"/>
+    <circle cx="480" cy="280" r="76"/>
+    <circle cx="480" cy="280" r="4" fill="#fff"/>
+
+    <rect x="22" y="125" width="142" height="310"/>
+    <rect x="22" y="199" width="55" height="162"/>
+    <path d="M164 215A76 76 0 0 1 164 345"/>
+    <circle cx="105" cy="280" r="4" fill="#fff"/>
+
+    <rect x="796" y="125" width="142" height="310"/>
+    <rect x="883" y="199" width="55" height="162"/>
+    <path d="M796 215A76 76 0 0 0 796 345"/>
+    <circle cx="855" cy="280" r="4" fill="#fff"/>
+  </g>
+
+  <g fill="none" stroke="#111827" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)">
+    <path d="M224 158C194 169 166 184 136 204"/>
+    <path d="M295 246C255 247 215 251 169 260"/>
+    <path d="M274 322C232 328 190 338 142 352"/>
+    <path d="M218 410C174 414 127 423 78 436"/>
+  </g>
+
+  <g fill="#102a68" stroke="#071635" stroke-width="5" filter="url(#softShadow)">
+    <circle cx="235" cy="151" r="17"/>
+    <circle cx="307" cy="254" r="17"/>
+    <circle cx="286" cy="326" r="17"/>
+    <circle cx="230" cy="410" r="17"/>
+  </g>
+  <g fill="#6fa8ff" opacity="0.42">
+    <circle cx="230" cy="146" r="6"/>
+    <circle cx="302" cy="249" r="6"/>
+    <circle cx="281" cy="321" r="6"/>
+    <circle cx="225" cy="405" r="6"/>
+  </g>
+</svg>

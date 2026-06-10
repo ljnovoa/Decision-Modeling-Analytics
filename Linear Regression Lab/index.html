@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linear Regression Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Doto:wght@700;800&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+  <style>
+    :root {
+      --navy: #10233f;
+      --muted: #607089;
+      --border: #dbe5ef;
+      --surface: #ffffff;
+      --background: #ffffff;
+      --blue: #087ea4;
+      --blue-dark: #243b80;
+      --red: #e33f4f;
+      --amber: #f59e0b;
+      --green: #0f9f75;
+      --shadow: 0 14px 38px rgba(23, 45, 78, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--navy);
+      background: var(--background);
+      font-family: "Montserrat", sans-serif;
+    }
+
+    .page-shell {
+      width: min(1500px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 48px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px 32px;
+      color: var(--navy);
+      border: 1px solid rgba(219, 229, 239, 0.9);
+      border-radius: 20px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      padding-right: 330px;
+    }
+
+    .title-lockup {
+      display: flex;
+      align-items: center;
+      gap: 17px;
+    }
+
+    .lab-logo {
+      flex: 0 0 auto;
+      width: 82px;
+      height: 76px;
+      overflow: visible;
+      filter: drop-shadow(0 3px 3px rgba(16, 35, 63, 0.1));
+    }
+
+    .hero-text { min-width: 0; }
+
+    .soccer-tactics {
+      position: absolute;
+      z-index: 0;
+      right: 22px;
+      top: 50%;
+      width: 278px;
+      height: 162px;
+      object-fit: cover;
+      border: 4px solid white;
+      border-radius: 15px;
+      box-shadow: 0 10px 24px rgba(16, 35, 63, 0.18);
+      image-rendering: auto;
+      transform: translateY(-50%);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Doto", "Montserrat", sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 3.4vw, 3.2rem);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: #4f6178;
+      font-size: clamp(0.78rem, 1.25vw, 1rem);
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+
+    .credit {
+      margin: 7px 0 0;
+      color: #7a8797;
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+
+    .credit a {
+      color: inherit;
+      font-weight: inherit;
+      text-decoration: none;
+    }
+
+    .credit a:hover { text-decoration: underline; }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(219, 229, 239, 0.9);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .story-card, .model-card { padding: 25px 28px; }
+
+    .section-kicker {
+      margin: 0 0 12px;
+      color: var(--blue);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .story-card p {
+      margin: 0 0 12px;
+      color: #34465f;
+      line-height: 1.72;
+    }
+
+    .brief-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding-left: 20px;
+      color: #34465f;
+      font-size: 0.96rem;
+    }
+
+    .brief-list li {
+      padding-left: 4px;
+      line-height: 1.58;
+    }
+
+    .brief-list li::marker {
+      color: var(--blue);
+      font-size: 1.08em;
+    }
+
+    .brief-content {
+      display: block;
+    }
+
+    .brief-model {
+      margin-top: 12px;
+      padding: 0;
+    }
+
+    .brief-model h2 {
+      margin: 0 0 12px;
+      color: #34465f;
+      font-size: 0.96rem;
+      font-weight: 400;
+      line-height: 1.58;
+    }
+
+    .brief-model .brief-list {
+      gap: 4px;
+    }
+
+    .note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 18px !important;
+      padding: 12px 14px;
+      color: #65410b !important;
+      border: 1px solid #f7d990;
+      border-radius: 12px;
+      background: #fff8e8;
+      font-size: 0.87rem;
+      line-height: 1.5 !important;
+    }
+
+    .note-badge {
+      flex: 0 0 auto;
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      color: white;
+      border-radius: 50%;
+      background: var(--amber);
+      font-size: 0.73rem;
+      font-weight: 800;
+    }
+
+    .model-card {
+      color: var(--navy);
+      background: white;
+      border: 1px solid rgba(219, 229, 239, 0.9);
+    }
+
+    .model-card .section-kicker { color: var(--blue); }
+    .model-card h2 { margin: 0 0 18px; font-size: 0.74rem; }
+
+    .equation {
+      margin: 10px 0;
+      padding: 14px;
+      text-align: center;
+      border: 1px solid #dce8f1;
+      border-radius: 12px;
+      background: #f5f9fc;
+      font-size: 1.08rem;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+    }
+
+    .model-facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 18px;
+    }
+
+    .fact {
+      padding: 10px 11px;
+      color: #52647b;
+      border-radius: 10px;
+      background: #f5f9fc;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    .fact strong {
+      display: block;
+      color: var(--navy);
+      font-size: 0.95rem;
+    }
+
+    .model-card .fact,
+    .model-card .fact strong {
+      font-size: 0.74rem;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+      margin-top: 20px;
+    }
+
+    .controls {
+      position: sticky;
+      top: 16px;
+      padding: 22px;
+    }
+
+    .controls h2, .plot-heading h2, .report-card h2 {
+      margin: 0;
+      font-size: 1.12rem;
+      letter-spacing: -0.015em;
+    }
+
+    .control-group {
+      padding-top: 19px;
+      margin-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .control-group h3 {
+      margin: 0 0 11px;
+      color: #50627a;
+      font-size: 0.73rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    button, select {
+      width: 100%;
+      min-height: 43px;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 11px;
+      transition: 160ms ease;
+    }
+
+    button {
+      position: relative;
+      margin-top: 9px;
+      padding: 10px 38px 10px 13px;
+      color: #2d425e;
+      border: 1px solid #cedbe7;
+      background: #f8fbfd;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: #91a8be;
+      box-shadow: 0 6px 14px rgba(25, 58, 91, 0.09);
+    }
+
+    button:active:not(:disabled) { transform: translateY(0); }
+    button:disabled { opacity: 0.44; cursor: not-allowed; }
+
+    .info-output[data-help]::after {
+      content: "i";
+      display: inline-grid;
+      place-items: center;
+      width: 14px;
+      height: 14px;
+      margin-left: 5px;
+      color: #31506d;
+      border: 1px solid #9fb2c3;
+      border-radius: 50%;
+      background: white;
+      font-size: 0.54rem;
+      font-weight: 800;
+      line-height: 1;
+      vertical-align: middle;
+    }
+
+    .button-info {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      display: inline-grid;
+      place-items: center;
+      width: 15px;
+      height: 15px;
+      padding: 0;
+      color: #31506d;
+      border: 1px solid #9fb2c3;
+      border-radius: 50%;
+      background: white;
+      font-size: 0.56rem;
+      font-weight: 800;
+      line-height: 1;
+      cursor: help;
+      transform: translateY(-50%);
+    }
+
+    #globalTooltip {
+      position: fixed;
+      z-index: 99999;
+      display: none;
+      width: min(270px, calc(100vw - 24px));
+      padding: 10px 12px;
+      color: white;
+      border-radius: 8px;
+      background: #172b46;
+      box-shadow: 0 8px 22px rgba(16, 35, 63, 0.2);
+      font-size: 0.68rem;
+      font-weight: 500;
+      line-height: 1.45;
+      text-align: left;
+      white-space: normal;
+      pointer-events: none;
+    }
+
+    .info-output {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+
+    .fit-summary {
+      display: grid;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .fit-summary-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 11px;
+      border-left: 3px solid #c9d9e6;
+      border-radius: 0 8px 8px 0;
+      background: #f7fafc;
+      color: #455870;
+      font-size: 0.76rem;
+      line-height: 1.55;
+    }
+
+    .fit-value {
+      color: var(--navy);
+      font-family: "Montserrat", sans-serif;
+      font-weight: 800;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .report-card td,
+    .report-card strong,
+    .report-card .mono {
+      font-family: "Montserrat", sans-serif;
+    }
+
+    .report-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 0;
+    }
+
+    .report-meta span {
+      padding: 7px 10px;
+      color: #425773;
+      border: 1px solid #dbe5ef;
+      border-radius: 8px;
+      background: #f7fafc;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .primary {
+      color: white;
+      border-color: var(--blue);
+      background: linear-gradient(115deg, #087ea4, #0c9abe);
+    }
+
+    .sample-button {
+      color: white;
+      border-color: var(--blue-dark);
+      background: linear-gradient(115deg, #243b80, #3853ad);
+    }
+
+    .simulation-button {
+      color: #4c3100;
+      border-color: #f0b429;
+      background: linear-gradient(115deg, #ffc94a, #f6a914);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #52647b;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    select {
+      padding: 0 12px;
+      color: var(--navy);
+      border: 1px solid #cbd8e4;
+      background: white;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 10px 12px;
+      color: #5a6b80;
+      border-radius: 11px;
+      background: #f7f9fb;
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    #statusText { white-space: pre-line; }
+
+    .status-dot {
+      flex: 0 0 auto;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #a9b7c5;
+    }
+
+    .status-dot.live { background: var(--green); box-shadow: 0 0 0 4px rgba(15,159,117,0.12); }
+
+    .visual-column { min-width: 0; }
+
+    .plot-card { overflow: hidden; }
+
+    .plot-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 20px 23px 0;
+    }
+
+    .plot-heading p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .legend-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+    .chip { padding: 6px 9px; border-radius: 99px; font-size: 0.68rem; font-weight: 700; }
+    .chip.red { color: #a92232; background: #ffeaed; }
+    .chip.blue { color: #1650a0; background: #e7efff; }
+    .chip.gray { color: #5e6c7b; background: #edf1f4; }
+
+    #mainPlot { width: 100%; height: min(68vh, 720px); min-height: 510px; }
+
+    .report-card {
+      display: none;
+      margin-top: 20px;
+      padding: 24px;
+    }
+
+    .report-card.visible { display: block; }
+
+    .report-card > h2 { margin-bottom: 16px; }
+
+    #bandsBtn {
+      font-size: 0.69rem;
+      letter-spacing: -0.015em;
+    }
+
+    #bandsBtn .button-label { white-space: nowrap; }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      margin-top: 18px;
+    }
+
+    .report-block {
+      min-width: 0;
+      padding: 17px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: white;
+    }
+
+    .report-block h3 {
+      margin: 0 0 12px;
+      color: #425773;
+      font-size: 0.8rem;
+    }
+
+    .call {
+      padding: 11px 13px;
+      color: #214c72;
+      border-radius: 9px;
+      background: #eaf6fb;
+      font-family: Consolas, monospace;
+      font-size: 0.77rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.76rem;
+    }
+
+    th, td {
+      padding: 9px 8px;
+      text-align: right;
+      border-bottom: 1px solid #e3ebf2;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    th { color: #50637b; background: #f0f5f9; font-size: 0.68rem; }
+    tr:last-child td { border-bottom: none; }
+    .mono { font-family: Consolas, monospace; }
+
+    .summary-line {
+      margin: 8px 0 0;
+      color: #455870;
+      font-size: 0.77rem;
+      line-height: 1.6;
+    }
+
+    .sampling-section { display: none; margin-top: 20px; }
+    .sampling-section.visible { display: block; }
+    #samplingPlot { width: 100%; height: 430px; }
+
+    .sampling-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 11px;
+      margin-top: 18px;
+    }
+
+    .stat-tile {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+    }
+
+    .stat-tile span { display: block; color: var(--muted); font-size: 0.67rem; font-weight: 700; }
+    .stat-tile strong { display: block; margin-top: 6px; color: var(--navy); font-size: 1.05rem; }
+
+    .footer {
+      margin-top: 24px;
+      color: #738196;
+      text-align: center;
+      font-size: 0.7rem;
+    }
+
+    @media (max-width: 1000px) {
+      .top-grid, .workspace { grid-template-columns: 1fr; }
+      .controls { position: static; }
+      .control-group.button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .control-group.button-grid h3 { grid-column: 1 / -1; }
+      button { margin-top: 0; }
+    }
+
+    @media (max-width: 720px) {
+      .page-shell { width: min(100% - 18px, 1500px); padding-top: 10px; }
+      .hero { padding: 22px 20px; border-radius: 18px; }
+      .hero-copy { padding-right: 125px; }
+      .title-lockup { gap: 11px; }
+      .lab-logo { width: 54px; height: 54px; }
+      .soccer-tactics { right: 10px; width: 112px; height: 76px; border-width: 3px; opacity: 0.9; }
+      .subtitle { white-space: normal; }
+      .story-card, .model-card, .controls, .report-card { padding: 19px; }
+      .model-facts, .report-grid, .sampling-stats { grid-template-columns: 1fr 1fr; }
+      .plot-heading { align-items: flex-start; flex-direction: column; }
+      .legend-chips { justify-content: flex-start; }
+      #mainPlot { min-height: 460px; height: 62vh; }
+      .report-block { overflow-x: auto; }
+    }
+
+    @media (max-width: 480px) {
+      .control-group.button-grid, .model-facts, .report-grid, .sampling-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <div class="title-lockup">
+          <svg class="lab-logo" viewBox="0 0 88 80" role="img" aria-label="Hand-drawn scatterplot and regression line">
+            <defs>
+              <filter id="xkcdWobble" x="-15%" y="-15%" width="130%" height="130%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="8" result="noise"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.25" xChannelSelector="R" yChannelSelector="G"/>
+              </filter>
+            </defs>
+            <g filter="url(#xkcdWobble)" fill="none" stroke="#172b46" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 66C12.7 53 13.4 35 13 14" stroke-width="2.3"/>
+              <path d="M12 66C31 66.5 53 65.4 76 66" stroke-width="2.3"/>
+              <path d="M10 18L13 13L16 18M72 63L77 66L72 69" stroke-width="1.8"/>
+              <path d="M19 58C31 50 44 41 71 22" stroke="#e33f4f" stroke-width="3.2"/>
+              <path d="M19.5 57C33 49 47 39.5 71.5 21.5" stroke="#e33f4f" stroke-width="1.1" opacity="0.75"/>
+              <g fill="#087ea4" stroke="#172b46" stroke-width="1.4">
+                <path d="M19 54c-2-1-3-4-1-6 2-2 5-1 6 1 1 3-2 6-5 5Z"/>
+                <path d="M29 48c-2-2-1-5 1-6 3-1 5 1 5 4 0 3-4 4-6 2Z"/>
+                <path d="M37 52c-3-1-4-4-2-6 2-2 6-1 6 2 1 2-2 5-4 4Z"/>
+                <path d="M45 39c-2-2-1-5 2-6 3 0 5 3 4 5-1 3-4 3-6 1Z"/>
+                <path d="M56 34c-3-1-3-5 0-6 3-1 6 2 5 4 0 3-3 4-5 2Z"/>
+                <path d="M66 25c-2-2-1-5 2-6 3 0 5 2 4 5-1 2-4 3-6 1Z"/>
+              </g>
+            </g>
+            <text x="48" y="77" fill="#172b46" font-family="'Comic Neue', cursive" font-size="10" font-weight="700" transform="rotate(-2 48 77)">y ~ x</text>
+          </svg>
+          <div class="hero-text">
+            <h1>Linear Regression Lab</h1>
+            <p class="subtitle">A FIFA-inspired simulation of how sample regression lines estimate a hidden population relationship.</p>
+            <p class="credit">Designed by Luis Novoa and built using Codex (inspired by class video by <a href="https://www.youtube.com/watch?v=d7AooJgTJO4" target="_blank" rel="noopener noreferrer">Dr. Scott Stevens</a>)</p>
+          </div>
+        </div>
+      </div>
+      <img class="soccer-tactics" src="assets/soccer-tactics-pitch.svg" alt="Top-down soccer tactics pitch with player markers and directional arrows">
+    </header>
+
+    <section class="top-grid">
+      <article class="card story-card">
+        <p class="section-kicker">The Analytics Brief</p>
+        <div class="brief-content">
+          <ul class="brief-list">
+            <li>FIFA Analytics researchers developed the <strong>Attacking Threat Index (ATI)</strong> to measure attacking danger during a 90-minute match.</li>
+            <li>ATI combines dangerous attacks, penalty-area entries, shots on target, and successful through passes.</li>
+            <li>ATI has no fixed limits, although it is usually between 0 and 100.</li>
+            <li>The research question is whether a team's <strong>Possession Time (PT)</strong>, measured in minutes, is related to ATI.</li>
+            <li>
+              For this pedagogical lab, the true population relationship is known. Random samples show how sample regression lines estimate that hidden population line.
+              <section class="brief-model" aria-labelledby="populationModelHeading">
+                <h2 id="populationModelHeading">To generate the population data, the following assumptions were made:</h2>
+                <ul class="brief-list">
+                  <li>Population relationship: ATI = 10 + 0.90(PT) + &epsilon;</li>
+                  <li>Random error: &epsilon; ~ N(0, 12<sup>2</sup>)</li>
+                  <li>Possession Time distribution: PT ~ Uniform(15, 75)</li>
+                  <li>Generate 150 PT values and 50 ATI values for each PT value.</li>
+                  <li>Total population size: 7,500 observations.</li>
+                </ul>
+              </section>
+            </li>
+          </ul>
+        </div>
+      </article>
+    </section>
+
+    <section class="workspace">
+      <aside class="card controls">
+        <h2>Simulation Controls</h2>
+
+        <div class="control-group button-grid">
+          <h3>Population</h3>
+          <button id="revealBtn" class="primary"><span class="button-label">Reveal Population</span><span class="button-info" tabindex="0" data-help="Reveals the one fixed population of 7,500 observations and its true regression line.">i</span></button>
+          <button id="populationPointsBtn" disabled><span class="button-label">Hide Population Points</span><span class="button-info" tabindex="0" data-help="Hides or restores the gray population cloud without changing the population or current sample.">i</span></button>
+          <button id="populationLineBtn" disabled><span class="button-label">Hide True Population Line</span><span class="button-info" tabindex="0" data-help="Hides or restores the red true population line: ATI = 10 + 0.90PT.">i</span></button>
+          <button id="exportPopulationBtn" disabled><span class="button-label">Export Population CSV</span><span class="button-info" tabindex="0" data-help="Downloads all 7,500 fixed population observations with columns for observation number, PT, and ATI.">i</span></button>
+        </div>
+
+        <div class="control-group">
+          <h3>Current Sample</h3>
+          <label for="sampleSize">Sample size</label>
+          <select id="sampleSize" disabled>
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="300">300</option>
+          </select>
+          <button id="drawSampleBtn" class="sample-button" disabled><span class="button-label">Draw Random Sample</span><span class="button-info" tabindex="0" data-help="Draws a new simple random sample without replacement at the selected size, then fits its OLS line.">i</span></button>
+          <button id="squaresBtn" disabled><span class="button-label">Show Least-Squares Squares</span><span class="button-info" tabindex="0" data-help="Shows one true geometric square for each squared residual. Each side represents the vertical residual magnitude.">i</span></button>
+          <button id="bandsBtn" disabled><span class="button-label">Show 95% Mean Confidence Band</span><span class="button-info" tabindex="0" data-help="At each possession value x, the band is fitted ATI plus or minus t* times the residual standard error times sqrt(1/n + (x - x-bar)^2/SXX). It estimates uncertainty in the mean ATI, not individual-match predictions.">i</span></button>
+          <button id="sampleReportBtn" disabled><span class="button-label">Show Sample Regression Report</span><span class="button-info" tabindex="0" data-help="Opens or closes an R-style summary for the current sample regression, including coefficient tests and confidence intervals.">i</span></button>
+          <button id="exportSampleBtn" disabled><span class="button-label">Export Current Sample CSV</span><span class="button-info" tabindex="0" data-help="Downloads the current random sample with columns for observation number, PT, and ATI.">i</span></button>
+        </div>
+
+        <div class="control-group">
+          <h3>Sampling Distribution</h3>
+          <button id="runSamplesBtn" class="simulation-button" disabled><span class="button-label">Run 1,000 Samples</span><span class="button-info" tabindex="0" data-help="Draws 1,000 samples at the selected size from the fixed population and records every estimated slope.">i</span></button>
+          <button id="samplingReportBtn" disabled><span class="button-label">Show Sampling Distribution Report</span><span class="button-info" tabindex="0" data-help="Opens or closes descriptive statistics for the 1,000 simulated slope estimates.">i</span></button>
+        </div>
+
+        <div class="status-pill">
+          <span id="statusDot" class="status-dot"></span>
+          <span id="statusText">Population is hidden. Reveal it to begin.</span>
+        </div>
+      </aside>
+
+      <div class="visual-column">
+        <article class="card plot-card">
+          <div class="plot-heading">
+            <div>
+              <h2>ATI vs. PT</h2>
+              <p>Compare one sample estimate with the true population relationship.</p>
+            </div>
+            <div class="legend-chips">
+              <span class="chip gray">Population</span>
+              <span class="chip red">True line</span>
+              <span class="chip blue">Current sample</span>
+            </div>
+          </div>
+          <div id="mainPlot"></div>
+        </article>
+
+        <article id="sampleReport" class="card report-card">
+          <h2 class="info-output" data-help="An R-style OLS summary computed from the current random sample.">Sample Regression Report</h2>
+          <div id="sampleReportContent"></div>
+        </article>
+
+        <section id="samplingSection" class="sampling-section">
+          <article class="card plot-card">
+            <div class="plot-heading">
+              <div>
+                <h2>Sampling Distribution of the Slope</h2>
+                <p>How much does the estimated possession effect vary from sample to sample?</p>
+              </div>
+            </div>
+            <div id="samplingPlot"></div>
+          </article>
+
+          <article id="samplingReport" class="card report-card">
+            <h2 class="info-output" data-help="Descriptive statistics for the 1,000 estimated slopes generated at the selected sample size.">Sampling Distribution Report</h2>
+            <div id="samplingReportContent"></div>
+          </article>
+        </section>
+      </div>
+    </section>
+
+    <p class="footer">Linear Regression Lab &middot; FIFA-inspired analytics data for teaching</p>
+  </main>
+  <div id="globalTooltip" role="tooltip"></div>
+
+  <script>
+    const BETA0 = 10;
+    const BETA1 = 0.90;
+    const SIGMA = 12;
+    const POPULATION_X_COUNT = 150;
+    const OBSERVATIONS_PER_X = 50;
+
+    let population = [];
+    let currentSample = [];
+    let currentModel = null;
+    let slopeEstimates = [];
+    let manySamplesN = null;
+    let populationRevealed = false;
+    let showPopulationPoints = false;
+    let showPopulationLine = false;
+    let showSquares = false;
+    let showBands = false;
+
+    const els = {
+      revealBtn: document.getElementById("revealBtn"),
+      populationPointsBtn: document.getElementById("populationPointsBtn"),
+      populationLineBtn: document.getElementById("populationLineBtn"),
+      exportPopulationBtn: document.getElementById("exportPopulationBtn"),
+      sampleSize: document.getElementById("sampleSize"),
+      drawSampleBtn: document.getElementById("drawSampleBtn"),
+      squaresBtn: document.getElementById("squaresBtn"),
+      bandsBtn: document.getElementById("bandsBtn"),
+      sampleReportBtn: document.getElementById("sampleReportBtn"),
+      exportSampleBtn: document.getElementById("exportSampleBtn"),
+      runSamplesBtn: document.getElementById("runSamplesBtn"),
+      samplingReportBtn: document.getElementById("samplingReportBtn"),
+      sampleReport: document.getElementById("sampleReport"),
+      sampleReportContent: document.getElementById("sampleReportContent"),
+      samplingSection: document.getElementById("samplingSection"),
+      samplingReport: document.getElementById("samplingReport"),
+      samplingReportContent: document.getElementById("samplingReportContent"),
+      statusDot: document.getElementById("statusDot"),
+      statusText: document.getElementById("statusText"),
+      globalTooltip: document.getElementById("globalTooltip")
+    };
+
+    function uniformRandom(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function normalRandom(mean = 0, sd = 1) {
+      let u = 0;
+      let v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      return mean + sd * z;
+    }
+
+    function generatePopulation() {
+      population = [];
+      for (let i = 0; i < POPULATION_X_COUNT; i++) {
+        const x = uniformRandom(15, 75);
+        for (let j = 0; j < OBSERVATIONS_PER_X; j++) {
+          population.push({ x, y: BETA0 + BETA1 * x + normalRandom(0, SIGMA) });
+        }
+      }
+      clearSampleState();
+      slopeEstimates = [];
+      manySamplesN = null;
+      els.samplingSection.classList.remove("visible");
+      els.samplingReport.classList.remove("visible");
+      els.samplingReportBtn.disabled = true;
+    }
+
+    function sampleWithoutReplacement(data, n) {
+      const indices = new Uint32Array(data.length);
+      for (let i = 0; i < data.length; i++) indices[i] = i;
+      for (let i = 0; i < n; i++) {
+        const j = i + Math.floor(Math.random() * (data.length - i));
+        const temp = indices[i];
+        indices[i] = indices[j];
+        indices[j] = temp;
+      }
+      return Array.from({ length: n }, (_, i) => data[indices[i]]);
+    }
+
+    function exportDataCSV(data, filename) {
+      if (!data.length) return;
+      const rows = ["Observation,PT,ATI"];
+      data.forEach((d, index) => {
+        rows.push(`${index + 1},${d.x.toFixed(6)},${d.y.toFixed(6)}`);
+      });
+      const blob = new Blob([rows.join("\r\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function drawSample(n) {
+      currentSample = sampleWithoutReplacement(population, n);
+      currentModel = fitOLS(currentSample);
+      showSquares = false;
+      showBands = false;
+      setButtonLabel(els.squaresBtn, "Show Least-Squares Squares");
+      setButtonLabel(els.bandsBtn, "Show 95% Mean Confidence Band");
+      els.sampleReport.classList.remove("visible");
+      setButtonLabel(els.sampleReportBtn, "Show Sample Regression Report");
+      els.squaresBtn.disabled = false;
+      els.bandsBtn.disabled = false;
+      els.sampleReportBtn.disabled = false;
+      els.exportSampleBtn.disabled = false;
+      renderSampleReport();
+      updateMainPlot();
+      setStatus(`Current sample: n = ${n}, estimated slope = ${formatNumber(currentModel.b1, 3)}.`, true);
+    }
+
+    function fitOLS(data) {
+      const n = data.length;
+      const xBar = data.reduce((sum, d) => sum + d.x, 0) / n;
+      const yBar = data.reduce((sum, d) => sum + d.y, 0) / n;
+      let sxx = 0;
+      let sxy = 0;
+      for (const d of data) {
+        sxx += (d.x - xBar) ** 2;
+        sxy += (d.x - xBar) * (d.y - yBar);
+      }
+      const b1 = sxy / sxx;
+      const b0 = yBar - b1 * xBar;
+      const fitted = data.map(d => b0 + b1 * d.x);
+      const residuals = data.map((d, i) => d.y - fitted[i]);
+      const sse = residuals.reduce((sum, r) => sum + r ** 2, 0);
+      const sst = data.reduce((sum, d) => sum + (d.y - yBar) ** 2, 0);
+      const ssr = sst - sse;
+      const df = n - 2;
+      const residualSE = Math.sqrt(sse / df);
+      const rSquared = 1 - sse / sst;
+      const adjustedRSquared = 1 - (1 - rSquared) * (n - 1) / df;
+      const seSlope = residualSE / Math.sqrt(sxx);
+      const seIntercept = residualSE * Math.sqrt(1 / n + xBar ** 2 / sxx);
+      const tSlope = b1 / seSlope;
+      const tIntercept = b0 / seIntercept;
+      const pSlope = 2 * (1 - jStat.studentt.cdf(Math.abs(tSlope), df));
+      const pIntercept = 2 * (1 - jStat.studentt.cdf(Math.abs(tIntercept), df));
+      const tCritical = jStat.studentt.inv(0.975, df);
+      const tCritical99 = jStat.studentt.inv(0.995, df);
+      const fStatistic = ssr / (sse / df);
+      const modelPValue = 1 - jStat.centralF.cdf(fStatistic, 1, df);
+
+      return {
+        n, xBar, yBar, sxx, b0, b1, fitted, residuals, sse, sst, ssr, df,
+        residualSE, rSquared, adjustedRSquared, seSlope, seIntercept,
+        tSlope, tIntercept, pSlope, pIntercept, tCritical, tCritical99, fStatistic,
+        modelPValue,
+        ciSlope: [b1 - tCritical * seSlope, b1 + tCritical * seSlope],
+        ciIntercept: [b0 - tCritical * seIntercept, b0 + tCritical * seIntercept],
+        ciSlope99: [b1 - tCritical99 * seSlope, b1 + tCritical99 * seSlope],
+        ciIntercept99: [b0 - tCritical99 * seIntercept, b0 + tCritical99 * seIntercept]
+      };
+    }
+
+    function computeRegressionSummary(model) {
+      const sortedResiduals = [...model.residuals].sort((a, b) => a - b);
+      return {
+        residualFive: {
+          min: sortedResiduals[0],
+          q1: quantile(sortedResiduals, 0.25),
+          median: quantile(sortedResiduals, 0.5),
+          q3: quantile(sortedResiduals, 0.75),
+          max: sortedResiduals[sortedResiduals.length - 1]
+        }
+      };
+    }
+
+    function quantile(sorted, p) {
+      if (!sorted.length) return NaN;
+      const index = (sorted.length - 1) * p;
+      const lower = Math.floor(index);
+      const upper = Math.ceil(index);
+      const weight = index - lower;
+      return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+    }
+
+    function getMainYRange() {
+      const yMax = population.length
+        ? Math.max(120, Math.ceil((Math.max(...population.map(d => d.y), 100) + 5) / 10) * 10)
+        : 120;
+      const yMin = Math.min(0, population.length ? Math.floor((Math.min(...population.map(d => d.y)) - 5) / 10) * 10 : 0);
+      return [yMin, yMax];
+    }
+
+    function mainPlotLayout(shapes = []) {
+      const yRange = getMainYRange();
+      return {
+        margin: { l: 70, r: 30, t: 30, b: 68 },
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
+        hovermode: "closest",
+        showlegend: true,
+        legend: {
+          orientation: "h",
+          x: 0,
+          y: 1.02,
+          xanchor: "left",
+          yanchor: "bottom",
+          font: { family: "Montserrat", size: 11, color: "#52647b" }
+        },
+        xaxis: {
+          title: { text: "PT (Possession Time in minutes)", standoff: 15 },
+          range: [0, 90],
+          zeroline: false,
+          gridcolor: "#e7edf3",
+          linecolor: "#afbfce",
+          tickfont: { family: "Montserrat", color: "#5e6f84" },
+          titlefont: { family: "Montserrat", color: "#243955", size: 13 }
+        },
+        yaxis: {
+          title: { text: "ATI (Attacking Threat Index)", standoff: 12 },
+          range: yRange,
+          zeroline: false,
+          gridcolor: "#e7edf3",
+          linecolor: "#afbfce",
+          tickfont: { family: "Montserrat", color: "#5e6f84" },
+          titlefont: { family: "Montserrat", color: "#243955", size: 13 }
+        },
+        font: { family: "Montserrat", color: "#10233f" },
+        shapes,
+        annotations: !populationRevealed ? [{
+          x: 45, y: 60, xref: "x", yref: "y",
+          text: "<b>Click Reveal Population to begin.</b><br><span style='font-size:12px;color:#6c7c8e'>The hidden relationship is waiting.</span>",
+          showarrow: false,
+          align: "center",
+          bgcolor: "rgba(255,255,255,0.93)",
+          bordercolor: "#d8e3ec",
+          borderpad: 14,
+          font: { family: "Montserrat", size: 15, color: "#29415f" }
+        }] : []
+      };
+    }
+
+    function updateMainPlot() {
+      const traces = [];
+      const shapes = [];
+
+      if (populationRevealed && showPopulationPoints) {
+        traces.push({
+          x: population.map(d => d.x),
+          y: population.map(d => d.y),
+          type: "scattergl",
+          mode: "markers",
+          name: "Population observations",
+          marker: { color: "rgba(112,126,143,0.23)", size: 4 },
+          hovertemplate: "PT: %{x:.1f} min<br>ATI: %{y:.1f}<extra>Population</extra>"
+        });
+      }
+
+      if (populationRevealed && showPopulationLine) {
+        traces.push({
+          x: [0, 90],
+          y: [BETA0, BETA0 + BETA1 * 90],
+          type: "scatter",
+          mode: "lines",
+          name: "True population line",
+          line: { color: "#e33f4f", width: 4 },
+          hovertemplate: "True line: ATI = 10 + 0.90PT<extra></extra>"
+        });
+      }
+
+      if (currentModel && showBands) {
+        const sampleXMin = Math.min(...currentSample.map(d => d.x));
+        const sampleXMax = Math.max(...currentSample.map(d => d.x));
+        const xGrid = Array.from({ length: 101 }, (_, i) => sampleXMin + i * (sampleXMax - sampleXMin) / 100);
+        const center = xGrid.map(x => currentModel.b0 + currentModel.b1 * x);
+        const margin = xGrid.map(x =>
+          currentModel.tCritical * currentModel.residualSE *
+          Math.sqrt(1 / currentModel.n + (x - currentModel.xBar) ** 2 / currentModel.sxx)
+        );
+        const lower = center.map((v, i) => v - margin[i]);
+        const upper = center.map((v, i) => v + margin[i]);
+        traces.push({
+          x: xGrid, y: lower, type: "scatter", mode: "lines",
+          line: { width: 0 }, hoverinfo: "skip", showlegend: false
+        });
+        traces.push({
+          x: xGrid, y: upper, type: "scatter", mode: "lines",
+          fill: "tonexty", fillcolor: "rgba(63,81,181,0.16)",
+          line: { width: 0 }, name: "95% mean confidence band",
+          hoverinfo: "skip"
+        });
+      }
+
+      if (currentModel) {
+        if (showSquares) {
+          const plotNode = document.getElementById("mainPlot");
+          const yRange = getMainYRange();
+          const plotWidth = Math.max(1, plotNode.clientWidth - 100);
+          const plotHeight = Math.max(1, plotNode.clientHeight - 98);
+          const xUnitsPerPixel = 90 / plotWidth;
+          const yUnitsPerPixel = (yRange[1] - yRange[0]) / plotHeight;
+          currentSample.forEach((d, i) => {
+            const yHat = currentModel.fitted[i];
+            const ySide = Math.abs(d.y - yHat);
+            const xSide = ySide * xUnitsPerPixel / yUnitsPerPixel;
+            const direction = d.x + xSide <= 90 ? 1 : -1;
+            const x2 = d.x + direction * xSide;
+            shapes.push({
+              type: "rect",
+              x0: Math.min(d.x, x2), x1: Math.max(d.x, x2),
+              y0: Math.min(d.y, yHat), y1: Math.max(d.y, yHat),
+              fillcolor: "rgba(245,158,11,0.13)",
+              line: { color: "rgba(217,119,6,0.55)", width: 1 },
+              layer: "below"
+            });
+          });
+        }
+
+        traces.push({
+          x: currentSample.map(d => d.x),
+          y: currentSample.map(d => d.y),
+          type: "scatter",
+          mode: "markers",
+          name: `Current sample (n=${currentModel.n})`,
+          marker: { color: "#08a4c6", size: 9, line: { color: "white", width: 1.2 } },
+          hovertemplate: "PT: %{x:.1f} min<br>ATI: %{y:.1f}<extra>Sample</extra>"
+        });
+        traces.push({
+          x: [0, 90],
+          y: [currentModel.b0, currentModel.b0 + currentModel.b1 * 90],
+          type: "scatter",
+          mode: "lines",
+          name: "Sample regression line",
+          line: { color: "#293b84", width: 4, dash: "solid" },
+          hovertemplate: `Sample line: ATI = ${formatNumber(currentModel.b0, 2)} + ${formatNumber(currentModel.b1, 3)}PT<extra></extra>`
+        });
+      }
+
+      Plotly.react("mainPlot", traces, mainPlotLayout(shapes), {
+        responsive: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ["lasso2d", "select2d"]
+      });
+    }
+
+    function renderSampleReport() {
+      if (!currentModel) return;
+      const m = currentModel;
+      const summary = computeRegressionSummary(m);
+      const r = summary.residualFive;
+      els.sampleReportContent.innerHTML = `
+        <div class="call">Call: lm(formula = ATI ~ PT)</div>
+        <div class="report-meta">
+          <span class="info-output" data-help="The number of observations in the current random sample.">Sample size: n = ${m.n}</span>
+          <span>Residual degrees of freedom: ${m.df}</span>
+        </div>
+        <div class="report-grid">
+          <div class="report-block">
+            <h3 class="info-output" data-help="The five-number summary of observed ATI minus fitted ATI.">Residuals</h3>
+            <table>
+              <thead><tr><th>Min</th><th>1Q</th><th>Median</th><th>3Q</th><th>Max</th></tr></thead>
+              <tbody><tr>
+                <td>${formatNumber(r.min, 3)}</td><td>${formatNumber(r.q1, 3)}</td>
+                <td>${formatNumber(r.median, 3)}</td><td>${formatNumber(r.q3, 3)}</td>
+                <td>${formatNumber(r.max, 3)}</td>
+              </tr></tbody>
+            </table>
+            <h3 class="info-output" data-help="Estimate is the fitted coefficient; Std. Error measures sampling uncertainty; t and p test whether the coefficient equals zero." style="margin-top:18px">Coefficients</h3>
+            <table>
+              <thead><tr>
+                <th></th>
+                <th><span class="info-output" data-help="The OLS point estimate of the coefficient.">Estimate</span></th>
+                <th><span class="info-output" data-help="The estimated standard deviation of the coefficient across repeated samples.">Std. Error</span></th>
+                <th><span class="info-output" data-help="Estimate divided by its standard error, testing a coefficient value of zero.">t value</span></th>
+                <th><span class="info-output" data-help="Two-sided probability of a t statistic at least this extreme if the coefficient were zero.">Pr(&gt;|t|)</span></th>
+              </tr></thead>
+              <tbody>
+                <tr><td>(Intercept)</td><td>${formatNumber(m.b0, 4)}</td><td>${formatNumber(m.seIntercept, 4)}</td><td>${formatNumber(m.tIntercept, 3)}</td><td>${formatP(m.pIntercept)}</td></tr>
+                <tr><td>PT</td><td>${formatNumber(m.b1, 4)}</td><td>${formatNumber(m.seSlope, 4)}</td><td>${formatNumber(m.tSlope, 3)}</td><td>${formatP(m.pSlope)}</td></tr>
+              </tbody>
+            </table>
+            <div class="fit-summary">
+              <div class="fit-summary-row">
+                <span class="info-output" data-help="The estimated standard deviation of the regression errors, calculated as sqrt(SSE/(n-2)).">Residual standard error</span>
+                <span class="fit-value">${formatNumber(m.residualSE, 3)}</span>
+              </div>
+              <div class="fit-summary-row">
+                <span class="info-output" data-help="The proportion of sample variation in ATI explained by PT.">Multiple R-squared</span>
+                <span class="fit-value">${formatNumber(m.rSquared, 4)}</span>
+              </div>
+              <div class="fit-summary-row">
+                <span class="info-output" data-help="R-squared adjusted for model size and sample degrees of freedom.">Adjusted R-squared</span>
+                <span class="fit-value">${formatNumber(m.adjustedRSquared, 4)}</span>
+              </div>
+              <div class="fit-summary-row">
+                <span class="info-output" data-help="The overall regression test comparing explained variation with unexplained variation.">F-statistic</span>
+                <span class="fit-value">${formatNumber(m.fStatistic, 3)}</span>
+              </div>
+              <div class="fit-summary-row">
+                <span class="info-output" data-help="The probability of an F-statistic at least this large if the population slope were zero.">Model p-value</span>
+                <span class="fit-value">${formatP(m.modelPValue)}</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="report-block">
+              <h3 class="info-output" data-help="Compares the known population coefficients with the estimates from the current sample.">Population vs. Sample</h3>
+              <table>
+                <thead><tr><th>Quantity</th><th>True Value</th><th>Estimate</th><th>Error</th></tr></thead>
+                <tbody>
+                  <tr><td>Intercept</td><td>10.00</td><td>${formatNumber(m.b0, 3)}</td><td>${signedNumber(m.b0 - BETA0, 3)}</td></tr>
+                  <tr><td>Slope</td><td>0.90</td><td>${formatNumber(m.b1, 3)}</td><td>${signedNumber(m.b1 - BETA1, 3)}</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="report-block" style="margin-top:14px">
+              <h3 class="info-output" data-help="Intervals built with t critical values and the coefficient standard errors. In repeated sampling, 95% of such intervals capture the true coefficient.">95% Confidence Intervals</h3>
+              <table>
+                <thead><tr><th>Term</th><th>Lower</th><th>Upper</th></tr></thead>
+                <tbody>
+                  <tr><td>Intercept</td><td>${formatNumber(m.ciIntercept[0], 3)}</td><td>${formatNumber(m.ciIntercept[1], 3)}</td></tr>
+                  <tr><td>Slope</td><td>${formatNumber(m.ciSlope[0], 3)}</td><td>${formatNumber(m.ciSlope[1], 3)}</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="report-block" style="margin-top:14px">
+              <h3 class="info-output" data-help="Wider coefficient intervals designed for 99% repeated-sampling coverage.">99% Confidence Intervals</h3>
+              <table>
+                <thead><tr><th>Term</th><th>Lower</th><th>Upper</th></tr></thead>
+                <tbody>
+                  <tr><td>Intercept</td><td>${formatNumber(m.ciIntercept99[0], 3)}</td><td>${formatNumber(m.ciIntercept99[1], 3)}</td></tr>
+                  <tr><td>Slope</td><td>${formatNumber(m.ciSlope99[0], 3)}</td><td>${formatNumber(m.ciSlope99[1], 3)}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function togglePopulationPoints() {
+      showPopulationPoints = !showPopulationPoints;
+      setButtonLabel(els.populationPointsBtn, showPopulationPoints ? "Hide Population Points" : "Show Population Points");
+      updateMainPlot();
+    }
+
+    function togglePopulationLine() {
+      showPopulationLine = !showPopulationLine;
+      setButtonLabel(els.populationLineBtn, showPopulationLine ? "Hide True Population Line" : "Show True Population Line");
+      updateMainPlot();
+    }
+
+    function toggleSquares() {
+      if (!currentModel) return;
+      showSquares = !showSquares;
+      setButtonLabel(els.squaresBtn, showSquares ? "Hide Least-Squares Squares" : "Show Least-Squares Squares");
+      updateMainPlot();
+    }
+
+    function toggleConfidenceBands() {
+      if (!currentModel) return;
+      showBands = !showBands;
+      setButtonLabel(els.bandsBtn, showBands ? "Hide 95% Mean Confidence Band" : "Show 95% Mean Confidence Band");
+      updateMainPlot();
+    }
+
+    function runManySamples(B = 1000) {
+      const n = Number(els.sampleSize.value);
+      els.runSamplesBtn.disabled = true;
+      setButtonLabel(els.runSamplesBtn, "Running Simulation...");
+      setStatus(`Running ${B.toLocaleString()} samples of size ${n}...`, true);
+
+      setTimeout(() => {
+        slopeEstimates = [];
+        for (let b = 0; b < B; b++) {
+          const sample = sampleWithoutReplacement(population, n);
+          slopeEstimates.push(fitOLS(sample).b1);
+        }
+        manySamplesN = n;
+        els.samplingSection.classList.add("visible");
+        renderSamplingPlot();
+        renderSamplingDistributionReport();
+        els.samplingReport.classList.remove("visible");
+        els.samplingReportBtn.disabled = false;
+        setButtonLabel(els.samplingReportBtn, "Show Sampling Distribution Report");
+        els.runSamplesBtn.disabled = false;
+        setButtonLabel(els.runSamplesBtn, "Run 1,000 Samples");
+        const meanSlope = slopeEstimates.reduce((a, b) => a + b, 0) / slopeEstimates.length;
+        const slopeSD = Math.sqrt(slopeEstimates.reduce((sum, value) => sum + (value - meanSlope) ** 2, 0) / (slopeEstimates.length - 1));
+        setStatus(`Simulation complete\nMean slope = ${formatNumber(meanSlope, 3)};\nEstimated SD = ${formatNumber(slopeSD, 3)}`, true);
+        els.samplingSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 40);
+    }
+
+    function renderSamplingPlot() {
+      const meanSlope = slopeEstimates.reduce((a, b) => a + b, 0) / slopeEstimates.length;
+      const slopeSD = Math.sqrt(slopeEstimates.reduce((sum, value) => sum + (value - meanSlope) ** 2, 0) / (slopeEstimates.length - 1));
+      const min = Math.min(...slopeEstimates, BETA1);
+      const max = Math.max(...slopeEstimates, BETA1);
+      const padding = Math.max((max - min) * 0.12, 0.03);
+
+      const trace = {
+        x: slopeEstimates,
+        type: "histogram",
+        nbinsx: 34,
+        name: "Slope estimates",
+        marker: {
+          color: "#27a6c8",
+          line: { color: "#147596", width: 1 }
+        },
+        opacity: 0.88,
+        hovertemplate: "Slope range: %{x}<br>Count: %{y}<extra></extra>"
+      };
+
+      const layout = {
+        margin: { l: 65, r: 65, t: 62, b: 65 },
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
+        bargap: 0.05,
+        font: { family: "Montserrat", color: "#10233f" },
+        xaxis: {
+          title: { text: "Estimated Slope", standoff: 14 },
+          range: [min - padding, max + padding],
+          gridcolor: "#e7edf3",
+          zeroline: false
+        },
+        yaxis: {
+          title: { text: "Frequency", standoff: 12 },
+          gridcolor: "#e7edf3",
+          zeroline: false
+        },
+        shapes: [
+          { type: "line", x0: BETA1, x1: BETA1, y0: 0, y1: 1, yref: "paper", line: { color: "#e33f4f", width: 4 } },
+          { type: "line", x0: meanSlope, x1: meanSlope, y0: 0, y1: 1, yref: "paper", line: { color: "#293b84", width: 3, dash: "dash" } }
+        ],
+        annotations: [
+          { x: BETA1, y: 1, yref: "paper", text: "True slope: 0.90", showarrow: false, yshift: 14, font: { color: "#c52d3d", size: 11 } },
+          { x: meanSlope, y: 0.88, yref: "paper", text: `Mean: ${formatNumber(meanSlope, 3)}`, showarrow: false, xanchor: meanSlope >= BETA1 ? "left" : "right", font: { color: "#293b84", size: 11 } },
+          { x: 0.5, xref: "paper", y: 1.13, yref: "paper", text: `<b>Mean estimate: ${formatNumber(meanSlope, 4)} &nbsp;&nbsp; Estimated SD: ${formatNumber(slopeSD, 4)}</b>`, showarrow: false, font: { color: "#34465f", size: 12 } }
+        ],
+        showlegend: false
+      };
+
+      Plotly.react("samplingPlot", [trace], layout, {
+        responsive: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ["lasso2d", "select2d"]
+      });
+    }
+
+    function renderSamplingDistributionReport() {
+      const sorted = [...slopeEstimates].sort((a, b) => a - b);
+      const mean = sorted.reduce((a, b) => a + b, 0) / sorted.length;
+      const sd = Math.sqrt(sorted.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (sorted.length - 1));
+      const stats = [
+        ["Number of samples", sorted.length.toLocaleString()],
+        ["Sample size", manySamplesN],
+        ["True slope", formatNumber(BETA1, 3)],
+        ["Mean estimated slope", formatNumber(mean, 4)],
+        ["Estimated SD of slopes", formatNumber(sd, 4)],
+        ["Minimum", formatNumber(sorted[0], 4)],
+        ["25th percentile", formatNumber(quantile(sorted, 0.25), 4)],
+        ["Median", formatNumber(quantile(sorted, 0.5), 4)],
+        ["75th percentile", formatNumber(quantile(sorted, 0.75), 4)],
+        ["Maximum", formatNumber(sorted[sorted.length - 1], 4)]
+      ];
+      els.samplingReportContent.innerHTML = `
+        <div class="fit-summary">
+          ${stats.map(([label, value]) => `
+            <div class="fit-summary-row">
+              <span class="info-output" data-help="${samplingStatHelp(label)}">${label}</span>
+              <span class="fit-value">${value}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function samplingStatHelp(label) {
+      const help = {
+        "Number of samples": "The number of repeated random samples used to build this simulated sampling distribution.",
+        "Sample size": "The number of population observations selected without replacement in each simulated sample.",
+        "True slope": "The fixed population slope used to generate ATI: 0.90 ATI points per possession minute.",
+        "Mean estimated slope": "The arithmetic average of the 1,000 fitted sample slopes.",
+        "Estimated SD of slopes": "The simulated standard error: the typical sample-to-sample variation in the slope estimate.",
+        "Minimum": "The smallest slope estimate among the 1,000 samples.",
+        "25th percentile": "One quarter of the simulated slope estimates fall at or below this value.",
+        "Median": "Half of the simulated slope estimates fall below and half above this value.",
+        "75th percentile": "Three quarters of the simulated slope estimates fall at or below this value.",
+        "Maximum": "The largest slope estimate among the 1,000 samples."
+      };
+      return help[label] || "A summary measure from the simulated sampling distribution.";
+    }
+
+    function clearSampleState() {
+      currentSample = [];
+      currentModel = null;
+      showSquares = false;
+      showBands = false;
+      els.squaresBtn.disabled = true;
+      els.bandsBtn.disabled = true;
+      els.sampleReportBtn.disabled = true;
+      els.exportSampleBtn.disabled = true;
+      setButtonLabel(els.squaresBtn, "Show Least-Squares Squares");
+      setButtonLabel(els.bandsBtn, "Show 95% Mean Confidence Band");
+      setButtonLabel(els.sampleReportBtn, "Show Sample Regression Report");
+      els.sampleReport.classList.remove("visible");
+      els.sampleReportContent.innerHTML = "";
+    }
+
+    function setSampleControls(enabled) {
+      els.sampleSize.disabled = !enabled;
+      els.drawSampleBtn.disabled = !enabled;
+      els.runSamplesBtn.disabled = !enabled;
+      els.populationPointsBtn.disabled = !enabled;
+      els.populationLineBtn.disabled = !enabled;
+      els.exportPopulationBtn.disabled = !enabled;
+    }
+
+    function setButtonLabel(button, text) {
+      const label = button.querySelector(".button-label");
+      if (label) label.textContent = text;
+    }
+
+    function setStatus(text, live = false) {
+      els.statusText.textContent = text;
+      els.statusDot.classList.toggle("live", live);
+    }
+
+    function showGlobalTooltip(target) {
+      const message = target.dataset.help;
+      if (!message) return;
+      const tooltip = els.globalTooltip;
+      tooltip.textContent = message;
+      tooltip.style.display = "block";
+      tooltip.style.visibility = "hidden";
+
+      const targetRect = target.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const gap = 9;
+      let left = targetRect.left + targetRect.width / 2 - tooltipRect.width / 2;
+      left = Math.max(12, Math.min(left, window.innerWidth - tooltipRect.width - 12));
+
+      let top = targetRect.top - tooltipRect.height - gap;
+      if (top < 12) top = targetRect.bottom + gap;
+      top = Math.max(12, Math.min(top, window.innerHeight - tooltipRect.height - 12));
+
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+      tooltip.style.visibility = "visible";
+    }
+
+    function hideGlobalTooltip() {
+      els.globalTooltip.style.display = "none";
+    }
+
+    function formatNumber(value, digits = 3) {
+      return Number.isFinite(value) ? value.toFixed(digits) : "NA";
+    }
+
+    function signedNumber(value, digits = 3) {
+      return `${value >= 0 ? "+" : ""}${formatNumber(value, digits)}`;
+    }
+
+    function formatP(p) {
+      if (!Number.isFinite(p)) return "NA";
+      if (p < 2e-16) return "<2e-16";
+      if (p < 0.0001) return p.toExponential(2);
+      return p.toFixed(4);
+    }
+
+    function stars(p) {
+      if (p < 0.001) return "***";
+      if (p < 0.01) return "**";
+      if (p < 0.05) return "*";
+      if (p < 0.1) return ".";
+      return "";
+    }
+
+    els.revealBtn.addEventListener("click", () => {
+      populationRevealed = true;
+      showPopulationPoints = true;
+      showPopulationLine = true;
+      setSampleControls(true);
+      setButtonLabel(els.revealBtn, "Population Revealed");
+      els.revealBtn.disabled = true;
+      setButtonLabel(els.populationPointsBtn, "Hide Population Points");
+      setButtonLabel(els.populationLineBtn, "Hide True Population Line");
+      updateMainPlot();
+      setStatus("Population revealed: 7,500 observations and the true line are visible.", true);
+    });
+
+    els.populationPointsBtn.addEventListener("click", togglePopulationPoints);
+    els.populationLineBtn.addEventListener("click", togglePopulationLine);
+    els.exportPopulationBtn.addEventListener("click", () => exportDataCSV(population, "fifa_population_PT_ATI.csv"));
+    els.squaresBtn.addEventListener("click", toggleSquares);
+    els.bandsBtn.addEventListener("click", toggleConfidenceBands);
+    els.drawSampleBtn.addEventListener("click", () => drawSample(Number(els.sampleSize.value)));
+    els.exportSampleBtn.addEventListener("click", () => exportDataCSV(currentSample, "current_sample_PT_ATI.csv"));
+    els.runSamplesBtn.addEventListener("click", () => runManySamples(1000));
+
+    els.sampleReportBtn.addEventListener("click", () => {
+      const visible = els.sampleReport.classList.toggle("visible");
+      setButtonLabel(els.sampleReportBtn, `${visible ? "Hide" : "Show"} Sample Regression Report`);
+      if (visible) els.sampleReport.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    els.samplingReportBtn.addEventListener("click", () => {
+      const visible = els.samplingReport.classList.toggle("visible");
+      setButtonLabel(els.samplingReportBtn, `${visible ? "Hide" : "Show"} Sampling Distribution Report`);
+      if (visible) els.samplingReport.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    window.addEventListener("resize", () => {
+      if (showSquares) updateMainPlot();
+      else Plotly.Plots.resize("mainPlot");
+      if (els.samplingSection.classList.contains("visible")) Plotly.Plots.resize("samplingPlot");
+    });
+
+    document.addEventListener("mouseover", event => {
+      const target = event.target.closest("[data-help]");
+      if (target) showGlobalTooltip(target);
+    });
+
+    document.addEventListener("mouseout", event => {
+      const target = event.target.closest("[data-help]");
+      if (target && !target.contains(event.relatedTarget)) hideGlobalTooltip();
+    });
+
+    document.addEventListener("focusin", event => {
+      const target = event.target.closest("[data-help]");
+      if (target) showGlobalTooltip(target);
+    });
+
+    document.addEventListener("focusout", event => {
+      if (event.target.closest("[data-help]")) hideGlobalTooltip();
+    });
+
+    document.querySelectorAll(".button-info").forEach(info => {
+      info.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+    });
+
+    window.addEventListener("scroll", hideGlobalTooltip, true);
+    window.addEventListener("resize", hideGlobalTooltip);
+
+    generatePopulation();
+    updateMainPlot();
+  </script>
+</body>
+</html>
