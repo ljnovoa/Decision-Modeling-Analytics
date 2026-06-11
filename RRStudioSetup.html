@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <title>R Ready | R & RStudio Setup Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #10233f;
+      --muted: #607089;
+      --paper: #ffffff;
+      --canvas: #ffffff;
+      --line: #dbe5ef;
+      --blue: #087ea4;
+      --blue-dark: #243b80;
+      --blue-soft: #eaf6fb;
+      --coral: #e33f4f;
+      --coral-soft: #fde9e2;
+      --gold: #f59e0b;
+      --green: #0f9f75;
+      --green-soft: #e1f3ec;
+      --red: #b8463c;
+      --shadow: 0 14px 38px rgba(23, 45, 78, 0.09);
+      --radius: 20px;
+      --mono: "Unbounded", ui-sans-serif, system-ui, sans-serif;
+      --sans: "Unbounded", ui-sans-serif, system-ui, sans-serif;
+      --display: "Unbounded", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+
+    button, input, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: var(--blue-dark); }
+    button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(232, 174, 49, 0.75);
+      outline-offset: 3px;
+    }
+
+    .app-shell {
+      width: min(1320px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 42px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 10px 4px 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      font-family: var(--display);
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 20px rgba(23, 107, 135, 0.22);
+      font-family: var(--display);
+      font-size: 1.15rem;
+    }
+
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .save-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .save-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+    .text-button {
+      border: 0;
+      padding: 8px 10px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-weight: 750;
+    }
+    .text-button:hover { color: var(--red); }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 32px;
+      align-items: center;
+      min-height: 270px;
+      padding: clamp(26px, 4vw, 42px);
+      border: 1px solid rgba(219, 229, 239, 0.9);
+      border-radius: 20px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    h1 {
+      max-width: 720px;
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.55rem, 2.65vw, 2.5rem);
+      font-weight: 800;
+      line-height: 1.16;
+      letter-spacing: -0.045em;
+    }
+    .title-line { display: block; }
+    .hero-description {
+      max-width: 650px;
+      margin: 18px 0 0;
+      color: #526773;
+      font-size: clamp(0.82rem, 1.35vw, 1rem);
+      text-wrap: pretty;
+    }
+    .hero-credit {
+      max-width: 650px;
+      margin: 8px 0 0;
+      color: #7b8995;
+      font-size: clamp(0.57rem, 0.82vw, 0.67rem);
+      font-weight: 500;
+      line-height: 1.55;
+      text-wrap: balance;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 22px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #465c68;
+      background: #fff;
+      font-size: 0.78rem;
+      font-weight: 750;
+    }
+
+    .hero-visual {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      min-height: 230px;
+    }
+    .setup-mark {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: min(100%, 390px);
+      height: 210px;
+      transform: translate(-50%, -50%);
+    }
+    .setup-mark::before,
+    .setup-mark::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(8, 126, 164, 0.16);
+    }
+    .setup-mark::before { inset: 5px 45px 2px 35px; }
+    .setup-mark::after { inset: 28px 72px 23px 62px; border-style: dashed; }
+    .engine-node {
+      position: absolute;
+      z-index: 2;
+      left: 6px;
+      top: 48px;
+      display: grid;
+      place-items: center;
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      color: white;
+      background: linear-gradient(145deg, #0c9abe, #243b80);
+      box-shadow: 0 18px 36px rgba(36, 59, 128, 0.24);
+    }
+    .engine-node::after {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      border: 1px solid rgba(255,255,255,0.34);
+      border-radius: 50%;
+    }
+    .engine-r {
+      position: relative;
+      z-index: 1;
+      font-size: 2.65rem;
+      font-weight: 800;
+      letter-spacing: -0.09em;
+    }
+    .engine-label {
+      position: absolute;
+      left: 22px;
+      bottom: 14px;
+      color: var(--blue-dark);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .flow-line {
+      position: absolute;
+      z-index: 1;
+      left: 104px;
+      top: 100px;
+      width: 88px;
+      height: 4px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--blue), var(--gold));
+    }
+    .flow-line::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      width: 11px;
+      height: 11px;
+      border-top: 3px solid var(--gold);
+      border-right: 3px solid var(--gold);
+      transform: translateY(-50%) rotate(45deg);
+    }
+    .workspace-node {
+      position: absolute;
+      z-index: 2;
+      right: 4px;
+      top: 28px;
+      width: 205px;
+      height: 156px;
+      overflow: hidden;
+      border: 1px solid rgba(16, 35, 63, 0.14);
+      border-radius: 22px;
+      background: white;
+      box-shadow: 0 20px 44px rgba(23, 45, 78, 0.18);
+    }
+    .workspace-top {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 31px;
+      padding: 0 12px;
+      background: #f3f6f9;
+      border-bottom: 1px solid var(--line);
+    }
+    .workspace-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #aebdcc;
+    }
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      grid-template-rows: 1fr 1fr;
+      height: 125px;
+    }
+    .workspace-pane {
+      position: relative;
+      padding: 11px;
+      border-color: var(--line);
+      border-style: solid;
+      border-width: 0 0 1px 1px;
+    }
+    .workspace-pane.console {
+      grid-row: 1 / 3;
+      border-left: 0;
+      border-bottom: 0;
+    }
+    .workspace-pane:last-child { border-bottom: 0; }
+    .code-line {
+      display: block;
+      height: 4px;
+      margin-bottom: 8px;
+      border-radius: 99px;
+      background: #cbd8e2;
+    }
+    .code-line.blue { width: 82%; background: #67b8cf; }
+    .code-line.short { width: 48%; }
+    .mini-chart {
+      display: flex;
+      align-items: end;
+      gap: 4px;
+      height: 34px;
+      padding-top: 7px;
+    }
+    .mini-chart span {
+      width: 8px;
+      border-radius: 3px 3px 0 0;
+      background: var(--coral);
+    }
+    .mini-chart span:nth-child(1) { height: 10px; }
+    .mini-chart span:nth-child(2) { height: 23px; }
+    .mini-chart span:nth-child(3) { height: 16px; }
+    .mini-chart span:nth-child(4) { height: 29px; }
+    .ready-chip {
+      position: absolute;
+      z-index: 3;
+      right: 18px;
+      bottom: 2px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: white;
+      background: var(--green);
+      box-shadow: 0 8px 20px rgba(15,159,117,0.22);
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+      margin-top: 22px;
+    }
+    .sidebar {
+      position: sticky;
+      top: 16px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+    .progress-track {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #e6e8e5;
+    }
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), #3aa58d);
+      transition: width 0.35s ease;
+    }
+    .step-nav {
+      display: grid;
+      gap: 7px;
+      margin-top: 19px;
+    }
+    .step-link {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      padding: 9px;
+      border: 0;
+      border-radius: 14px;
+      color: var(--muted);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .step-link:hover { background: #f3f5f2; }
+    .step-link.active { color: var(--blue-dark); background: var(--blue-soft); }
+    .step-link.complete { color: var(--green); }
+    .step-number {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: white;
+      font-size: 0.82rem;
+      font-weight: 850;
+    }
+    .step-link.active .step-number { color: white; border-color: var(--blue); background: var(--blue); }
+    .step-link.complete .step-number { color: white; border-color: var(--green); background: var(--green); }
+    .step-name { display: block; font-size: 0.88rem; font-weight: 800; }
+    .step-time { display: block; margin-top: 1px; font-size: 0.72rem; opacity: 0.78; }
+    .side-note {
+      margin: 18px 0 0;
+      padding: 13px;
+      border-radius: 14px;
+      color: #4b626e;
+      border: 1px solid var(--line);
+      background: white;
+      font-size: 0.78rem;
+    }
+
+    .stage {
+      min-height: 650px;
+      padding: clamp(24px, 5vw, 48px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .step-panel { display: none; animation: panelIn 0.28s ease both; }
+    .step-panel.active { display: block; }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .stage-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .stage-kicker {
+      margin: 0 0 5px;
+      color: var(--blue);
+      font-size: 0.75rem;
+      font-weight: 850;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.45rem, 2.7vw, 2.35rem);
+      line-height: 1.06;
+      letter-spacing: -0.045em;
+    }
+    .stage-intro {
+      max-width: 760px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .time-chip {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: var(--blue-dark);
+      background: var(--blue-soft);
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+    .choice-card {
+      position: relative;
+      min-height: 185px;
+      padding: 24px;
+      border: 2px solid var(--line);
+      border-radius: 20px;
+      color: var(--ink);
+      background: white;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .choice-card:hover { transform: translateY(-3px); border-color: #9ab8c1; box-shadow: 0 12px 25px rgba(35, 55, 67, 0.09); }
+    .choice-card.selected { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(23, 107, 135, 0.10); }
+    .choice-card.selected::after {
+      content: "Selected";
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      padding: 4px 8px;
+      border-radius: 99px;
+      color: white;
+      background: var(--green);
+      font-size: 0.68rem;
+      font-weight: 850;
+    }
+    .choice-icon {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      margin-bottom: 17px;
+      border-radius: 17px;
+      color: white;
+      background: var(--ink);
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .windows-glyph {
+      display: grid;
+      grid-template-columns: repeat(2, 9px);
+      grid-template-rows: repeat(2, 9px);
+      gap: 3px;
+      width: 21px;
+      height: 21px;
+    }
+    .windows-glyph span {
+      display: block;
+      width: 9px;
+      height: 9px;
+      background: white;
+    }
+    .choice-card.mac .choice-icon { background: #5d6670; }
+    .choice-title { display: block; font-size: 1rem; font-weight: 850; }
+    .choice-desc { display: block; margin-top: 6px; color: var(--muted); font-size: 0.88rem; }
+
+    .concept-map {
+      display: grid;
+      grid-template-columns: 1fr 80px 1fr;
+      gap: 16px;
+      align-items: stretch;
+      margin-top: 30px;
+    }
+    .concept-card {
+      padding: 25px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: white;
+    }
+    .concept-card.r-concept { border-top: 5px solid var(--blue); }
+    .concept-card.ide-concept { border-top: 5px solid var(--coral); }
+    .concept-card h3 { margin: 0 0 9px; font-size: 1.08rem; }
+    .concept-card p { margin: 0; color: var(--muted); }
+    .concept-card ul { margin: 15px 0 0; padding-left: 20px; color: #435b67; }
+    .plus {
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 2.4rem;
+      font-weight: 900;
+    }
+    .analogy {
+      margin-top: 18px;
+      padding: 17px 19px;
+      border-left: 5px solid var(--gold);
+      border-radius: 0 15px 15px 0;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--gold);
+      background: white;
+      color: #5e542e;
+    }
+
+    .instruction-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+      gap: 24px;
+      margin-top: 26px;
+      align-items: start;
+    }
+    .task-list { display: grid; gap: 12px; }
+    .task {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: white;
+    }
+    .task-count {
+      display: flex;
+      flex: 0 0 36px;
+      align-items: center;
+      justify-content: center;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      overflow: hidden;
+      border: 1px solid rgba(8, 126, 164, 0.16);
+      border-radius: 10px;
+      color: white;
+      background: var(--blue);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+      font-size: 0.7rem;
+      font-weight: 850;
+      line-height: 1;
+    }
+    .task strong { display: block; margin-bottom: 3px; }
+    .task > div {
+      min-width: 0;
+      text-wrap: pretty;
+    }
+    .task strong {
+      text-wrap: balance;
+    }
+    .task > div > span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.65;
+      text-wrap: pretty;
+    }
+    .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 9px;
+      padding: 8px 11px;
+      border-radius: 10px;
+      color: white;
+      background: var(--blue);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+    .download-link:hover { background: var(--blue-dark); }
+
+    .demo {
+      padding: 17px;
+      border: 1px solid #cbd2d1;
+      border-radius: 20px;
+      background: white;
+    }
+    .demo-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .demo-label { font-size: 0.76rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+    .demo-controls { display: flex; gap: 7px; }
+    .mini-button {
+      border: 1px solid #b9c3c2;
+      padding: 6px 9px;
+      border-radius: 9px;
+      color: #3f555e;
+      background: white;
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+    .mini-button:hover { border-color: var(--blue); color: var(--blue); }
+    .fake-window {
+      position: relative;
+      overflow: hidden;
+      min-height: 320px;
+      border: 1px solid #b9c3c2;
+      border-radius: 14px;
+      background: white;
+      box-shadow: 0 10px 24px rgba(35, 55, 67, 0.10);
+    }
+    .window-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 13px;
+      color: #4a5d66;
+      background: #e8ebea;
+      font-size: 0.75rem;
+      font-weight: 750;
+    }
+    .window-dot { width: 9px; height: 9px; border-radius: 50%; background: #aeb8b8; }
+    .window-title { margin-left: 5px; }
+    .window-body { padding: 24px; }
+    .installer-heading { margin: 0; font-size: 1rem; }
+    .installer-copy { margin: 8px 0 22px; color: var(--muted); font-size: 0.82rem; }
+    .fake-option {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 10px 0;
+      color: #465b65;
+      font-size: 0.8rem;
+    }
+    .fake-radio {
+      width: 15px;
+      height: 15px;
+      border: 4px solid white;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px #9daaaa;
+      background: white;
+    }
+    .fake-radio.active { background: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+    .fake-footer {
+      position: absolute;
+      right: 18px;
+      bottom: 16px;
+      display: flex;
+      gap: 8px;
+    }
+    .fake-btn { padding: 7px 13px; border: 1px solid #b8c1c0; border-radius: 7px; color: #40545d; background: #f4f5f5; font-size: 0.74rem; }
+    .fake-btn.primary { color: white; border-color: var(--blue); background: var(--blue); }
+    .demo-cursor {
+      position: absolute;
+      z-index: 5;
+      left: 34%;
+      top: 45%;
+      width: 26px;
+      height: 34px;
+      opacity: 0;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.55));
+    }
+    .demo-cursor::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #10233f;
+      clip-path: polygon(0 0, 0 82%, 23% 62%, 39% 100%, 55% 92%, 39% 57%, 69% 57%);
+    }
+    .demo-cursor::after {
+      content: "";
+      position: absolute;
+      inset: 3px 4px 5px 3px;
+      background: white;
+      clip-path: polygon(0 0, 0 82%, 23% 62%, 39% 100%, 55% 92%, 39% 57%, 69% 57%);
+    }
+    .demo.playing .demo-cursor { animation: cursorTour 5.5s ease-in-out both; }
+    .demo.playing .fake-radio { animation: selectRadio 5.5s ease both; }
+    .demo.playing .fake-btn.primary { animation: buttonPulse 5.5s ease both; }
+    @keyframes cursorTour {
+      0% { left: 25%; top: 20%; opacity: 0; }
+      10% { opacity: 1; }
+      35% { left: 18%; top: 54%; }
+      55% { left: 18%; top: 54%; transform: scale(0.85); }
+      72% { left: 82%; top: 86%; transform: scale(1); }
+      86% { left: 82%; top: 86%; transform: scale(0.85); opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes selectRadio { 0%, 45% { background: white; } 50%, 100% { background: var(--blue); } }
+    @keyframes buttonPulse { 0%, 78% { box-shadow: none; } 83% { box-shadow: 0 0 0 5px rgba(23,107,135,0.22); } 100% { box-shadow: none; } }
+
+    .mac-chip-box {
+      display: none;
+      margin-top: 21px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+    }
+    .mac-chip-box.visible { display: block; }
+    .mac-chip-box h3 { margin: 0 0 7px; font-size: 1rem; }
+    .mac-chip-box p { margin: 0 0 12px; color: var(--muted); font-size: 0.85rem; }
+    .chip-options { display: flex; flex-wrap: wrap; gap: 9px; }
+    .chip-button {
+      border: 1px solid var(--line);
+      padding: 9px 12px;
+      border-radius: 11px;
+      color: #3f555f;
+      background: white;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+    .chip-button.selected { color: white; border-color: var(--blue); background: var(--blue); }
+    .chip-result { margin: 13px 0 0; color: var(--green); font-size: 0.83rem; font-weight: 750; }
+
+    .verify-intro {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      margin: 24px 0 17px;
+      padding: 17px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: white;
+    }
+    .verify-intro p { margin: 0; color: #365765; font-size: 0.88rem; }
+    .script-button, .primary-button, .secondary-button {
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 850;
+    }
+    .script-button {
+      padding: 10px 13px;
+      color: white;
+      background: var(--blue-dark);
+      white-space: nowrap;
+      font-size: 0.78rem;
+    }
+
+    .test-list { display: grid; gap: 14px; }
+    .test-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: white;
+    }
+    .test-head {
+      display: grid;
+      grid-template-columns: 35px 1fr auto;
+      gap: 11px;
+      align-items: center;
+      padding: 13px 15px;
+      cursor: pointer;
+    }
+    .test-status {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--muted);
+      background: #f8f9f7;
+      font-size: 0.76rem;
+      font-weight: 850;
+    }
+    .test-card.passed .test-status { color: white; border-color: var(--green); background: var(--green); }
+    .test-title { font-size: 0.84rem; font-weight: 850; }
+    .test-subtitle { margin-top: 2px; color: var(--muted); font-size: 0.76rem; }
+    .chevron { color: var(--muted); transition: transform 0.2s ease; }
+    .test-card.open .chevron { transform: rotate(180deg); }
+    .test-body { display: none; padding: 0 15px 17px 61px; }
+    .test-card.open .test-body { display: block; }
+    .code-wrap {
+      position: relative;
+      margin: 5px 0 13px;
+    }
+    pre {
+      overflow-x: auto;
+      margin: 0;
+      padding: 16px;
+      border-radius: 13px;
+      color: #eaf8f5;
+      background: #17323e;
+      font: 0.82rem/1.65 var(--mono);
+      white-space: pre-wrap;
+    }
+    .copy-code {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 5px 8px;
+      border-radius: 8px;
+      color: white;
+      background: rgba(255,255,255,0.10);
+      cursor: pointer;
+      font-size: 0.68rem;
+      font-weight: 800;
+    }
+    .expected {
+      margin: 0 0 12px;
+      padding: 11px 13px;
+      border-radius: 11px;
+      color: #405a52;
+      border: 1px solid rgba(15,159,117,0.24);
+      background: white;
+      font-size: 0.8rem;
+    }
+    .expected strong { color: var(--green); }
+    .output-label { display: block; margin-bottom: 6px; font-size: 0.78rem; font-weight: 800; }
+    .output-entry {
+      width: 100%;
+      min-height: 74px;
+      resize: vertical;
+      padding: 11px;
+      border: 1px solid #bdc8c7;
+      border-radius: 11px;
+      color: var(--ink);
+      background: #fbfcfb;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+    .check-row { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
+    .check-output {
+      border: 0;
+      padding: 8px 11px;
+      border-radius: 9px;
+      color: white;
+      background: var(--blue);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 850;
+    }
+    .check-message { color: var(--muted); font-size: 0.78rem; }
+    .check-message.success { color: var(--green); font-weight: 800; }
+    .check-message.retry { color: var(--red); }
+
+    .finish-card {
+      overflow: hidden;
+      margin-top: 27px;
+      border: 1px solid rgba(39, 133, 103, 0.25);
+      border-radius: 24px;
+      background: white;
+      text-align: center;
+    }
+    .finish-top { padding: 35px 24px 28px; }
+    .badge-seal {
+      display: grid;
+      place-items: center;
+      width: 105px;
+      height: 105px;
+      margin: 0 auto 18px;
+      border: 8px double rgba(255,255,255,0.8);
+      border-radius: 50%;
+      color: white;
+      background: var(--green);
+      box-shadow: 0 13px 25px rgba(39, 133, 103, 0.2);
+      font-size: 2.5rem;
+      font-weight: 900;
+    }
+    .finish-card h3 { margin: 0; font-size: clamp(1.35rem, 2.7vw, 2.05rem); letter-spacing: -0.04em; }
+    .finish-card p { max-width: 600px; margin: 9px auto 0; color: var(--muted); }
+    .readiness-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid rgba(39, 133, 103, 0.18);
+      border-bottom: 1px solid rgba(39, 133, 103, 0.18);
+      background: white;
+    }
+    .readiness-item { padding: 17px 10px; }
+    .readiness-item + .readiness-item { border-left: 1px solid rgba(39, 133, 103, 0.18); }
+    .readiness-value { display: block; color: var(--green); font-size: 1.4rem; font-weight: 900; }
+    .readiness-label { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 750; }
+    .finish-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 22px; }
+
+    .primary-button { padding: 12px 17px; color: white; background: var(--blue); }
+    .primary-button:hover { background: var(--blue-dark); }
+    .secondary-button { padding: 11px 16px; color: var(--blue-dark); border: 1px solid var(--blue); background: white; }
+    .secondary-button:hover { background: var(--blue-soft); }
+    .primary-button:disabled { cursor: not-allowed; opacity: 0.45; }
+    .stage-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+    .stage-footer > div {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 22px;
+    }
+    .completion-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #465e68;
+      font-size: 0.84rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .completion-check input { width: 18px; height: 18px; accent-color: var(--green); }
+
+    .toast {
+      position: fixed;
+      z-index: 20;
+      right: 20px;
+      bottom: 20px;
+      max-width: min(370px, calc(100% - 40px));
+      padding: 12px 15px;
+      border-radius: 12px;
+      color: white;
+      background: var(--ink);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+      font-size: 0.82rem;
+      font-weight: 750;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: 0.2s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .only-os { display: none; }
+    body[data-os="windows"] .only-windows,
+    body[data-os="mac"] .only-mac { display: block; }
+    body[data-os="windows"] .task.only-windows,
+    body[data-os="mac"] .task.only-mac { display: grid; }
+
+    .sources {
+      margin: 20px 4px 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-align: center;
+    }
+    .sources a { color: inherit; }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .workspace { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .step-nav { grid-template-columns: repeat(6, minmax(44px, 1fr)); overflow-x: auto; }
+      .step-link { display: block; padding: 7px; text-align: center; }
+      .step-number { margin: 0 auto; }
+      .step-name, .step-time { display: none; }
+      .side-note { display: none; }
+      .instruction-layout { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 901px) and (max-width: 1120px) {
+      .instruction-layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .app-shell { width: min(100% - 20px, 1320px); padding-top: 10px; }
+      .topbar { align-items: flex-start; }
+      .save-state { display: none; }
+      .hero { min-height: auto; padding: 28px 22px; border-radius: 22px; }
+      .stage { min-height: 0; padding: 23px 18px; }
+      .stage-head { display: block; }
+      .time-chip { display: inline-flex; margin-top: 12px; }
+      .choice-grid, .concept-map { grid-template-columns: 1fr; }
+      .plus { min-height: 35px; }
+      .verify-intro { grid-template-columns: 1fr; }
+      .test-body { padding-left: 15px; }
+      .readiness-grid { grid-template-columns: 1fr; }
+      .readiness-item + .readiness-item { border-left: 0; border-top: 1px solid rgba(39, 133, 103, 0.18); }
+      .stage-footer { align-items: flex-end; }
+      .stage-footer > div { flex-wrap: wrap; gap: 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+    }
+
+    @media print {
+      body { background: white; }
+      .topbar, .hero, .sidebar, .step-panel:not([data-step="5"]), .stage-footer, .sources, .finish-actions { display: none !important; }
+      .app-shell, .workspace { width: 100%; margin: 0; padding: 0; display: block; }
+      .stage { min-height: auto; border: 0; box-shadow: none; }
+      .step-panel[data-step="5"] { display: block !important; }
+      .finish-card { margin-top: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">R</span><span>R Ready</span></div>
+      <div class="top-actions">
+        <span class="save-state"><span class="save-dot"></span>Progress saves automatically</span>
+        <button class="text-button" id="resetButton" type="button">Start over</button>
+      </div>
+    </header>
+
+    <section class="hero" aria-labelledby="pageTitle">
+      <div>
+        <h1 id="pageTitle"><span class="title-line">From download</span><span class="title-line">to</span><span class="title-line">data-ready.</span></h1>
+        <p class="hero-description">A beginner-friendly guide to installing R and RStudio, then proving that everything works with real statistics.</p>
+        <p class="hero-credit">Designed by Luis Novoa and built using Codex - for educational purposes</p>
+        <div class="hero-meta">
+          <span class="pill">About 15 minutes</span>
+          <span class="pill">Windows + macOS</span>
+          <span class="pill">No experience needed</span>
+          <span class="pill">Instructor: Luis Novoa</span>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="setup-mark">
+          <div class="engine-node"><span class="engine-r">R</span></div>
+          <span class="engine-label">Statistics engine</span>
+          <span class="flow-line"></span>
+          <div class="workspace-node">
+            <div class="workspace-top"><span class="workspace-dot"></span><span class="workspace-dot"></span><span class="workspace-dot"></span></div>
+            <div class="workspace-grid">
+              <div class="workspace-pane console"><span class="code-line blue"></span><span class="code-line"></span><span class="code-line short"></span><span class="code-line blue"></span></div>
+              <div class="workspace-pane"><span class="code-line"></span><span class="code-line short"></span></div>
+              <div class="workspace-pane"><div class="mini-chart"><span></span><span></span><span></span><span></span></div></div>
+            </div>
+          </div>
+          <span class="ready-chip">READY TO ANALYZE</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="workspace">
+      <aside class="sidebar" aria-label="Setup progress">
+        <div class="progress-label"><span>Your progress</span><span id="progressText">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <nav class="step-nav" id="stepNav">
+          <button class="step-link active" data-go="0" type="button"><span class="step-number">1</span><span><span class="step-name">Choose system</span><span class="step-time">1 minute</span></span></button>
+          <button class="step-link" data-go="1" type="button"><span class="step-number">2</span><span><span class="step-name">Meet the tools</span><span class="step-time">2 minutes</span></span></button>
+          <button class="step-link" data-go="2" type="button"><span class="step-number">3</span><span><span class="step-name">Install R</span><span class="step-time">4 minutes</span></span></button>
+          <button class="step-link" data-go="3" type="button"><span class="step-number">4</span><span><span class="step-name">Install RStudio</span><span class="step-time">4 minutes</span></span></button>
+          <button class="step-link" data-go="4" type="button"><span class="step-number">5</span><span><span class="step-name">Test the setup</span><span class="step-time">5 minutes</span></span></button>
+          <button class="step-link" data-go="5" type="button"><span class="step-number">6</span><span><span class="step-name">You are ready</span><span class="step-time">Finish</span></span></button>
+        </nav>
+        <p class="side-note"><strong>Good to know:</strong> Your selections and completed steps stay on this computer, even if you close the page.</p>
+      </aside>
+
+      <main class="stage">
+        <section class="step-panel active" data-step="0">
+          <div class="stage-head">
+            <div>
+              <p class="stage-kicker">Step 1 of 6</p>
+              <h2>Which computer are you using?</h2>
+              <p class="stage-intro">Choose the computer where you will do your statistics work. The rest of the guide will adapt to your system.</p>
+            </div>
+            <span class="time-chip">1 min</span>
+          </div>
+
+          <div class="choice-grid">
+            <button class="choice-card windows" data-os-choice="windows" type="button">
+              <span class="choice-icon" aria-hidden="true"><span class="windows-glyph"><span></span><span></span><span></span><span></span></span></span>
+              <span class="choice-title">Windows</span>
+              <span class="choice-desc">Windows 10 or Windows 11</span>
+            </button>
+            <button class="choice-card mac" data-os-choice="mac" type="button">
+              <span class="choice-icon" aria-hidden="true">⌘</span>
+              <span class="choice-title">Mac</span>
+              <span class="choice-desc">A MacBook, iMac, Mac mini, or Mac Studio</span>
+            </button>
+          </div>
+
+          <div class="mac-chip-box" id="macChipBox">
+            <h3>One quick Mac check</h3>
+            <p>Open the Apple menu  → <strong>About This Mac</strong>. Look for “Chip” or “Processor.” Most Macs from late 2020 onward use Apple silicon.</p>
+            <div class="chip-options">
+              <button class="chip-button" data-chip="apple" type="button">It says Apple M1, M2, M3, M4, or newer</button>
+              <button class="chip-button" data-chip="intel" type="button">It says Intel</button>
+              <button class="chip-button" data-chip="unknown" type="button">I am still not sure</button>
+            </div>
+            <p class="chip-result" id="chipResult"></p>
+          </div>
+
+          <div class="stage-footer">
+            <span></span>
+            <button class="primary-button next-button" type="button" disabled>Continue</button>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="1">
+          <div class="stage-head">
+            <div>
+              <p class="stage-kicker">Step 2 of 6</p>
+              <h2>Two tools, one workflow.</h2>
+              <p class="stage-intro">R and RStudio work together, but they do different jobs. You need to install R first.</p>
+            </div>
+            <span class="time-chip">2 min</span>
+          </div>
+
+          <div class="concept-map">
+            <article class="concept-card r-concept">
+              <h3>R is the engine</h3>
+              <p>R performs the calculations: means, probabilities, confidence intervals, tests, models, and plots.</p>
+              <ul><li>Free and open source</li><li>Understands the R language</li><li>Does the statistical work</li></ul>
+            </article>
+            <div class="plus" aria-hidden="true">+</div>
+            <article class="concept-card ide-concept">
+              <h3>RStudio is the workspace</h3>
+              <p>RStudio gives you a friendly place to write code, view results, make plots, and organize files.</p>
+              <ul><li>Runs R behind the scenes</li><li>Keeps code and output organized</li><li>Makes learning R easier</li></ul>
+            </article>
+          </div>
+          <div class="analogy"><strong>Think of it this way:</strong> R is the kitchen that prepares the meal. RStudio is the organized counter where you keep the recipe, ingredients, and finished dish.</div>
+
+          <div class="stage-footer">
+            <button class="secondary-button back-button" type="button">Back</button>
+            <div>
+              <label class="completion-check"><input class="step-check" data-complete="1" type="checkbox"> I understand the difference</label>
+              <button class="primary-button next-button" type="button">Continue</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="2">
+          <div class="stage-head">
+            <div>
+              <p class="stage-kicker">Step 3 of 6</p>
+              <h2>Install R, the statistics engine.</h2>
+              <p class="stage-intro only-os only-windows">Download R from its official archive, run the installer, and keep the recommended settings.</p>
+              <p class="stage-intro only-os only-mac">Download the package that matches your Mac, open it, and keep the recommended settings.</p>
+            </div>
+            <span class="time-chip">4 min</span>
+          </div>
+
+          <div class="instruction-layout">
+            <div>
+              <div class="task-list only-os only-windows">
+                <div class="task"><span class="task-count">1</span><div><strong>Open the official R download page</strong><span>The button below always points to the current Windows release.</span><a class="download-link" href="https://cran.r-project.org/bin/windows/base/release.html" target="_blank" rel="noopener">Open official R download ↗</a></div></div>
+                <div class="task"><span class="task-count">2</span><div><strong>Download R for Windows</strong><span>Select the main “Download R” link. As of June 11, 2026, the stable release is R 4.6.0.</span></div></div>
+                <div class="task"><span class="task-count">3</span><div><strong>Run the downloaded .exe file</strong><span>Choose your language, accept the default folder, and continue with the default options.</span></div></div>
+                <div class="task"><span class="task-count">4</span><div><strong>Finish the installer</strong><span>When the progress bar completes, select Finish. You do not need to open the separate R app.</span></div></div>
+              </div>
+              <div class="task-list only-os only-mac">
+                <div class="task"><span class="task-count">1</span><div><strong>Open the official R for macOS page</strong><span>Use the package matching your Mac’s chip.</span><a class="download-link" href="https://cran.r-project.org/bin/macosx/" target="_blank" rel="noopener">Open official R download ↗</a></div></div>
+                <div class="task"><span class="task-count">2</span><div><strong id="macDownloadInstruction">Choose the recommended package</strong><span id="macDownloadDetail">Apple silicon uses the arm64 package; Intel uses the x86_64 package. R 4.6.0 is current as of June 11, 2026.</span></div></div>
+                <div class="task"><span class="task-count">3</span><div><strong>Open the downloaded .pkg file</strong><span>Select Continue, agree to the license, and use the standard installation.</span></div></div>
+                <div class="task"><span class="task-count">4</span><div><strong>Complete the installation</strong><span>Enter your Mac password or use Touch ID if asked, then close the installer.</span></div></div>
+              </div>
+            </div>
+
+            <div class="demo" data-demo>
+              <div class="demo-bar"><span class="demo-label">Simplified walkthrough</span><div class="demo-controls"><button class="mini-button play-demo" type="button">▶ Show me</button></div></div>
+              <div class="fake-window">
+                <div class="window-titlebar"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span><span class="window-title">R Setup</span></div>
+                <div class="window-body">
+                  <h3 class="installer-heading">Setup options</h3>
+                  <p class="installer-copy">The recommended defaults are right for this course.</p>
+                  <div class="fake-option"><span class="fake-radio active"></span>Core files</div>
+                  <div class="fake-option"><span class="fake-radio active"></span>64-bit files</div>
+                  <div class="fake-option"><span class="fake-radio active"></span>Message translations</div>
+                </div>
+                <div class="fake-footer"><span class="fake-btn">Back</span><span class="fake-btn primary">Next</span></div>
+                <span class="demo-cursor"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-footer">
+            <button class="secondary-button back-button" type="button">Back</button>
+            <div>
+              <label class="completion-check"><input class="step-check" data-complete="2" type="checkbox"> R is installed</label>
+              <button class="primary-button next-button" type="button">Continue</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="3">
+          <div class="stage-head">
+            <div>
+              <p class="stage-kicker">Step 4 of 6</p>
+              <h2>Install RStudio, your workspace.</h2>
+              <p class="stage-intro">Now that R is installed, add the free RStudio Desktop application from Posit.</p>
+            </div>
+            <span class="time-chip">4 min</span>
+          </div>
+
+          <div class="instruction-layout">
+            <div class="task-list">
+              <div class="task"><span class="task-count">1</span><div><strong>Choose RStudio IDE</strong><span>On Posit’s download page, use the free RStudio IDE Desktop edition. Do not choose RStudio Server, Posit Workbench, or a commercial edition.</span><a class="download-link" href="https://posit.co/download/rstudio-desktop/" target="_blank" rel="noopener">Open RStudio IDE download ↗</a></div></div>
+              <div class="task only-os only-windows"><span class="task-count">2</span><div><strong>Download the Windows .exe installer</strong><span>Choose the recommended Windows 10/11 file ending in <code>.exe</code>. Do not choose the <code>.zip</code> archive. RStudio Desktop 2026.05.0 is current as of June 11, 2026.</span></div></div>
+              <div class="task only-os only-mac"><span class="task-count">2</span><div><strong>Download the macOS installer</strong><span>Choose the macOS 13+ .dmg. RStudio Desktop 2026.05.0 is current as of June 11, 2026.</span></div></div>
+              <div class="task only-os only-windows"><span class="task-count">3</span><div><strong>Run the .exe file</strong><span>Accept the suggested install location and select Install.</span></div></div>
+              <div class="task only-os only-mac"><span class="task-count">3</span><div><strong>Open the .dmg file</strong><span>Drag the RStudio icon into the Applications folder.</span></div></div>
+              <div class="task"><span class="task-count">4</span><div><strong>Open RStudio</strong><span>At first launch, you should see three visible panes: the Console on the left, Environment at upper right, and Files at lower right.</span></div></div>
+            </div>
+
+            <div class="demo" data-demo>
+              <div class="demo-bar"><span class="demo-label">What you should see</span><div class="demo-controls"><button class="mini-button play-demo" type="button">▶ Show me</button></div></div>
+              <div class="fake-window">
+                <div class="window-titlebar"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span><span class="window-title">RStudio</span></div>
+                <div style="display:grid;grid-template-columns:1.16fr .84fr;grid-template-rows:1fr 1fr;min-height:282px">
+                  <div style="grid-row:1 / 3;padding:14px;border-right:1px solid #d9dfde;font: .7rem/1.62 var(--mono);color:#244754">
+                    <strong style="font-family:var(--sans);color:#10233f">Console</strong><br><br>
+                    R version 4.6.0<br>
+                    R is free software.<br>
+                    Type 'demo()' for demos.<br><br>
+                    <strong style="color:#176b87">&gt;</strong> <span style="display:inline-block;width:7px;height:13px;background:#176b87;vertical-align:middle"></span>
+                  </div>
+                  <div style="padding:14px;border-bottom:1px solid #d9dfde;font-size:.72rem;color:#61727b"><strong style="color:#10233f">Environment</strong><br><br><span style="opacity:.65">Environment is empty</span></div>
+                  <div style="padding:14px;font-size:.72rem;color:#61727b"><strong style="color:#10233f">Files · Plots · Packages · Help</strong><br><br><span style="opacity:.65">Files and charts appear here</span></div>
+                </div>
+                <span class="demo-cursor"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-footer">
+            <button class="secondary-button back-button" type="button">Back</button>
+            <div>
+              <label class="completion-check"><input class="step-check" data-complete="3" type="checkbox"> RStudio opens successfully</label>
+              <button class="primary-button next-button" type="button">Continue</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="4">
+          <div class="stage-head">
+            <div>
+              <p class="stage-kicker">Step 5 of 6</p>
+              <h2>Give your setup a test drive.</h2>
+              <p class="stage-intro">Run each example in the RStudio Console. Paste the result back here and the guide will check for the key values.</p>
+            </div>
+            <span class="time-chip">5 min</span>
+          </div>
+
+          <div class="verify-intro">
+            <p><strong>How to run code:</strong> Copy a code block, click beside the blue <code>&gt;</code> in the RStudio Console, paste, and press Enter. These examples use R’s built-in <code>mtcars</code> data, so no extra download is needed.</p>
+            <button class="script-button" id="downloadScript" type="button">Download all tests (.R)</button>
+          </div>
+
+          <div class="test-list">
+            <article class="test-card open" data-test="0">
+              <div class="test-head"><span class="test-status">1</span><div><div class="test-title">Calculate a mean</div><div class="test-subtitle">Create a vector and summarize it</div></div><span class="chevron">⌄</span></div>
+              <div class="test-body">
+                <div class="code-wrap"><pre>scores &lt;- c(72, 84, 91, 88, 95)
+mean(scores)</pre><button class="copy-code" type="button">Copy</button></div>
+                <p class="expected"><strong>Expected:</strong> You should see a mean of <code>86</code>.</p>
+                <label class="output-label">Paste the Console output here</label>
+                <textarea class="output-entry" placeholder="[1] 86"></textarea>
+                <div class="check-row"><button class="check-output" type="button">Check result</button><span class="check-message">Looking for 86.</span></div>
+              </div>
+            </article>
+
+            <article class="test-card" data-test="1">
+              <div class="test-head"><span class="test-status">2</span><div><div class="test-title">Summarize real data</div><div class="test-subtitle">Explore a built-in dataset</div></div><span class="chevron">⌄</span></div>
+              <div class="test-body">
+                <div class="code-wrap"><pre>head(mtcars)
+mean(mtcars$mpg)
+sd(mtcars$mpg)</pre><button class="copy-code" type="button">Copy</button></div>
+                <p class="expected"><strong>Expected:</strong> A small table of cars, then mean MPG near <code>20.09</code> and standard deviation near <code>6.03</code>.</p>
+                <label class="output-label">Paste the Console output here</label>
+                <textarea class="output-entry" placeholder="Paste all or part of the output"></textarea>
+                <div class="check-row"><button class="check-output" type="button">Check result</button><span class="check-message">Looking for values near 20.09 and 6.03.</span></div>
+              </div>
+            </article>
+
+            <article class="test-card" data-test="2">
+              <div class="test-head"><span class="test-status">3</span><div><div class="test-title">Make your first distribution plot</div><div class="test-subtitle">A histogram of fuel economy</div></div><span class="chevron">⌄</span></div>
+              <div class="test-body">
+                <div class="code-wrap"><pre>hist(mtcars$mpg,
+     main = "Distribution of Fuel Economy",
+     xlab = "Miles per gallon",
+     col = "skyblue",
+     border = "white")</pre><button class="copy-code" type="button">Copy</button></div>
+                <p class="expected"><strong>Expected:</strong> The lower-right Plots pane should display a histogram with bars roughly spanning 10–35 MPG.</p>
+                <label class="completion-check"><input class="visual-check" type="checkbox"> I can see the histogram in the Plots pane</label>
+              </div>
+            </article>
+
+            <article class="test-card" data-test="3">
+              <div class="test-head"><span class="test-status">4</span><div><div class="test-title">Run a hypothesis test</div><div class="test-subtitle">Compare automatic and manual cars</div></div><span class="chevron">⌄</span></div>
+              <div class="test-body">
+                <div class="code-wrap"><pre>t.test(mpg ~ am, data = mtcars, var.equal = TRUE)</pre><button class="copy-code" type="button">Copy</button></div>
+                <p class="expected"><strong>Expected:</strong> A two-sample Student’s t-test with <code>t</code> near <code>-4.106</code>, <code>df = 30</code>, and a p-value near <code>0.000285</code>.</p>
+                <label class="output-label">Paste the Console output here</label>
+                <textarea class="output-entry" placeholder="Two Sample t-test..."></textarea>
+                <div class="check-row"><button class="check-output" type="button">Check result</button><span class="check-message">Looking for the t statistic, degrees of freedom, and p-value.</span></div>
+              </div>
+            </article>
+
+            <article class="test-card" data-test="4">
+              <div class="test-head"><span class="test-status">5</span><div><div class="test-title">Fit a linear regression</div><div class="test-subtitle">Predict MPG from vehicle weight</div></div><span class="chevron">⌄</span></div>
+              <div class="test-body">
+                <div class="code-wrap"><pre>model &lt;- lm(mpg ~ wt, data = mtcars)
+summary(model)</pre><button class="copy-code" type="button">Copy</button></div>
+                <p class="expected"><strong>Expected:</strong> The coefficient for <code>wt</code> is near <code>-5.344</code>, and R-squared is near <code>0.7528</code>.</p>
+                <label class="output-label">Paste the Console output here</label>
+                <textarea class="output-entry" placeholder="Call:&#10;lm(formula = mpg ~ wt..."></textarea>
+                <div class="check-row"><button class="check-output" type="button">Check result</button><span class="check-message">Looking for the weight coefficient and R-squared.</span></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="stage-footer">
+            <button class="secondary-button back-button" type="button">Back</button>
+            <button class="primary-button next-button" id="finishTests" type="button" disabled>Complete setup</button>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="5">
+          <div class="stage-head">
+            <div>
+              <p class="stage-kicker">Step 6 of 6</p>
+              <h2>You are ready for statistics.</h2>
+              <p class="stage-intro">Your computer can run R code, summarize data, produce plots, test hypotheses, and fit a regression model.</p>
+            </div>
+            <span class="time-chip">Complete</span>
+          </div>
+
+          <div class="finish-card">
+            <div class="finish-top">
+              <div class="badge-seal">✓</div>
+              <h3>R Ready</h3>
+              <p>Setup completed for Luis Novoa’s Statistics course on <span id="completionDate"></span>.</p>
+            </div>
+            <div class="readiness-grid">
+              <div class="readiness-item"><span class="readiness-value">R</span><span class="readiness-label">Statistics engine installed</span></div>
+              <div class="readiness-item"><span class="readiness-value">RStudio</span><span class="readiness-label">Workspace installed</span></div>
+              <div class="readiness-item"><span class="readiness-value">5/5</span><span class="readiness-label">Readiness checks passed</span></div>
+            </div>
+            <div class="finish-actions">
+              <button class="primary-button" id="printBadge" type="button">Print or save badge</button>
+              <button class="secondary-button" id="downloadScriptFinal" type="button">Download practice script</button>
+              <button class="secondary-button" id="reviewTests" type="button">Review tests</button>
+            </div>
+          </div>
+
+          <div class="stage-footer">
+            <button class="secondary-button back-button" type="button">Back</button>
+            <span style="color:var(--green);font-weight:850">Setup complete ✓</span>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <p class="sources">Version details checked June 11, 2026 using the official <a href="https://cran.r-project.org/" target="_blank" rel="noopener">R Project</a> and <a href="https://posit.co/download/rstudio-desktop/" target="_blank" rel="noopener">Posit</a> websites.</p>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "r-ready-progress-v1";
+      const defaultState = {
+        os: "",
+        chip: "",
+        currentStep: 0,
+        completed: [],
+        tests: [false, false, false, false, false]
+      };
+      let state = loadState();
+
+      const panels = [...document.querySelectorAll(".step-panel")];
+      const navLinks = [...document.querySelectorAll(".step-link")];
+      const progressFill = document.getElementById("progressFill");
+      const progressText = document.getElementById("progressText");
+      const toast = document.getElementById("toast");
+      const osCards = [...document.querySelectorAll("[data-os-choice]")];
+      const chipButtons = [...document.querySelectorAll("[data-chip]")];
+
+      function loadState() {
+        try {
+          return { ...defaultState, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") };
+        } catch {
+          return { ...defaultState };
+        }
+      }
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        updateProgress();
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+
+      function markComplete(step, complete = true) {
+        const set = new Set(state.completed);
+        complete ? set.add(step) : set.delete(step);
+        state.completed = [...set].sort();
+        saveState();
+      }
+
+      function updateProgress() {
+        const finishedSteps = new Set(state.completed);
+        if (state.os) finishedSteps.add(0);
+        if (state.tests.every(Boolean)) finishedSteps.add(4);
+        if (state.currentStep === 5) finishedSteps.add(5);
+        const percent = Math.round((finishedSteps.size / 6) * 100);
+        progressFill.style.width = `${percent}%`;
+        progressText.textContent = `${percent}%`;
+        navLinks.forEach((link, index) => {
+          link.classList.toggle("active", index === state.currentStep);
+          link.classList.toggle("complete", finishedSteps.has(index));
+          link.querySelector(".step-number").textContent = finishedSteps.has(index) && index !== state.currentStep ? "✓" : index + 1;
+        });
+      }
+
+      function goToStep(step) {
+        const target = Math.max(0, Math.min(5, Number(step)));
+        if (target > 0 && !state.os) {
+          showToast("Choose Windows or Mac first.");
+          return;
+        }
+        state.currentStep = target;
+        panels.forEach(panel => panel.classList.toggle("active", Number(panel.dataset.step) === target));
+        window.scrollTo({ top: document.querySelector(".workspace").offsetTop - 10, behavior: "smooth" });
+        if (target === 5) {
+          markComplete(5);
+          document.getElementById("completionDate").textContent = new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(new Date());
+        }
+        saveState();
+      }
+
+      function applyOS() {
+        document.body.dataset.os = state.os;
+        osCards.forEach(card => card.classList.toggle("selected", card.dataset.osChoice === state.os));
+        document.getElementById("macChipBox").classList.toggle("visible", state.os === "mac");
+        document.querySelector('[data-step="0"] .next-button').disabled = !state.os || (state.os === "mac" && !state.chip);
+        chipButtons.forEach(button => button.classList.toggle("selected", button.dataset.chip === state.chip));
+        const result = document.getElementById("chipResult");
+        const instruction = document.getElementById("macDownloadInstruction");
+        const detail = document.getElementById("macDownloadDetail");
+        if (state.chip === "apple") {
+          result.textContent = "Great. Choose the Apple silicon (arm64) package.";
+          instruction.textContent = "Choose R-4.6.0-arm64.pkg";
+          detail.textContent = "The arm64 package is made for Apple silicon Macs.";
+        } else if (state.chip === "intel") {
+          result.textContent = "Great. Choose the Intel (x86_64) package.";
+          instruction.textContent = "Choose R-4.6.0-x86_64.pkg";
+          detail.textContent = "The x86_64 package is made for Intel Macs.";
+        } else if (state.chip === "unknown") {
+          result.textContent = "Look for “Chip” in About This Mac. “Apple M…” means arm64; “Intel” means x86_64.";
+          instruction.textContent = "Match the package to About This Mac";
+          detail.textContent = "Choose arm64 for an Apple M-series chip or x86_64 for an Intel processor.";
+        } else {
+          result.textContent = "";
+        }
+      }
+
+      osCards.forEach(card => card.addEventListener("click", () => {
+        state.os = card.dataset.osChoice;
+        if (state.os !== "mac") state.chip = "";
+        markComplete(0);
+        applyOS();
+      }));
+
+      chipButtons.forEach(button => button.addEventListener("click", () => {
+        state.chip = button.dataset.chip;
+        applyOS();
+        saveState();
+      }));
+
+      navLinks.forEach(link => link.addEventListener("click", () => goToStep(link.dataset.go)));
+      document.querySelectorAll(".next-button").forEach(button => button.addEventListener("click", () => {
+        if (state.currentStep === 4 && !state.tests.every(Boolean)) return;
+        if (state.currentStep > 0 && state.currentStep < 4) markComplete(state.currentStep);
+        goToStep(state.currentStep + 1);
+      }));
+      document.querySelectorAll(".back-button").forEach(button => button.addEventListener("click", () => goToStep(state.currentStep - 1)));
+
+      document.querySelectorAll(".step-check").forEach(check => {
+        check.checked = state.completed.includes(Number(check.dataset.complete));
+        check.addEventListener("change", () => markComplete(Number(check.dataset.complete), check.checked));
+      });
+
+      document.querySelectorAll("[data-demo]").forEach(demo => {
+        const play = () => {
+          demo.classList.remove("playing");
+          void demo.offsetWidth;
+          demo.classList.add("playing");
+        };
+        demo.querySelector(".play-demo").addEventListener("click", play);
+      });
+
+      document.querySelectorAll(".test-head").forEach(head => head.addEventListener("click", () => head.closest(".test-card").classList.toggle("open")));
+
+      document.querySelectorAll(".copy-code").forEach(button => button.addEventListener("click", async () => {
+        const code = button.previousElementSibling.textContent;
+        try {
+          await navigator.clipboard.writeText(code);
+          button.textContent = "Copied";
+          showToast("Code copied. Paste it into the RStudio Console.");
+          setTimeout(() => button.textContent = "Copy", 1400);
+        } catch {
+          showToast("Select the code and copy it manually.");
+        }
+      }));
+
+      const validators = [
+        text => /(?:\[1\]\s*)?86(?:\D|$)/.test(text),
+        text => /20\.0?9/.test(text) && /6\.0[23]/.test(text),
+        () => true,
+        text => /Two Sample t-test/i.test(text) && /-4\.10/.test(text) && /\b30\b/.test(text) && /(0\.00028|2\.8\d*e-0?4)/i.test(text),
+        text => /-5\.34/.test(text) && /(0\.752|Multiple R-squared)/i.test(text)
+      ];
+
+      function setTestPassed(index, passed) {
+        state.tests[index] = passed;
+        const card = document.querySelector(`[data-test="${index}"]`);
+        card.classList.toggle("passed", passed);
+        card.querySelector(".test-status").textContent = passed ? "✓" : index + 1;
+        document.getElementById("finishTests").disabled = !state.tests.every(Boolean);
+        if (state.tests.every(Boolean)) {
+          markComplete(4);
+          showToast("All five checks passed. Your setup is ready.");
+        } else {
+          saveState();
+        }
+      }
+
+      document.querySelectorAll(".check-output").forEach(button => button.addEventListener("click", () => {
+        const card = button.closest(".test-card");
+        const index = Number(card.dataset.test);
+        const text = card.querySelector(".output-entry").value.trim();
+        const message = card.querySelector(".check-message");
+        if (!text) {
+          message.textContent = "Paste the RStudio output first.";
+          message.className = "check-message retry";
+          return;
+        }
+        if (validators[index](text)) {
+          message.textContent = "Looks right. Check passed.";
+          message.className = "check-message success";
+          setTestPassed(index, true);
+          const next = document.querySelector(`[data-test="${index + 1}"]`);
+          if (next) next.classList.add("open");
+        } else {
+          message.textContent = "I could not find the expected values. Compare your output above and try again.";
+          message.className = "check-message retry";
+        }
+      }));
+
+      document.querySelector(".visual-check").addEventListener("change", event => setTestPassed(2, event.target.checked));
+
+      const scriptContent = `# R Ready: Statistics Course Setup Test
+# Instructor: Luis Novoa
+
+# 1. Calculate a mean
+scores <- c(72, 84, 91, 88, 95)
+mean(scores)
+
+# 2. Summarize built-in data
+head(mtcars)
+mean(mtcars$mpg)
+sd(mtcars$mpg)
+
+# 3. Plot a distribution
+hist(mtcars$mpg,
+     main = "Distribution of Fuel Economy",
+     xlab = "Miles per gallon",
+     col = "skyblue",
+     border = "white")
+
+# 4. Run a hypothesis test
+t.test(mpg ~ am, data = mtcars, var.equal = TRUE)
+
+# 5. Fit a linear regression
+model <- lm(mpg ~ wt, data = mtcars)
+summary(model)
+`;
+
+      function downloadScript() {
+        const blob = new Blob([scriptContent], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "R-ready-practice.R";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast("Practice script downloaded.");
+      }
+
+      document.getElementById("downloadScript").addEventListener("click", downloadScript);
+      document.getElementById("downloadScriptFinal").addEventListener("click", downloadScript);
+      document.getElementById("printBadge").addEventListener("click", () => window.print());
+      document.getElementById("reviewTests").addEventListener("click", () => goToStep(4));
+
+      document.getElementById("resetButton").addEventListener("click", () => {
+        if (!confirm("Start over and erase your saved progress on this computer?")) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state = { ...defaultState, completed: [], tests: [false, false, false, false, false] };
+        document.querySelectorAll("input").forEach(input => input.checked = false);
+        document.querySelectorAll(".test-card").forEach((card, index) => {
+          card.classList.remove("passed");
+          card.querySelector(".test-status").textContent = index + 1;
+        });
+        document.querySelectorAll(".output-entry").forEach(entry => entry.value = "");
+        applyOS();
+        goToStep(0);
+        showToast("Progress cleared.");
+      });
+
+      state.tests.forEach((passed, index) => {
+        const card = document.querySelector(`[data-test="${index}"]`);
+        card.classList.toggle("passed", passed);
+        card.querySelector(".test-status").textContent = passed ? "✓" : index + 1;
+      });
+      document.querySelector(".visual-check").checked = state.tests[2];
+      document.getElementById("finishTests").disabled = !state.tests.every(Boolean);
+      applyOS();
+      goToStep(state.currentStep);
+    })();
+  </script>
+</body>
+</html>
