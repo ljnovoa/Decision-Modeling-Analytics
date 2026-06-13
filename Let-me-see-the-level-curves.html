@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Let me see the level curves!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #111827;
+      --muted: #6b7280;
+      --paper: #fbfcff;
+      --card: #ffffff;
+      --teal: #2563eb;
+      --teal-dark: #1e40af;
+      --gold: #ffb23f;
+      --coral: #f06449;
+      --blue: #277da1;
+      --line: #e5e7eb;
+      --shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: #f6f7fb;
+      font-family: "Roboto", "Segoe UI", sans-serif;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .keep-together { white-space: nowrap; }
+
+    .app-shell {
+      width: min(1760px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0 30px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: var(--shadow);
+    }
+
+    .title-lockup {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      min-width: 0;
+    }
+
+    .katana-icon {
+      width: 104px;
+      height: 76px;
+      flex: 0 0 auto;
+      filter: drop-shadow(0 7px 8px rgba(15, 23, 42, 0.18));
+    }
+
+    .katana-icon .robe {
+      fill: #172554;
+    }
+
+    .katana-icon .armor {
+      fill: #2563eb;
+    }
+
+    .katana-icon .blade-highlight {
+      stroke: #dbeafe;
+    }
+
+    .title-copy { min-width: 0; }
+
+    .intro-band {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 12px 16px;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      text-wrap: pretty;
+    }
+
+    .intro-band strong {
+      flex: 0 0 auto;
+      color: #1d4ed8;
+      font-family: "Roboto", sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--teal);
+      font-size: 0.82rem;
+      font-weight: 850;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: #172554;
+      font-family: "Tektur", sans-serif;
+      font-size: clamp(2.25rem, 3.75vw, 4.25rem);
+      font-weight: 600;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .byline {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      white-space: nowrap;
+    }
+
+    .model-picker {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 7px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: var(--shadow);
+    }
+
+    .model-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 47px;
+      padding: 9px 14px;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 750;
+      line-height: 1.45;
+      text-wrap: balance;
+      transition: background 180ms, color 180ms, transform 180ms, box-shadow 180ms;
+    }
+
+    .model-button:hover { background: rgba(255,255,255,0.75); }
+    .model-button:active { transform: scale(0.98); }
+    .model-button.active {
+      color: white;
+      background: var(--teal);
+      box-shadow: 0 7px 16px rgba(21, 127, 120, 0.25);
+    }
+
+    .model-icon {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .model-icon svg {
+      width: 21px;
+      height: 21px;
+      overflow: visible;
+    }
+
+    .model-button.active .model-icon {
+      color: #ffffff;
+      background: rgba(255,255,255,0.18);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.42fr) minmax(470px, 0.8fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .visual-card, .lesson-card {
+      border: 1px solid rgba(255,255,255,0.72);
+      border-radius: 10px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .visual-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 720px;
+    }
+
+    #scene {
+      display: block;
+      width: 100%;
+      height: 720px;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #scene.dragging { cursor: grabbing; }
+
+    .scene-label {
+      position: absolute;
+      top: 19px;
+      left: 20px;
+      padding: 8px 11px;
+      border: 1px solid rgba(23, 50, 58, 0.08);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.78);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .scene-hint {
+      position: absolute;
+      right: 20px;
+      bottom: 18px;
+      padding: 7px 11px;
+      border-radius: 10px;
+      background: rgba(23, 50, 58, 0.75);
+      color: white;
+      font-size: 0.82rem;
+      pointer-events: none;
+    }
+
+    .legend {
+      position: absolute;
+      left: 18px;
+      bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.82);
+      box-shadow: 0 5px 18px rgba(23,50,58,0.08);
+      pointer-events: none;
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 750;
+    }
+
+    .swatch { width: 18px; height: 4px; border-radius: 3px; }
+    .swatch.slice { background: var(--gold); }
+    .swatch.map { background: var(--blue); }
+
+    .lesson-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 720px;
+      padding: 27px;
+    }
+
+    .step-pill {
+      align-self: flex-start;
+      margin-bottom: 12px;
+      padding: 6px 9px;
+      border-radius: 8px;
+      color: var(--teal-dark);
+      background: rgba(21, 127, 120, 0.1);
+      font-size: 0.8rem;
+      font-weight: 850;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .lesson-card h2 {
+      margin: 0 0 10px;
+      font-family: "Roboto", sans-serif;
+      font-size: clamp(1.15rem, 1.55vw, 1.45rem);
+      font-weight: 400;
+      line-height: 1.25;
+      letter-spacing: 0;
+      white-space: nowrap;
+      text-wrap: balance;
+    }
+
+    .simple-explanation {
+      min-height: 154px;
+      margin: 0;
+      color: #496267;
+      font-size: 0.91rem;
+      line-height: 1.68;
+      text-wrap: pretty;
+    }
+
+    .simple-explanation strong { color: var(--ink); }
+
+    .simple-explanation ul {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding-left: 1.15rem;
+    }
+
+    .simple-explanation li {
+      padding-left: 0.2rem;
+      text-wrap: pretty;
+    }
+
+    .simple-explanation li::marker {
+      color: var(--teal);
+    }
+
+    .altitude-box {
+      margin: 21px 0 17px;
+      padding: 17px;
+      border: 1px solid rgba(21, 127, 120, 0.12);
+      border-radius: 17px;
+      background: rgba(231, 245, 240, 0.65);
+    }
+
+    .altitude-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .altitude-top label {
+      font-size: 0.86rem;
+      font-weight: 850;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .height-readout {
+      padding: 4px 8px;
+      border-radius: 7px;
+      color: white;
+      background: var(--teal);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+      font-weight: 850;
+    }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      outline: none;
+      background: linear-gradient(90deg, var(--teal) var(--fill, 50%), #cbdcd7 var(--fill, 50%));
+      appearance: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+      border: 3px solid white;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 2px 7px rgba(23,50,58,0.25);
+      appearance: none;
+    }
+
+    .play-button, .view-button {
+      border: 0;
+      cursor: pointer;
+      transition: transform 160ms, background 160ms;
+    }
+
+    .play-button {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      color: white;
+      background: var(--coral);
+      font-size: 0.93rem;
+      box-shadow: 0 5px 12px rgba(240, 100, 73, 0.25);
+    }
+
+    .play-button:active, .view-button:active { transform: scale(0.95); }
+
+    .level-fact {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+      padding: 14px;
+      border-radius: 15px;
+      background: #fff8e9;
+      color: #685333;
+      font-size: 0.94rem;
+      line-height: 1.5;
+      text-wrap: pretty;
+    }
+
+    .fact-mark {
+      display: grid;
+      flex: 0 0 25px;
+      width: 25px;
+      height: 25px;
+      place-items: center;
+      border-radius: 50%;
+      color: #805300;
+      background: #ffd988;
+      font-family: "Roboto", sans-serif;
+      font-weight: bold;
+    }
+
+    .map-wrap {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 15px;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    #map {
+      display: block;
+      width: 130px;
+      height: 130px;
+      border: 1px solid rgba(23,50,58,0.1);
+      border-radius: 15px;
+      background: #f6f1e5;
+    }
+
+    .map-copy h3 {
+      margin: 0 0 6px;
+      font-family: "Roboto", sans-serif;
+      font-size: 1rem;
+      font-weight: 400;
+      text-wrap: balance;
+    }
+
+    .map-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.81rem;
+      line-height: 1.62;
+      text-wrap: pretty;
+    }
+
+    .view-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-top: 18px;
+    }
+
+    .view-button {
+      flex: 1;
+      padding: 9px 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .view-button:hover { background: #f4f8f6; }
+
+    .cut-again-button {
+      grid-column: 1 / -1;
+      border-color: #f8c45c;
+      color: #854d0e;
+      background: #fff8e9;
+    }
+
+    .cut-again-button:hover {
+      border-color: #f59e0b;
+      color: #713f12;
+      background: #fef3c7;
+    }
+
+    .question-strip {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      align-items: center;
+      margin-top: 16px;
+      padding: 18px 22px;
+      border: 1px solid rgba(255,255,255,0.72);
+      border-radius: 19px;
+      background: rgba(255,255,255,0.58);
+      color: var(--muted);
+    }
+
+    .question-strip strong {
+      color: var(--ink);
+      font-family: "Roboto", sans-serif;
+      font-size: 1.02rem;
+      font-weight: 400;
+      text-wrap: balance;
+    }
+
+    .question-strip p { margin: 0; font-size: 0.84rem; line-height: 1.6; text-wrap: pretty; }
+
+    @media (max-width: 980px) {
+      h1, .byline { white-space: normal; }
+      .main-grid { grid-template-columns: 1fr; }
+      .lesson-card { min-height: auto; }
+      .simple-explanation { min-height: 0; }
+      .map-wrap { margin-top: 7px; }
+    }
+
+    @media (max-width: 650px) {
+      .app-shell { width: min(100% - 18px, 1480px); padding-top: 18px; }
+      .model-picker { grid-template-columns: repeat(2, 1fr); }
+      .model-button { font-size: 0.82rem; }
+      .visual-card { min-height: 480px; }
+      #scene { height: 480px; }
+      .lesson-card { padding: 21px; }
+      .katana-icon { width: 70px; height: 54px; }
+      .intro-band { align-items: flex-start; flex-direction: column; }
+      .lesson-card h2 { white-space: normal; }
+      .question-strip { grid-template-columns: 1fr; gap: 5px; }
+      .scene-hint { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header>
+      <div class="title-lockup">
+        <svg class="katana-icon" viewBox="0 0 142 98" role="img" aria-label="Samurai holding a katana">
+          <circle cx="38" cy="18" r="10" fill="#111827"/>
+          <path d="M31 10c-5-7 3-12 8-7 7-3 12 3 8 8Z" fill="#111827"/>
+          <path class="robe" d="M29 27c-8 9-7 27-2 38L10 88h47l7-25 12 19h21L72 51 56 31c-7-7-20-9-27-4Z"/>
+          <path class="armor" d="M31 29c9-5 20-2 26 5l9 12-15 10-20-9Z" opacity=".75"/>
+          <path d="M49 35c11 6 21 14 32 19l5-8c-10-7-19-15-28-23Z" fill="#172554"/>
+          <path d="M78 46c8 2 15 0 20-4l5 7c-8 7-17 10-28 6Z" fill="#111827"/>
+          <path d="M27 48 8 67l4 4 21-14Z" fill="#111827"/>
+          <path d="M30 56 6 76" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+          <path d="m96 46 41-34" fill="none" stroke="#111827" stroke-width="6" stroke-linecap="round"/>
+          <path class="blade-highlight" d="m98 44 38-31" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="m90 43 11 11" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+          <path d="M7 89h102" stroke="#2563eb" stroke-width="3" stroke-linecap="round" opacity=".25"/>
+        </svg>
+        <div class="title-copy">
+          <p class="eyebrow">A visual optimization lab</p>
+          <h1>Let me see the level curves!</h1>
+          <p class="byline">Designed by Luis Novoa and built using Codex - for educational purposes</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="intro-band">
+      <strong>Our challenge</strong>
+      <span>The x-y plane is the <b>ground</b>. A mountain rises above it, but our map is only a flat sheet of paper. How can we show the mountain's altitude on <span class="keep-together">that 2D map?</span></span>
+    </section>
+
+    <nav class="model-picker" aria-label="Choose a landscape">
+      <button class="model-button active" data-model="mountain">
+        <span class="model-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20 9 7l3 5 3-4 7 12Z" fill="currentColor" opacity=".25"/><path d="m2 20 7-13 3 5 3-4 7 12M6.6 11.5 9 14l2-1.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+        Mountain
+      </button>
+      <button class="model-button" data-model="flat">
+        <span class="model-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 15-9 3 3-15 9Z" fill="currentColor" opacity=".22"/><path d="m3 17 15-9 3 3-15 9Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 20h15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        Flat mountain
+      </button>
+      <button class="model-button" data-model="bowl">
+        <span class="model-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7c3 9 15 9 18 0v10H3Z" fill="currentColor" opacity=".2"/><path d="M3 7c3 9 15 9 18 0M5 10c3 7 11 7 14 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        A valley
+      </button>
+      <button class="model-button" data-model="waves">
+        <span class="model-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18 6 9l4 7 4-11 3 8 5-4v9Z" fill="currentColor" opacity=".22"/><path d="M2 18 6 9l4 7 4-11 3 8 5-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+        Mountain with hills and valleys
+      </button>
+    </nav>
+
+    <section class="main-grid">
+      <div class="visual-card">
+        <canvas id="scene" aria-label="Interactive three-dimensional landscape with a cutting plane"></canvas>
+        <div class="scene-label">3D landscape</div>
+        <div class="legend">
+          <span><i class="swatch slice"></i> curve on landscape</span>
+          <span><i class="swatch map"></i> same curve on the x-y ground</span>
+        </div>
+        <div class="scene-hint">Drag to rotate · Scroll to zoom</div>
+      </div>
+
+      <aside class="lesson-card" aria-live="polite">
+        <span class="step-pill" id="stepPill">Start here</span>
+        <h2 id="lessonTitle">Imagine slicing a mountain.</h2>
+        <div class="simple-explanation" id="lessonText"></div>
+
+        <div class="altitude-box">
+          <div class="altitude-top">
+            <label for="heightSlider">Cutting altitude</label>
+            <output class="height-readout" id="heightReadout">500 ft</output>
+          </div>
+          <div class="slider-row">
+            <input id="heightSlider" type="range" min="100" max="900" step="25" value="500" aria-label="Cutting altitude in feet">
+            <button class="play-button" id="playButton" aria-label="Animate cutting height" title="Animate">▶</button>
+          </div>
+        </div>
+
+        <div class="level-fact">
+          <span class="fact-mark">=</span>
+          <span id="factText">Every point on the bright loop has exactly the same altitude. The corresponding imaginary loop on the ground is a <strong>level curve</strong> <span class="keep-together">(or contour line).</span></span>
+        </div>
+
+        <div class="map-wrap">
+          <canvas id="map" aria-label="Top-down contour map"></canvas>
+          <div class="map-copy">
+            <h3>Now look straight down.</h3>
+            <p id="mapText">The blue curve is the corresponding imaginary loop on the x-y ground. Its shape tells us where the mountain reaches this altitude.</p>
+          </div>
+        </div>
+
+        <div class="view-controls">
+          <button class="view-button" id="view3d">3D view</button>
+          <button class="view-button" id="viewTop">Look from above</button>
+          <button class="view-button cut-again-button" id="replayCut">Show me the sword cut again</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="question-strip">
+      <strong id="questionTitle">What happens when the mountain changes?</strong>
+      <p id="questionText">Try the other shapes above. Before moving the slider, guess what each level curve will look like.</p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const scene = document.getElementById("scene");
+      const mapCanvas = document.getElementById("map");
+      const ctx = scene.getContext("2d");
+      const mapCtx = mapCanvas.getContext("2d");
+      const slider = document.getElementById("heightSlider");
+      const readout = document.getElementById("heightReadout");
+      const playButton = document.getElementById("playButton");
+      const lessonTitle = document.getElementById("lessonTitle");
+      const lessonText = document.getElementById("lessonText");
+      const factText = document.getElementById("factText");
+      const mapText = document.getElementById("mapText");
+      const stepPill = document.getElementById("stepPill");
+      const questionTitle = document.getElementById("questionTitle");
+      const questionText = document.getElementById("questionText");
+      const replayCut = document.getElementById("replayCut");
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const models = {
+        mountain: {
+          title: "Imagine slicing a mountain.",
+          step: "Start here",
+          text: "<ul><li>The golden sheet is like the trace left by a perfectly flat cut of a samurai sword.</li><li>Where it touches the mountain, it draws a bright loop.</li><li><strong>Everyone standing on that loop would be at the same altitude</strong>, even though they are in different places.</li></ul>",
+          fact: "Every point on the bright loop has exactly the same altitude. The corresponding imaginary loop on the ground is a <strong>level curve</strong> <span class=\"keep-together\">(or contour line).</span>",
+          map: "The blue curve is the corresponding imaginary loop on the x-y ground. Higher cuts usually make smaller loops near the summit.",
+          question: "Can one altitude make more than one loop?",
+          prompt: "Move to a bumpy landscape and find out. A single level can create several separate curves.",
+          fn(x, y) {
+            const peak = 1.18 * Math.exp(-1.85 * (x * x + 0.86 * y * y));
+            const shoulder = 0.24 * Math.exp(-7.5 * ((x + 0.44) ** 2 + (y - 0.15) ** 2));
+            const dent = 0.08 * Math.exp(-12 * ((x - 0.18) ** 2 + (y + 0.12) ** 2));
+            const texture = 0.025 * Math.sin(7 * x + 2 * y) * Math.cos(5 * y);
+            return Math.max(0, peak + shoulder - dent + texture);
+          }
+        },
+        flat: {
+          title: "What if the mountain was flat?",
+          step: "Linear programming",
+          text: "<ul><li>Now the mountain is a tilted tabletop: <strong>no bumps and no curves</strong>. This is what a two-variable linear objective function looks like.</li><li>Slide the golden sheet and watch the meeting line travel without changing slope.</li><li>Say the objective of an LP were <strong>maximize 2x + 3y</strong>. How do we plot the level curve where the objective function takes an “altitude” of 10?</li><li>Set <strong>2x + 3y = 10</strong>. This is the equation of a straight line! Remember the song?</li><li>Every point on that line will score a value of 10 in the objective function, right?</li></ul>",
+          fact: "For a linear objective function, the level curves are <strong>straight, parallel lines</strong>. Better values lie <span class=\"keep-together\">farther in one direction as the mountain is flat.</span>",
+          map: "The lines never bend or cross. Each one is a different value of the same linear objective function.",
+          question: "How does this help with linear programming?",
+          prompt: "Imagine sliding this line across a feasible region. The last place it touches is where the best feasible value lives.",
+          fn(x, y) { return 0.53 + 0.31 * x - 0.22 * y; }
+        },
+        bowl: {
+          title: "What if the mountain formed a valley?",
+          step: "A smooth minimum",
+          text: "<ul><li>A valley has one lowest spot.</li><li>Think of dropping a marble: it rolls toward the middle.</li><li>Each level curve is a ring of places with the same altitude, and <strong>smaller rings lead us toward the minimum</strong>.</li></ul>",
+          fact: "Nested rings are like a target. For this valley, the center marks the <strong>minimum</strong> <span class=\"keep-together\">of the objective function.</span>",
+          map: "The oval rings shrink around the best point. Optimization methods often use this pattern to decide which way is downhill.",
+          question: "What would an upside-down bowl mean?",
+          prompt: "The center would become a maximum instead: the highest altitude rather than the lowest one.",
+          fn(x, y) { return 0.08 + 0.47 * x * x + 0.68 * y * y + 0.12 * x * y; }
+        },
+        waves: {
+          title: "What if it had many hills and valleys?",
+          step: "A tricky landscape",
+          text: "<ul><li>This landscape has several hills and dips.</li><li>At one altitude, the slice may touch in separate places.</li><li>That means <strong>one level can make several loops</strong>, like islands appearing at the same tide.</li></ul>",
+          fact: "Complicated objective functions can have many local hills and valleys. A nearby best point may not be the <strong class=\"keep-together\">best point overall</strong>.",
+          map: "Separate blue loops still mean the same thing: every point on every loop has exactly the selected value.",
+          question: "Why can optimization get difficult here?",
+          prompt: "A downhill traveler can settle in the nearest valley and never discover a deeper valley somewhere else.",
+          fn(x, y) {
+            return 0.48
+              + 0.28 * Math.sin(2.6 * x + 0.4) * Math.cos(3.0 * y - 0.2)
+              + 0.18 * Math.exp(-6 * ((x + 0.48) ** 2 + (y + 0.36) ** 2))
+              - 0.16 * Math.exp(-8 * ((x - 0.42) ** 2 + (y - 0.34) ** 2));
+          }
+        }
+      };
+
+      const state = {
+        model: "mountain",
+        yaw: -0.785,
+        pitch: 1.16,
+        zoom: 0.9,
+        targetYaw: null,
+        targetPitch: null,
+        dragging: false,
+        lastX: 0,
+        lastY: 0,
+        playing: false,
+        playDirection: 1,
+        playAltitude: 500,
+        cutStart: null,
+        cutProgress: reduceMotion ? 1 : 0,
+        lastTime: performance.now(),
+        data: null,
+        dirty: true
+      };
+
+      const N = 42;
+      const DOMAIN = 1.08;
+      const Z_SCALE = 1.38;
+      const floorZ = -0.12;
+      const MAX_ALTITUDE = 1000;
+      const palette = [
+        [82, 154, 139],
+        [102, 174, 135],
+        [139, 190, 126],
+        [190, 204, 116],
+        [229, 195, 105],
+        [224, 156, 91]
+      ];
+
+      function mix(a, b, t) { return a + (b - a) * t; }
+      function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+      function levelFromAltitude() { return Number(slider.value) / MAX_ALTITUDE; }
+      function keepLastWords(text, count = 3) {
+        const words = text.trim().split(/\s+/);
+        if (words.length <= count) return `<span class="keep-together">${text}</span>`;
+        const start = words.slice(0, -count).join(" ");
+        const ending = words.slice(-count).join(" ");
+        return `${start} <span class="keep-together">${ending}</span>`;
+      }
+
+      function colorAt(t, alpha = 1) {
+        t = clamp(t, 0, 0.999);
+        const p = t * (palette.length - 1);
+        const i = Math.floor(p);
+        const f = p - i;
+        const a = palette[i];
+        const b = palette[Math.min(i + 1, palette.length - 1)];
+        return `rgba(${mix(a[0],b[0],f)|0},${mix(a[1],b[1],f)|0},${mix(a[2],b[2],f)|0},${alpha})`;
+      }
+
+      function buildData() {
+        const fn = models[state.model].fn;
+        const raw = [];
+        let min = Infinity;
+        let max = -Infinity;
+        for (let j = 0; j <= N; j++) {
+          const row = [];
+          const y = -DOMAIN + (2 * DOMAIN * j / N);
+          for (let i = 0; i <= N; i++) {
+            const x = -DOMAIN + (2 * DOMAIN * i / N);
+            const z = fn(x, y);
+            min = Math.min(min, z);
+            max = Math.max(max, z);
+            row.push(z);
+          }
+          raw.push(row);
+        }
+        const range = max - min || 1;
+        const values = raw.map(row => row.map(v => (v - min) / range));
+        state.data = { values, min, max };
+      }
+
+      function resizeCanvas(canvas, context) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.max(1, Math.round(rect.width * dpr));
+        const h = Math.max(1, Math.round(rect.height * dpr));
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+          context.setTransform(dpr, 0, 0, dpr, 0, 0);
+          return true;
+        }
+        return false;
+      }
+
+      function projectionFactory(width, height) {
+        const cy = Math.cos(state.yaw);
+        const sy = Math.sin(state.yaw);
+        const cp = Math.cos(state.pitch);
+        const sp = Math.sin(state.pitch);
+        const scale = Math.min(width, height) * 0.255 * state.zoom;
+        const centerX = width * 0.5;
+        const centerY = height * 0.57;
+        return (x, y, z) => {
+          const xr = x * cy - y * sy;
+          const yr = x * sy + y * cy;
+          const yp = yr * cp - z * sp;
+          const depth = yr * sp + z * cp;
+          return { x: centerX + xr * scale, y: centerY + yp * scale, depth };
+        };
+      }
+
+      function worldPoint(i, j, zOverride) {
+        const x = -DOMAIN + 2 * DOMAIN * i / N;
+        const y = -DOMAIN + 2 * DOMAIN * j / N;
+        const z = zOverride === undefined ? state.data.values[j][i] * Z_SCALE : zOverride;
+        return { x, y, z };
+      }
+
+      function edgePoint(edge, i, j, level) {
+        const v = state.data.values;
+        let a, b;
+        if (edge === 0) { a = [i,j]; b = [i+1,j]; }
+        else if (edge === 1) { a = [i+1,j]; b = [i+1,j+1]; }
+        else if (edge === 2) { a = [i+1,j+1]; b = [i,j+1]; }
+        else { a = [i,j+1]; b = [i,j]; }
+        const va = v[a[1]][a[0]];
+        const vb = v[b[1]][b[0]];
+        const t = Math.abs(vb - va) < 1e-8 ? 0.5 : (level - va) / (vb - va);
+        return {
+          x: -DOMAIN + 2 * DOMAIN * (a[0] + (b[0] - a[0]) * t) / N,
+          y: -DOMAIN + 2 * DOMAIN * (a[1] + (b[1] - a[1]) * t) / N
+        };
+      }
+
+      function contourSegments(level) {
+        const segments = [];
+        const v = state.data.values;
+        const cases = {
+          1:[[3,0]], 2:[[0,1]], 3:[[3,1]], 4:[[1,2]], 5:[[3,2],[0,1]],
+          6:[[0,2]], 7:[[3,2]], 8:[[2,3]], 9:[[0,2]], 10:[[0,3],[1,2]],
+          11:[[1,2]], 12:[[1,3]], 13:[[0,1]], 14:[[3,0]]
+        };
+        for (let j = 0; j < N; j++) {
+          for (let i = 0; i < N; i++) {
+            let code = 0;
+            if (v[j][i] >= level) code |= 1;
+            if (v[j][i+1] >= level) code |= 2;
+            if (v[j+1][i+1] >= level) code |= 4;
+            if (v[j+1][i] >= level) code |= 8;
+            const pairs = cases[code];
+            if (!pairs) continue;
+            for (const pair of pairs) {
+              segments.push([edgePoint(pair[0], i, j, level), edgePoint(pair[1], i, j, level)]);
+            }
+          }
+        }
+        return segments;
+      }
+
+      function strokeSegments(context, segments, project, z, color, width, glow) {
+        context.save();
+        context.beginPath();
+        for (const segment of segments) {
+          const a = project(segment[0].x, segment[0].y, z);
+          const b = project(segment[1].x, segment[1].y, z);
+          context.moveTo(a.x, a.y);
+          context.lineTo(b.x, b.y);
+        }
+        context.strokeStyle = color;
+        context.lineWidth = width;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        if (glow) {
+          context.shadowColor = color;
+          context.shadowBlur = glow;
+        }
+        context.stroke();
+        context.restore();
+      }
+
+      function drawAnimatedKatana(context, width, height, project, planeZ, progress) {
+        if (progress >= 1 || reduceMotion) return;
+        const eased = progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+        const planeSize = DOMAIN * 1.06;
+        const planeCorners = [
+          project(-planeSize, -planeSize, planeZ),
+          project(planeSize, -planeSize, planeZ),
+          project(planeSize, planeSize, planeZ),
+          project(-planeSize, planeSize, planeZ)
+        ];
+        const pathA = project(-DOMAIN * 2.15, 0, planeZ + 0.02);
+        const pathB = project(DOMAIN * 2.15, 0, planeZ + 0.02);
+        const right = pathA.x > pathB.x ? pathA : pathB;
+        const left = pathA.x > pathB.x ? pathB : pathA;
+        const x = mix(right.x, left.x, eased);
+        const y = mix(right.y, left.y, eased) + 65 + 36 * (1 - eased);
+        const angle = Math.atan2(left.y - right.y, left.x - right.x) + (130 * Math.PI / 180);
+
+        context.save();
+        context.beginPath();
+        context.rect(x, 0, width - x + 2, height);
+        context.clip();
+        context.beginPath();
+        planeCorners.forEach((point, index) => {
+          if (index === 0) context.moveTo(point.x, point.y);
+          else context.lineTo(point.x, point.y);
+        });
+        context.closePath();
+        context.fillStyle = "rgba(255, 190, 64, 0.3)";
+        context.shadowColor = "rgba(255, 176, 0, 0.34)";
+        context.shadowBlur = 14;
+        context.fill();
+        context.shadowBlur = 0;
+        context.strokeStyle = "rgba(245, 158, 11, 0.62)";
+        context.lineWidth = 1.3;
+        context.setLineDash([7, 5]);
+        context.stroke();
+        context.restore();
+
+        context.save();
+        context.translate(x, y);
+        context.rotate(angle);
+        context.lineCap = "round";
+
+        context.shadowColor = "rgba(37,99,235,0.35)";
+        context.shadowBlur = 12;
+        context.strokeStyle = "#111827";
+        context.lineWidth = 8;
+        context.beginPath();
+        context.moveTo(-48, 0);
+        context.lineTo(105, 0);
+        context.stroke();
+
+        context.shadowBlur = 0;
+        context.strokeStyle = "#dbeafe";
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(-3, -1.5);
+        context.lineTo(105, -1.5);
+        context.stroke();
+
+        context.strokeStyle = "#f59e0b";
+        context.lineWidth = 5;
+        context.beginPath();
+        context.moveTo(-8, -11);
+        context.lineTo(-8, 11);
+        context.stroke();
+
+        context.strokeStyle = "#172554";
+        context.lineWidth = 10;
+        context.beginPath();
+        context.moveTo(-48, 0);
+        context.lineTo(-12, 0);
+        context.stroke();
+
+        context.strokeStyle = "#f59e0b";
+        context.lineWidth = 1.5;
+        for (let h = -42; h <= -17; h += 8) {
+          context.beginPath();
+          context.moveTo(h, -5);
+          context.lineTo(h + 6, 5);
+          context.stroke();
+        }
+        context.restore();
+      }
+
+      function drawScene() {
+        const rect = scene.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        ctx.clearRect(0, 0, width, height);
+        const project = projectionFactory(width, height);
+        const level = levelFromAltitude();
+        const planeZ = level * Z_SCALE;
+
+        const bg = ctx.createLinearGradient(0, 0, 0, height);
+        bg.addColorStop(0, "#ffffff");
+        bg.addColorStop(1, "#fbfcff");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.45)";
+        ctx.beginPath();
+        ctx.arc(width * 0.82, height * 0.14, height * 0.23, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        const floorCorners = [
+          project(-DOMAIN, -DOMAIN, floorZ), project(DOMAIN, -DOMAIN, floorZ),
+          project(DOMAIN, DOMAIN, floorZ), project(-DOMAIN, DOMAIN, floorZ)
+        ];
+        ctx.beginPath();
+        floorCorners.forEach((p, i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+        ctx.closePath();
+        ctx.fillStyle = "rgba(245, 240, 224, 0.8)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(23,50,58,0.24)";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(23,50,58,0.07)";
+        ctx.lineWidth = 0.7;
+        for (let g = -1; g <= 1.001; g += 0.25) {
+          let a = project(g * DOMAIN, -DOMAIN, floorZ);
+          let b = project(g * DOMAIN, DOMAIN, floorZ);
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+          a = project(-DOMAIN, g * DOMAIN, floorZ);
+          b = project(DOMAIN, g * DOMAIN, floorZ);
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+        ctx.restore();
+
+        const contourLevels = [0.18, 0.34, 0.50, 0.66, 0.82];
+        for (const contourLevel of contourLevels) {
+          strokeSegments(ctx, contourSegments(contourLevel), project, floorZ + 0.006, "rgba(39,125,161,0.28)", 1.1, 0);
+        }
+
+        const cells = [];
+        for (let j = 0; j < N; j++) {
+          for (let i = 0; i < N; i++) {
+            const points = [
+              worldPoint(i,j), worldPoint(i+1,j), worldPoint(i+1,j+1), worldPoint(i,j+1)
+            ];
+            const projected = points.map(p => project(p.x,p.y,p.z));
+            cells.push({
+              points: projected,
+              depth: projected.reduce((s,p) => s + p.depth, 0) / 4,
+              value: points.reduce((s,p) => s + p.z / Z_SCALE, 0) / 4
+            });
+          }
+        }
+        cells.sort((a,b) => a.depth - b.depth);
+        for (const cell of cells) {
+          ctx.beginPath();
+          cell.points.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+          ctx.closePath();
+          ctx.fillStyle = colorAt(cell.value, 0.91);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,0.055)";
+          ctx.lineWidth = 0.45;
+          ctx.stroke();
+        }
+
+        const planeSize = DOMAIN * 1.06;
+        const plane = [
+          project(-planeSize,-planeSize,planeZ), project(planeSize,-planeSize,planeZ),
+          project(planeSize,planeSize,planeZ), project(-planeSize,planeSize,planeZ)
+        ];
+        ctx.save();
+        ctx.beginPath();
+        plane.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+        ctx.closePath();
+        ctx.fillStyle = "rgba(255, 190, 64, 0.18)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(218, 135, 19, 0.72)";
+        ctx.lineWidth = 1.4;
+        ctx.setLineDash([7,5]);
+        ctx.stroke();
+        ctx.restore();
+
+        const current = contourSegments(level);
+        ctx.save();
+        const revealX = mix(width + 40, -40, state.cutProgress);
+        ctx.beginPath();
+        ctx.rect(revealX, 0, width - revealX + 40, height);
+        ctx.clip();
+        strokeSegments(ctx, current, project, planeZ + 0.012, "#ffb000", 4.8, 11);
+        ctx.restore();
+        strokeSegments(ctx, current, project, floorZ + 0.014, "#277da1", 3.1, 5);
+
+        ctx.save();
+        ctx.setLineDash([3,5]);
+        ctx.strokeStyle = "rgba(37,99,235,0.3)";
+        ctx.lineWidth = 0.9;
+        for (let k = 0; k < current.length; k += Math.max(1, Math.floor(current.length / 25))) {
+          const p = current[k][0];
+          const a = project(p.x,p.y,floorZ);
+          const b = project(p.x,p.y,planeZ);
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+        ctx.restore();
+
+        const origin = project(-DOMAIN, DOMAIN, floorZ);
+        const xEnd = project(-DOMAIN + 0.42, DOMAIN, floorZ);
+        const yEnd = project(-DOMAIN, DOMAIN - 0.42, floorZ);
+        ctx.save();
+        ctx.strokeStyle = "rgba(23,50,58,0.65)";
+        ctx.fillStyle = "#111827";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(origin.x,origin.y); ctx.lineTo(xEnd.x,xEnd.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(origin.x,origin.y); ctx.lineTo(yEnd.x,yEnd.y); ctx.stroke();
+        ctx.font = '700 12px "Roboto", sans-serif';
+        const drawAxisLabel = (label, point, dx, dy) => {
+          const lx = point.x + dx;
+          const ly = point.y + dy;
+          ctx.beginPath();
+          ctx.arc(lx, ly - 4, 10, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(255,255,255,0.94)";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(17,24,39,0.16)";
+          ctx.stroke();
+          ctx.fillStyle = "#111827";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(label, lx, ly - 4);
+        };
+        drawAxisLabel("x", xEnd, 12, 1);
+        drawAxisLabel("y", yEnd, -2, -12);
+        ctx.restore();
+
+        const labelAnchor = project(planeSize, -planeSize, planeZ);
+        ctx.save();
+        ctx.fillStyle = "rgba(128,83,0,0.9)";
+        ctx.font = '700 10px "Roboto", sans-serif';
+        ctx.fillText(`${Math.round(Number(slider.value))} FT LEVEL`, labelAnchor.x + 8, labelAnchor.y - 6);
+        ctx.restore();
+
+        drawAnimatedKatana(ctx, width, height, project, planeZ, state.cutProgress);
+      }
+
+      function drawMap() {
+        const rect = mapCanvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        mapCtx.clearRect(0,0,w,h);
+        mapCtx.fillStyle = "#ffffff";
+        mapCtx.fillRect(0,0,w,h);
+
+        const padding = 11;
+        const toMap = (x,y) => ({
+          x: padding + (x + DOMAIN) / (2 * DOMAIN) * (w - 2 * padding),
+          y: h - padding - (y + DOMAIN) / (2 * DOMAIN) * (h - 2 * padding)
+        });
+
+        mapCtx.save();
+        mapCtx.strokeStyle = "rgba(23,50,58,0.08)";
+        mapCtx.lineWidth = 0.7;
+        for (let i = 0; i <= 4; i++) {
+          const p = padding + i * (w - 2 * padding) / 4;
+          mapCtx.beginPath(); mapCtx.moveTo(p,padding); mapCtx.lineTo(p,h-padding); mapCtx.stroke();
+          mapCtx.beginPath(); mapCtx.moveTo(padding,p); mapCtx.lineTo(w-padding,p); mapCtx.stroke();
+        }
+        mapCtx.restore();
+
+        for (const level of [0.18,0.34,0.50,0.66,0.82]) {
+          const segments = contourSegments(level);
+          mapCtx.beginPath();
+          for (const s of segments) {
+            const a = toMap(s[0].x,s[0].y);
+            const b = toMap(s[1].x,s[1].y);
+            mapCtx.moveTo(a.x,a.y); mapCtx.lineTo(b.x,b.y);
+          }
+          mapCtx.strokeStyle = "rgba(23,50,58,0.24)";
+          mapCtx.lineWidth = 0.85;
+          mapCtx.stroke();
+        }
+
+        const current = contourSegments(levelFromAltitude());
+        mapCtx.save();
+        mapCtx.beginPath();
+        for (const s of current) {
+          const a = toMap(s[0].x,s[0].y);
+          const b = toMap(s[1].x,s[1].y);
+          mapCtx.moveTo(a.x,a.y); mapCtx.lineTo(b.x,b.y);
+        }
+        mapCtx.strokeStyle = "#277da1";
+        mapCtx.lineWidth = 3;
+        mapCtx.lineCap = "round";
+        mapCtx.shadowColor = "rgba(39,125,161,0.45)";
+        mapCtx.shadowBlur = 5;
+        mapCtx.stroke();
+        mapCtx.restore();
+
+        mapCtx.fillStyle = "rgba(23,50,58,0.55)";
+        mapCtx.font = '700 9px "Roboto", sans-serif';
+        mapCtx.fillText("y", 6, 12);
+        mapCtx.fillText("x", w - 16, h - 6);
+      }
+
+      function render() {
+        resizeCanvas(scene, ctx);
+        resizeCanvas(mapCanvas, mapCtx);
+        if (!state.data) buildData();
+        drawScene();
+        drawMap();
+        state.dirty = false;
+      }
+
+      function updateSliderVisual() {
+        const value = Number(slider.value);
+        const fill = ((value - Number(slider.min)) / (Number(slider.max) - Number(slider.min))) * 100;
+        slider.style.setProperty("--fill", `${fill}%`);
+        readout.value = `${Math.round(value)} ft`;
+        readout.textContent = `${Math.round(value)} ft`;
+      }
+
+      function setModel(name) {
+        state.model = name;
+        buildData();
+        const model = models[name];
+        lessonTitle.textContent = model.title;
+        lessonText.innerHTML = model.text;
+        factText.innerHTML = model.fact;
+        mapText.innerHTML = keepLastWords(model.map);
+        stepPill.textContent = model.step;
+        questionTitle.textContent = model.question;
+        questionText.innerHTML = keepLastWords(model.prompt);
+        document.querySelectorAll(".model-button").forEach(button => {
+          const active = button.dataset.model === name;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        state.dirty = true;
+      }
+
+      function setView(yaw, pitch, zoom) {
+        state.targetYaw = yaw;
+        state.targetPitch = pitch;
+        state.zoom = zoom;
+      }
+
+      function animate(time) {
+        const dt = Math.min(50, time - state.lastTime);
+        state.lastTime = time;
+        if (!reduceMotion && state.cutProgress < 1) {
+          if (state.cutStart === null) state.cutStart = time + 450;
+          state.cutProgress = clamp((time - state.cutStart) / 2600, 0, 1);
+          state.dirty = true;
+        }
+        if (state.playing) {
+          state.playAltitude += state.playDirection * dt * 0.12;
+          if (state.playAltitude >= Number(slider.max)) {
+            state.playAltitude = Number(slider.max);
+            state.playDirection = -1;
+          }
+          if (state.playAltitude <= Number(slider.min)) {
+            state.playAltitude = Number(slider.min);
+            state.playDirection = 1;
+          }
+          slider.value = String(Math.round(state.playAltitude / 25) * 25);
+          updateSliderVisual();
+          state.dirty = true;
+        }
+        if (state.targetYaw !== null) {
+          const yawDiff = state.targetYaw - state.yaw;
+          const pitchDiff = state.targetPitch - state.pitch;
+          state.yaw += yawDiff * 0.12;
+          state.pitch += pitchDiff * 0.12;
+          if (Math.abs(yawDiff) < 0.002 && Math.abs(pitchDiff) < 0.002) {
+            state.yaw = state.targetYaw;
+            state.pitch = state.targetPitch;
+            state.targetYaw = null;
+            state.targetPitch = null;
+          }
+          state.dirty = true;
+        }
+        if (state.dirty) render();
+        requestAnimationFrame(animate);
+      }
+
+      document.querySelectorAll(".model-button").forEach(button => {
+        button.addEventListener("click", () => setModel(button.dataset.model));
+      });
+
+      slider.addEventListener("input", () => {
+        state.playAltitude = Number(slider.value);
+        updateSliderVisual();
+        state.dirty = true;
+      });
+
+      playButton.addEventListener("click", () => {
+        state.playing = !state.playing;
+        state.playAltitude = Number(slider.value);
+        playButton.textContent = state.playing ? "❚❚" : "▶";
+        playButton.setAttribute("aria-label", state.playing ? "Pause altitude animation" : "Animate cutting height");
+      });
+
+      scene.addEventListener("pointerdown", event => {
+        state.dragging = true;
+        state.targetYaw = null;
+        state.targetPitch = null;
+        state.lastX = event.clientX;
+        state.lastY = event.clientY;
+        scene.classList.add("dragging");
+        scene.setPointerCapture(event.pointerId);
+      });
+
+      scene.addEventListener("pointermove", event => {
+        if (!state.dragging) return;
+        const dx = event.clientX - state.lastX;
+        const dy = event.clientY - state.lastY;
+        state.yaw += dx * 0.008;
+        state.pitch = clamp(state.pitch - dy * 0.007, 0.06, 1.42);
+        state.lastX = event.clientX;
+        state.lastY = event.clientY;
+        state.dirty = true;
+      });
+
+      function stopDrag(event) {
+        state.dragging = false;
+        scene.classList.remove("dragging");
+        if (event.pointerId !== undefined && scene.hasPointerCapture(event.pointerId)) {
+          scene.releasePointerCapture(event.pointerId);
+        }
+      }
+      scene.addEventListener("pointerup", stopDrag);
+      scene.addEventListener("pointercancel", stopDrag);
+
+      scene.addEventListener("wheel", event => {
+        event.preventDefault();
+        state.zoom = clamp(state.zoom * (event.deltaY > 0 ? 0.92 : 1.08), 0.68, 1.48);
+        state.dirty = true;
+      }, { passive: false });
+
+      document.getElementById("view3d").addEventListener("click", () => setView(-0.785, 1.16, 0.9));
+      document.getElementById("viewTop").addEventListener("click", () => setView(-Math.PI / 2, 0.06, 0.94));
+      replayCut.addEventListener("click", () => {
+        if (reduceMotion) {
+          state.cutProgress = 1;
+          state.dirty = true;
+          return;
+        }
+        state.cutStart = performance.now() + 180;
+        state.cutProgress = 0;
+        state.dirty = true;
+      });
+
+      window.addEventListener("resize", () => { state.dirty = true; });
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => { state.dirty = true; });
+      }
+
+      updateSliderVisual();
+      setModel("mountain");
+      requestAnimationFrame(animate);
+    })();
+  </script>
+</body>
+</html>
