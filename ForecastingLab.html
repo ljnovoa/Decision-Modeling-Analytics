@@ -117,7 +117,7 @@
 
   header h1 {
     font-family: 'Syne', sans-serif;
-    font-size: 1.9rem;
+    font-size: 2.3rem;
     font-weight: 800;
     letter-spacing: -0.03em;
     color: var(--text);
@@ -644,6 +644,44 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+  /* TABLE */
+  #forecastTable {
+    width: auto;
+    border-collapse: collapse;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+  }
+  #forecastTable th {
+    position: sticky;
+    top: 0;
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    width: 1px;
+  }
+  #forecastTable td {
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+    color: var(--text-dim);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    white-space: nowrap;
+    width: 1px;
+  }
+  #forecastTable tr:hover td { background: rgba(255,255,255,0.02); }
+  #forecastTable .col-actual { color: var(--text); }
+  #forecastTable .col-ma  { color: #00e5ff; }
+  #forecastTable .col-wma { color: #a78bfa; }
+  #forecastTable .col-ses { color: #ff6b6b; }
+  #forecastTable .col-err { color: var(--text-muted); font-size: 0.65rem; }
+
   /* Notification */
   .toast {
     position: fixed;
@@ -724,11 +762,40 @@
             <option value="demand">Quarterly Product Demand</option>
             <option value="sales">Monthly Store Sales</option>
             <option value="calls">Weekly Support Calls</option>
+            <option value="trend">Monthly Sales (Trend) ↗</option>
           </select>
           <button class="btn btn-ghost" onclick="loadSample()">Load Sample →</button>
         </div>
 
         <div id="dataStatus" style="margin-top:0.6rem;font-size:0.72rem;color:var(--text-muted);font-family:'DM Mono',monospace;"></div>
+      </div>
+    </div>
+
+    <!-- VARIABLE INFO -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="dot" style="background:var(--accent4);box-shadow:0 0 6px var(--accent4);"></div>
+        <h2>Variable</h2>
+      </div>
+      <div class="panel-body" style="display:flex;flex-direction:column;gap:0.5rem;">
+        <div class="control-row">
+          <span class="control-label" style="flex-shrink:0;">Name</span>
+          <input type="text" id="varName" placeholder="e.g. Sales" oninput="renderAll()"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.25rem 0.5rem;font-family:'DM Sans',sans-serif;font-size:0.78rem;outline:none;min-width:0;margin-left:0.5rem;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div class="control-row">
+          <span class="control-label" style="flex-shrink:0;">Units</span>
+          <input type="text" id="varUnits" placeholder="e.g. units, $" oninput="renderAll()"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.25rem 0.5rem;font-family:'DM Sans',sans-serif;font-size:0.78rem;outline:none;min-width:0;margin-left:0.5rem;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div class="control-row">
+          <span class="control-label" style="flex-shrink:0;">Time unit</span>
+          <input type="text" id="varTime" placeholder="e.g. Month, Week" oninput="renderAll()"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.25rem 0.5rem;font-family:'DM Sans',sans-serif;font-size:0.78rem;outline:none;min-width:0;margin-left:0.5rem;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
       </div>
     </div>
 
@@ -825,7 +892,12 @@
   <div class="chart-area">
     <div class="chart-toolbar">
       <div style="font-family:'Syne',sans-serif;font-size:0.8rem;color:var(--text-muted);" id="dataLabel">No data loaded</div>
-      <div class="stats-row" id="statsRow"></div>
+      <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+        <div class="stats-row" id="statsRow"></div>
+        <button id="tableToggleBtn" class="btn btn-ghost" onclick="toggleTable()" style="padding:0.3rem 0.7rem;font-size:0.72rem;display:none;">
+          ⊞ Show Table
+        </button>
+      </div>
     </div>
 
     <div class="chart-wrap" id="chartWrap">
@@ -834,6 +906,14 @@
         <p>Load data using the panel on the left to start visualizing forecasts.</p>
       </div>
       <canvas id="mainChart" style="display:none;"></canvas>
+    </div>
+
+    <!-- DATA TABLE -->
+    <div id="tableWrap" style="display:none;border-top:1px solid var(--border);overflow:auto;max-height:240px;flex-shrink:0;">
+      <table id="forecastTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -856,7 +936,14 @@ let sesAlpha = 0.30;
 const samples = {
   demand: [142,148,139,155,150,143,158,152,147,161,155,148,163,157,145,160,153,149,158,152],
   sales:  [820,835,811,849,862,830,845,858,841,867,875,852,861,877,848,870,883,856,872,890],
-  calls:  [312,298,325,308,319,303,327,311,296,321,307,315,299,323,310,318,302,328,314,306]
+  calls:  [312,298,325,308,319,303,327,311,296,321,307,315,299,323,310,318,302,328,314,306],
+  trend:  [102,111,107,118,122,116,128,135,129,141,138,150,147,158,162,155,169,165,174,179]
+};
+const sampleMeta = {
+  demand: { name: 'Product Demand', units: 'units',  time: 'Quarter' },
+  sales:  { name: 'Store Sales',    units: '$000',   time: 'Month'   },
+  calls:  { name: 'Support Calls',  units: 'calls',  time: 'Week'    },
+  trend:  { name: 'Product Sales',  units: 'units',  time: 'Month'   }
 };
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
@@ -883,17 +970,23 @@ function parseValues(text) {
 function setData(vals, name) {
   if (vals.length < 4) { showToast('Need at least 4 data points.', 'error'); return; }
   rawData = vals;
-  labels = vals.map((_, i) => `t${i + 1}`);
+  labels = vals.map((_, i) => i + 1);
   document.getElementById('dataStatus').textContent = `✓ ${vals.length} observations loaded`;
   document.getElementById('dataLabel').textContent = `${name} · N = ${vals.length}`;
   showToast(`${vals.length} observations loaded`, 'success');
   renderAll();
 }
 
+function clearVarFields() {
+  document.getElementById('varName').value  = '';
+  document.getElementById('varUnits').value = '';
+  document.getElementById('varTime').value  = '';
+}
 function loadPaste() {
   const text = document.getElementById('pasteInput').value;
   const vals = parseValues(text);
   if (!vals.length) { showToast('No valid numbers found.', 'error'); return; }
+  clearVarFields();
   setData(vals, 'Pasted Data');
 }
 
@@ -904,6 +997,7 @@ function loadFile(e) {
   reader.onload = ev => {
     const vals = parseValues(ev.target.result);
     if (!vals.length) { showToast('No valid numbers found in file.', 'error'); return; }
+    clearVarFields();
     setData(vals, file.name.replace('.csv',''));
   };
   reader.readAsText(file);
@@ -911,8 +1005,11 @@ function loadFile(e) {
 
 function loadSample() {
   const key = document.getElementById('sampleSelect').value;
-  const names = { demand:'Quarterly Demand', sales:'Monthly Sales', calls:'Weekly Calls' };
-  setData([...samples[key]], names[key]);
+  const meta = sampleMeta[key];
+  document.getElementById('varName').value  = meta.name;
+  document.getElementById('varUnits').value = meta.units;
+  document.getElementById('varTime').value  = meta.time;
+  setData([...samples[key]], meta.name);
 }
 
 // ─── METHOD TOGGLES ──────────────────────────────────────────────────────────
@@ -1075,7 +1172,7 @@ function extendForecast(fitted, n, horizon) {
   if (lastForecast === null) return { ext: [], extLabels: [] };
   const ext = new Array(horizon).fill(lastForecast);
   const extLabels = [];
-  for (let h = 1; h <= horizon; h++) extLabels.push(`t${n + h}`);
+  for (let h = 1; h <= horizon; h++) extLabels.push(n + h);
   return { ext, extLabels, lastIdx };
 }
 
@@ -1085,7 +1182,7 @@ function renderAll() {
 
   const n = rawData.length;
   const extLabels = [];
-  for (let h = 1; h <= horizon; h++) extLabels.push(`t${n + h}`);
+  for (let h = 1; h <= horizon; h++) extLabels.push(n + h);
   const allLabels = [...labels, ...extLabels];
 
   // Compute methods
@@ -1167,7 +1264,9 @@ function renderAll() {
 
   if (sesFitted && methods.ses) {
     const sesExt = extendForecast(sesFitted, n, horizon);
-    const sesData = [...sesFitted, ...sesExt.ext];
+    // Null index 0: period 1 has no forecast (Y1 is init only), so no dot at t=1
+    const sesDisplay = [null, ...sesFitted.slice(0, -1)];  // shift right: sesDisplay[i]=Ŷ_{i+1}=fitted[i-1]
+    const sesData = [...sesDisplay, ...sesExt.ext];
     datasets.push({
       label: `SES (α=${sesAlpha.toFixed(2)})`,
       data: sesData,
@@ -1189,6 +1288,25 @@ function renderAll() {
 
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('mainChart').style.display = 'block';
+  document.getElementById('tableToggleBtn').style.display = 'inline-flex';
+  if (tableVisible) renderTable();
+}
+
+function getAxisTitles() {
+  const vName  = (document.getElementById('varName')?.value  || '').trim();
+  const vUnits = (document.getElementById('varUnits')?.value || '').trim();
+  const vTime  = (document.getElementById('varTime')?.value  || '').trim();
+  const yTitle = [vName, vUnits ? `(${vUnits})` : ''].filter(Boolean).join(' ');
+  return { yTitle, vTime };
+}
+
+function applyAxisTitles() {
+  if (!mainChart) return;
+  const { yTitle, vTime } = getAxisTitles();
+  mainChart.options.scales.y.title.display = !!yTitle;
+  mainChart.options.scales.y.title.text = yTitle;
+  mainChart.options.scales.x.title.display = !!vTime;
+  mainChart.options.scales.x.title.text = vTime;
 }
 
 function renderMainChart(labels, datasets, splitIdx) {
@@ -1213,6 +1331,7 @@ function renderMainChart(labels, datasets, splitIdx) {
     });
     // Remove surplus datasets
     existing.splice(datasets.length);
+    applyAxisTitles();
     mainChart.update('active');
     return;
   }
@@ -1254,14 +1373,24 @@ function renderMainChart(labels, datasets, splitIdx) {
       },
       scales: {
         x: {
+          type: 'linear',
+          min: 0,
           grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: { color: '#6b7280', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 20 },
-          border: { color: '#252a38' }
+          ticks: {
+            color: '#6b7280',
+            font: { family: 'DM Mono', size: 12 },
+            maxTicksLimit: 20,
+            stepSize: 1,
+            precision: 0
+          },
+          border: { color: '#252a38' },
+          title: { display: false, text: '', color: '#6b7280', font: { family: 'DM Sans', size: 13 } }
         },
         y: {
           grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: { color: '#6b7280', font: { family: 'DM Mono', size: 10 } },
-          border: { color: '#252a38' }
+          ticks: { color: '#6b7280', font: { family: 'DM Mono', size: 12 } },
+          border: { color: '#252a38' },
+          title: { display: false, text: '', color: '#6b7280', font: { family: 'DM Sans', size: 13 } }
         }
       },
       animation: { duration: 400, easing: 'easeInOutCubic' }
@@ -1293,6 +1422,7 @@ function renderMainChart(labels, datasets, splitIdx) {
     }]
   });
   mainChart._forecastSplitIdx = splitIdx;
+  applyAxisTitles();
 }
 
 function updateStats(maM, wmaM, sesM) {
@@ -1351,6 +1481,85 @@ dropZone.addEventListener('drop', e => {
 });
 
 
+// ─── TABLE ───────────────────────────────────────────────────────────────────
+let tableVisible = false;
+
+function toggleTable() {
+  tableVisible = !tableVisible;
+  document.getElementById('tableWrap').style.display = tableVisible ? 'block' : 'none';
+  document.getElementById('tableToggleBtn').textContent = tableVisible ? '⊞ Hide Table' : '⊞ Show Table';
+  if (tableVisible) renderTable();
+}
+
+function renderTable() {
+  if (!rawData.length) return;
+  const n = rawData.length;
+  const vName = (document.getElementById('varName')?.value || '').trim() || 'Y';
+  const vUnits = (document.getElementById('varUnits')?.value || '').trim();
+  const unitSuffix = vUnits ? ` (${vUnits})` : '';
+
+  const maF   = methods.ma  ? computeMA(rawData, maK) : null;
+  const wmaF  = methods.wma ? computeWMA(rawData, wmaK, wmaWeights) : null;
+  const sesF  = methods.ses ? computeSES(rawData, sesAlpha) : null;
+  const sesDisp = sesF ? [null, ...sesF.slice(0, -1)] : null;  // Ŷ_{i+1}=sesF[i-1], shift right
+
+  // Build header
+  const head = document.getElementById('tableHead');
+  const body = document.getElementById('tableBody');
+  const vTime  = (document.getElementById('varTime')?.value  || '').trim();
+  const timeLbl = vTime || 'Period';
+  let headHTML = '<tr><th>' + timeLbl + '</th><th>' + vName + unitSuffix + '</th>';
+  if (maF)     headHTML += `<th class="col-ma">MA(k=${maK})${unitSuffix}</th><th class="col-err">Error</th>`;
+  if (wmaF)    headHTML += `<th class="col-wma">WMA(k=${wmaK})${unitSuffix}</th><th class="col-err">Error</th>`;
+  if (sesDisp) headHTML += `<th class="col-ses">SES(α=${sesAlpha.toFixed(2)})${unitSuffix}</th><th class="col-err">Error</th>`;
+  headHTML += '</tr>';
+  head.innerHTML = headHTML;
+
+  let bodyHTML = '';
+  for (let i = 0; i < n; i++) {
+    const per = i + 1;
+    const y = rawData[i];
+    let row = `<tr><td>${per}</td><td class="col-actual">${y.toFixed(2)}</td>`;
+
+    if (maF) {
+      // maF[t] = forecast for period t+1; so forecast for period i is maF[i-1]
+      const fVal = i > 0 && maF[i-1] !== null ? maF[i-1] : null;
+      const err  = fVal !== null ? (y - fVal) : null;
+      row += `<td class="col-ma">${fVal !== null ? fVal.toFixed(2) : '—'}</td>`;
+      row += `<td class="col-err">${err !== null ? err.toFixed(2) : '—'}</td>`;
+    }
+    if (wmaF) {
+      const fVal = i > 0 && wmaF[i-1] !== null ? wmaF[i-1] : null;
+      const err  = fVal !== null ? (y - fVal) : null;
+      row += `<td class="col-wma">${fVal !== null ? fVal.toFixed(2) : '—'}</td>`;
+      row += `<td class="col-err">${err !== null ? err.toFixed(2) : '—'}</td>`;
+    }
+    if (sesDisp) {
+      // sesDisp[t] = Ŷ_{t+1}; forecast for period i is sesDisp[i-1]
+      const fVal = i > 0 && sesDisp[i-1] !== null ? sesDisp[i-1] : null;
+      const err  = fVal !== null ? (y - fVal) : null;
+      row += `<td class="col-ses">${fVal !== null ? fVal.toFixed(2) : '—'}</td>`;
+      row += `<td class="col-err">${err !== null ? err.toFixed(2) : '—'}</td>`;
+    }
+    row += '</tr>';
+    bodyHTML += row;
+  }
+
+  // Add forecast rows (horizon)
+  const maExt   = maF   ? extendForecast(maF, n, horizon)   : null;
+  const wmaExt  = wmaF  ? extendForecast(wmaF, n, horizon)  : null;
+  const sesExt  = sesF  ? extendForecast(sesF, n, horizon)  : null;
+  for (let h = 1; h <= horizon; h++) {
+    let row = `<tr style="opacity:0.6;"><td>${timeLbl} ${n + h} ▶</td><td class="col-actual">—</td>`;
+    if (maExt)  row += `<td class="col-ma">${maExt.ext[h-1].toFixed(2)}</td><td class="col-err">—</td>`;
+    if (wmaExt) row += `<td class="col-wma">${wmaExt.ext[h-1].toFixed(2)}</td><td class="col-err">—</td>`;
+    if (sesExt) row += `<td class="col-ses">${sesExt.ext[h-1].toFixed(2)}</td><td class="col-err">—</td>`;
+    row += '</tr>';
+    bodyHTML += row;
+  }
+  body.innerHTML = bodyHTML;
+}
+
 // ─── RESIZER ──────────────────────────────────────────────────────────────────
 (function() {
   const resizer = document.getElementById('resizer');
@@ -1388,7 +1597,6 @@ dropZone.addEventListener('drop', e => {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 buildWeightsGrid();
-loadSample(); // start with sample data for immediate engagement
 </script>
 </body>
 </html>
