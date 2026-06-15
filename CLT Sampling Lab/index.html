@@ -1154,8 +1154,8 @@
         "The population distribution describes individual outcomes.",
         "The sampling distributions describe statistics calculated from multiple samples.",
         "The theoretical mean of the sample mean is " + fmt3.format(stats.mean) + "; the theoretical mean of the sample sum is " + fmt3.format(sumTheoryMean) + ".",
-        "For the mean, the theoretical std. error is " + fmt3.format(se) + ". Larger n should tighten the histogram.",
-        "The sum has theoretical standard deviation " + fmt3.format(sumTheorySd) + ". It spreads out as n grows."
+        "For the sample mean, the theoretical std. dev is " + fmt3.format(se) + ". Larger n should tighten the histogram.",
+        "The sum has theoretical std. dev " + fmt3.format(sumTheorySd) + ". It spreads out as n grows."
       ];
       if (state.dist === "gamma") notices.push("The gamma shape control lets you move from strongly right-skewed data toward a more rounded population.");
       if (state.sampleSize < 10) {
