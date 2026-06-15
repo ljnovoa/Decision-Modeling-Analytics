@@ -510,7 +510,7 @@
   <main>
     <aside class="controls" aria-label="Simulation controls">
       <section class="control-group">
-        <div class="label-row"><label for="dist">Population</label></div>
+        <div class="label-row"><label for="dist">Population's Distribution</label></div>
         <select id="dist">
           <option value="normal">Normal</option>
           <option value="uniform">Uniform</option>
@@ -606,7 +606,7 @@
           <div class="panel-head">
             <div>
               <h2>Sampling Distribution of the Mean</h2>
-              <p>Each bar counts sample means within a small range. The curve is the CLT prediction, scaled to the histogram counts.</p>
+              <p>Each bar counts sample means within a small range. The curve is the CLT prediction, scaled to the counts.</p>
             </div>
           </div>
           <div class="chart-with-side">
@@ -641,7 +641,7 @@
           <div class="panel-head">
             <div>
               <h2>Sampling Distribution of the Sum</h2>
-              <p>Each bar counts sample sums within a small range. The curve is the CLT prediction, scaled to the histogram counts.</p>
+              <p>Each bar counts sample sums within a small range. The curve is the CLT prediction, scaled to the counts.</p>
             </div>
           </div>
           <div class="chart-with-side">
@@ -1148,17 +1148,18 @@
       const sumTheoryMean = stats.mean * state.sampleSize;
       const sumTheorySd = Math.sqrt(stats.variance * state.sampleSize);
       $("lessonText").textContent = state.dist === "exponential"
-        ? "A right-skewed population is perfect for seeing the CLT: the original shape stays skewed, while the means become more bell-shaped."
+        ? "A right-skewed population is perfect for seeing the CLT: the original shape stays skewed, while the means' become more bell-shaped as n increases."
         : "Change the sample size and trials to see whether the statistic settles down, spreads out, or becomes more normal-looking.";
       const notices = [
-        "The population describes individual outcomes; the sampling distributions describe statistics calculated from repeated samples.",
+        "The population distribution describes individual outcomes.",
+        "The sampling distributions describe statistics calculated from multiple samples.",
         "The theoretical mean of the sample mean is " + fmt3.format(stats.mean) + "; the theoretical mean of the sample sum is " + fmt3.format(sumTheoryMean) + ".",
-        "For the mean, the theoretical standard error is " + fmt3.format(se) + ", so larger samples should tighten the histogram.",
-        "The sum has theoretical standard deviation " + fmt3.format(sumTheorySd) + ". It spreads out as n grows, while the mean tightens."
+        "For the mean, the theoretical standard error is " + fmt3.format(se) + ". Larger sample sizes should tighten the histogram.",
+        "The sum has theoretical standard deviation " + fmt3.format(sumTheorySd) + ". It spreads out as the sample size grows."
       ];
       if (state.dist === "gamma") notices.push("The gamma shape control lets you move from strongly right-skewed data toward a more rounded population.");
       if (state.sampleSize < 10) {
-        notices.push("With very small samples, the sampling distribution still carries a lot of the population's original personality.");
+        notices.push("With small sample sizes, the sampling distribution still carries some of the population's personality.");
       }
       $("notices").innerHTML = notices.map((text) => "<li>" + text + "</li>").join("");
     }
