@@ -1,0 +1,1974 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An interactive guide to choosing data visualizations by level of measurement and communication goal, with R, Python and Excel examples.">
+  <title>Plot Compass | Choose a Data Visualization</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Monoton&family=Roboto:wght@400;500;600;700;800&display=swap");
+
+    :root {
+      --ink: #18212f;
+      --muted: #5d6878;
+      --paper: #f7f7f2;
+      --card: #ffffff;
+      --line: #dfe3e6;
+      --navy: #173f5f;
+      --teal: #168c87;
+      --teal-soft: #dff3f0;
+      --coral: #ef6a5b;
+      --coral-soft: #fde9e5;
+      --gold: #e9aa32;
+      --gold-soft: #fff2d7;
+      --violet: #7457a6;
+      --violet-soft: #eee8f7;
+      --shadow: 0 18px 50px rgba(24, 33, 47, 0.09);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 5%, rgba(22, 140, 135, 0.10), transparent 28rem),
+        radial-gradient(circle at 92% 12%, rgba(239, 106, 91, 0.09), transparent 25rem),
+        var(--paper);
+      font-family: Roboto, "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
+      line-height: 1.55;
+    }
+
+    button, select { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid rgba(22, 140, 135, 0.35); outline-offset: 3px; }
+
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 24px 0 12px;
+    }
+
+    .topnav { display: flex; gap: 8px; }
+    .topnav a {
+      padding: 9px 13px;
+      border-radius: 999px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.91rem;
+      font-weight: 700;
+    }
+    .topnav a:hover { background: white; color: var(--ink); }
+
+    .hero {
+      padding: 64px 0 78px;
+    }
+
+    .hero-title {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+    .hero-compass {
+      flex: 0 0 auto;
+      width: clamp(72px, 9vw, 112px);
+      filter: drop-shadow(0 12px 18px rgba(23,63,95,.17));
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Monoton, Roboto, "Trebuchet MS", sans-serif;
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 400;
+      line-height: .94;
+      letter-spacing: -0.015em;
+    }
+    .hero h2 {
+      margin: 0 0 18px;
+      color: var(--teal);
+      font-size: clamp(2rem, 4vw, 3.7rem);
+      line-height: 1.05;
+      letter-spacing: -.045em;
+    }
+    .hero-description {
+      max-width: 920px;
+      margin: 0 0 15px;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.24rem);
+    }
+    .hero-credit { margin: 0 0 28px; color: var(--navy); font-size: .82rem; font-weight: 650; }
+
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .primary-btn, .secondary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 48px;
+      padding: 0 19px;
+      border-radius: 13px;
+      text-decoration: none;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+    .primary-btn { color: white; background: var(--navy); box-shadow: 0 10px 24px rgba(23,63,95,.2); }
+    .primary-btn:hover { transform: translateY(-1px); }
+    .secondary-btn { background: rgba(255,255,255,.75); border-color: var(--line); }
+
+    .section { padding: 74px 0; }
+    .section-kicker { color: var(--teal); font-size: .8rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: 30px;
+    }
+    .section-head h2 {
+      margin: 5px 0 0;
+      font-family: Roboto, "Trebuchet MS", sans-serif;
+      font-size: clamp(2.1rem, 4vw, 3.5rem);
+      font-weight: 500;
+      line-height: 1.05;
+      letter-spacing: -.035em;
+    }
+    #levels .section-head > div { max-width: 720px; }
+    #levels .section-head h2 { text-wrap: balance; }
+    .section-head p { max-width: 500px; margin: 0; color: var(--muted); }
+
+    .levels {
+      display: grid;
+      grid-template-columns: 1fr 34px 1fr 34px 1fr 34px 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .level-card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.72);
+    }
+    .inherit-arrow { display: grid; place-items: center; padding-right: 8px; color: var(--navy); font-size: 4.2rem; font-weight: 900; line-height: 1; }
+    .level-visual { height: 88px; display: grid; place-items: center; margin-bottom: 12px; border-radius: 13px; background: #f4f6f6; }
+    .level-visual svg { width: 100%; height: 76px; display: block; }
+    .level-no {
+      display: inline-grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 10px;
+      color: white;
+      background: var(--navy);
+      font-weight: 850;
+    }
+    .level-card.nominal .level-no { background: #3568c0; }
+    .level-card.ordinal .level-no { background: #8a54b8; }
+    .level-card.interval .level-no { background: #dc654f; }
+    .level-card.ratio .level-no { background: #168c87; }
+    .level-card h3 { margin: 12px 0 8px; font-size: 1.18rem; }
+    .level-facts { display: grid; gap: 9px; margin: 0; }
+    .level-facts div { padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: .78rem; text-wrap: pretty; }
+    .level-facts dt { color: var(--ink); font-weight: 850; }
+    .level-facts dd { margin: 2px 0 0; text-wrap: balance; }
+    .keep-together { white-space: nowrap; }
+
+    .hero-description,
+    .hero-credit,
+    .section-head p,
+    .quiz-launch p,
+    .chooser-head p,
+    .step-title,
+    .chooser-note,
+    .goal strong,
+    .goal small,
+    .rec-card > p,
+    .why,
+    .atlas-card p,
+    .info-row,
+    .quiz-question,
+    .answer-panel,
+    .references-list li {
+      text-wrap: pretty;
+      orphans: 2;
+      widows: 2;
+    }
+
+    .hero h2,
+    .section-head h2,
+    .chooser-head h2,
+    .quiz-launch h3,
+    .rec-card h3,
+    .atlas-card h3 {
+      text-wrap: balance;
+    }
+    .level-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; margin-top: 14px; }
+    .level-group { position: relative; padding-top: 20px; color: var(--muted); text-align: center; font-size: .84rem; font-weight: 750; }
+    .level-group::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 11px; border: solid var(--navy); border-width: 0 3px 3px; border-radius: 0 0 6px 6px; }
+    .quiz-launch { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 30px; padding: 20px 22px; border-radius: 18px; color: white; background: var(--violet); }
+    .quiz-launch h3 { margin: 0 0 3px; }
+    .quiz-launch p { margin: 0; color: rgba(255,255,255,.75); }
+    .quiz-btn { flex: 0 0 auto; padding: 11px 15px; border: 0; border-radius: 11px; color: var(--violet); background: white; cursor: pointer; font-weight: 850; }
+
+    .chooser-wrap {
+      padding: 28px;
+      border: 1px solid #c9d7d8;
+      border-radius: 30px;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(213, 235, 232, .96), rgba(231, 232, 243, .96));
+      box-shadow: 0 24px 60px rgba(23, 63, 95, .14);
+    }
+    .chooser-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    .chooser-head h2 { margin: 5px 0 0; font-family: Roboto, "Trebuchet MS", sans-serif; font-size: clamp(2.1rem, 4vw, 3.5rem); font-weight: 500; line-height: 1.05; letter-spacing: -.035em; }
+    .chooser-head p { margin: 0; color: var(--muted); }
+    .icon-heading { display: flex; align-items: center; gap: 14px; }
+    .heading-icon { flex: 0 0 auto; display: grid; width: 52px; height: 52px; place-items: center; border-radius: 16px; color: var(--navy); background: white; box-shadow: 0 10px 24px rgba(23,63,95,.11); }
+    .heading-icon svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    #atlas .icon-heading h2 { font-size: clamp(1.9rem, 3vw, 3rem); white-space: nowrap; }
+    .reset-btn {
+      padding: 9px 13px;
+      color: var(--navy);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 750;
+    }
+    .reset-btn:hover { background: white; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: minmax(230px, .68fr) minmax(0, 1.32fr);
+      gap: 18px;
+    }
+    .step-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.72);
+    }
+    .step-title { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-weight: 800; }
+    .step-badge { display: grid; width: 30px; height: 30px; place-items: center; border: 2px solid var(--navy); border-radius: 9px; color: white; background: var(--navy); box-shadow: 0 4px 10px rgba(23,63,95,.18); font-size: .82rem; }
+
+    .option-grid { display: grid; grid-template-columns: 1fr; gap: 7px; }
+    .option {
+      min-height: 48px;
+      padding: 9px 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 12px;
+      color: var(--ink);
+      background: white;
+      cursor: pointer;
+      text-align: left;
+    }
+    .option strong, .option small { display: block; }
+    .option strong { font-size: .92rem; }
+    .option small { display: none; }
+    .option:hover { border-color: var(--teal); }
+    .option.selected { color: #10253a; border-color: #78b8b1; background: #cce9e5; box-shadow: inset 0 0 0 2px rgba(22,140,135,.18); }
+
+    .goal-grid { display: grid; grid-template-columns: 1fr; gap: 7px; }
+    .goal {
+      min-height: 66px;
+      padding: 11px 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--ink);
+      background: white;
+      cursor: pointer;
+      text-align: left;
+    }
+    .goal.selected { color: white; background: var(--teal); border-color: var(--teal); }
+    .goal:disabled { cursor: not-allowed; color: #929aa4; background: #edf0f1; opacity: .68; }
+    .goal strong, .goal small { display: block; }
+    .goal strong { font-size: .88rem; }
+    .goal small { margin-top: 3px; color: var(--muted); font-size: .73rem; line-height: 1.35; }
+    .goal.selected small { color: rgba(255,255,255,.8); }
+    .goal:disabled small { color: #929aa4; }
+
+    .recommendations {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .chooser-note { grid-column: 1 / -1; padding: 12px 14px; border: 1px solid #d4e8e6; border-radius: 12px; color: #0e706c; background: var(--teal-soft); font-size: .84rem; }
+    .rec-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 390px;
+      padding: 20px;
+      color: var(--ink);
+      border-radius: 19px;
+      background: white;
+      display: flex;
+      flex-direction: column;
+    }
+    .rec-card.primary { box-shadow: none; }
+    .rec-rank { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .fit-pill { padding: 5px 9px; border-radius: 999px; color: #0d6f6a; background: var(--teal-soft); font-size: .72rem; font-weight: 850; text-transform: uppercase; letter-spacing: .05em; }
+    .rec-index { color: #9aa1aa; font-family: Roboto, "Trebuchet MS", sans-serif; font-size: 1.5rem; }
+    .rec-card h3 { margin: 12px 0 5px; font-family: Roboto, "Trebuchet MS", sans-serif; font-size: 1.62rem; font-weight: 700; }
+    .rec-card > p { min-height: 67px; margin: 0; color: var(--muted); font-size: .9rem; }
+    .chart-preview { width: 100%; height: 132px; margin: 13px 0; overflow: hidden; border-radius: 12px; background: #f7f8f8; }
+    .chart-preview svg { display: block; width: 100%; height: 100%; }
+    .why { margin-bottom: 18px; padding: 10px 12px; border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; background: var(--gold-soft); font-size: .8rem; }
+    .details-btn {
+      width: 100%;
+      margin-top: auto;
+      padding: 10px;
+      border: 0;
+      border-radius: 10px;
+      color: white;
+      background: var(--navy);
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .empty-rec {
+      grid-column: 1/-1;
+      padding: 28px 32px;
+      border: 2px dashed #6a8c96;
+      border-radius: 18px;
+      color: #173f5f;
+      background: rgba(255,255,255,.82);
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 750;
+    }
+
+    .atlas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .atlas-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.84);
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .atlas-card:hover { transform: translateY(-3px); box-shadow: 0 16px 35px rgba(24,33,47,.09); }
+    .atlas-top { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
+    .atlas-card h3 { margin: 0; font-family: Roboto, "Trebuchet MS", sans-serif; font-size: 1.38rem; }
+    .mini-pill { padding: 4px 7px; border-radius: 7px; color: var(--violet); background: var(--violet-soft); font-size: .7rem; font-weight: 850; }
+    .atlas-card p { margin: 7px 0 14px; color: var(--muted); font-size: .86rem; }
+    .atlas-card .chart-preview { height: 115px; margin: auto 0 0; }
+
+    footer { padding: 38px 0 48px; color: var(--muted); font-size: .86rem; }
+    .footer-inner { padding-top: 22px; border-top: 1px solid var(--line); }
+    .footer-title { color: var(--ink); font-weight: 850; }
+    .footer-credit { margin-top: 5px; font-size: .74rem; }
+    .references-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; font-size: .78rem; line-height: 1.45; }
+    .references-list li { padding: 10px 13px; border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.76); }
+    .references-list a { color: var(--teal); font-weight: 750; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    #references .section-head h2 { font-size: clamp(1.55rem, 2.7vw, 2.25rem); }
+    #references .section-head p { max-width: 440px; font-size: .84rem; }
+
+    dialog {
+      width: min(1120px, calc(100% - 28px));
+      max-height: calc(100dvh - 20px);
+      padding: 0;
+      border: 0;
+      border-radius: 24px;
+      color: var(--ink);
+      background: white;
+      box-shadow: 0 28px 90px rgba(0,0,0,.25);
+      overflow: hidden;
+    }
+    #chartDialog { display: none; height: min(92dvh, 900px); flex-direction: column; }
+    #chartDialog[open] { display: flex; }
+    dialog::backdrop { background: rgba(14,26,39,.62); backdrop-filter: blur(4px); }
+    .modal-head { display: flex; justify-content: space-between; gap: 20px; padding: 19px 25px 15px; border-bottom: 1px solid var(--line); }
+    .modal-head h2 { margin: 0; font-family: Roboto, "Trebuchet MS", sans-serif; font-size: 2rem; }
+    .modal-head p { margin: 3px 0 0; color: var(--muted); }
+    .close-btn { width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 50%; background: white; cursor: pointer; font-size: 1.2rem; }
+    .modal-body { flex: 1 1 auto; min-height: 0; padding: 22px 25px 28px; overflow: auto; }
+    .modal-top { display: grid; grid-template-columns: minmax(0,.82fr) minmax(0,1.18fr); gap: 24px; align-items: start; }
+    .modal-top > div { min-width: 0; }
+    .modal-visual .chart-preview { height: 190px; margin-top: 0; }
+    .info-list { display: grid; gap: 8px; margin-top: 12px; }
+    .info-row { padding: 10px 12px; border-radius: 10px; background: #f5f6f6; font-size: .82rem; }
+    .info-row strong { display: block; margin-bottom: 2px; }
+    .info-row a { color: var(--teal); font-weight: 750; text-underline-offset: 3px; }
+    .manual-links { display: flex; flex-wrap: wrap; gap: 7px 12px; }
+    .interpretation-panel { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 22px; }
+    .interpretation-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 15px; background: #fff; }
+    .interpretation-card.interpret { border-top: 4px solid var(--violet); background: #faf8ff; }
+    .interpretation-card.attention { border-top: 4px solid var(--teal); background: #f4fbfa; }
+    .interpretation-card.caveats { border-top: 4px solid var(--gold); background: #fffbf2; }
+    .interpretation-heading { display: flex; gap: 9px; align-items: center; margin-bottom: 9px; }
+    .interpretation-heading h3 { margin: 0; font-size: .92rem; line-height: 1.2; }
+    .guide-icon { flex: 0 0 auto; display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: var(--navy); background: white; box-shadow: 0 4px 12px rgba(23,63,95,.1); }
+    .guide-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .interpretation-card ul { display: grid; gap: 6px; margin: 0; padding-left: 18px; color: #4e5a68; font-size: .8rem; line-height: 1.43; }
+    .interpretation-card li,
+    .dataset-card p,
+    .task-head p,
+    .solution-steps li {
+      text-wrap: pretty;
+      orphans: 2;
+      widows: 2;
+    }
+    .code-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+    .code-tab { padding: 8px 12px; border: 0; border-radius: 9px; background: #edf0f1; cursor: pointer; font-weight: 800; }
+    .code-tab.active { color: white; background: var(--navy); }
+    .code-box { position: relative; min-width: 0; }
+    pre {
+      height: 390px;
+      min-height: 0;
+      max-height: none;
+      max-width: 100%;
+      margin: 0;
+      padding: 54px 19px 19px;
+      overflow: auto;
+      border-radius: 13px;
+      color: #e7edf3;
+      background: #14202c;
+      font: 0.82rem/1.55 Gintronic, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      white-space: pre;
+    }
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; color: white; background: rgba(255,255,255,.1); cursor: pointer; font-size: .76rem; font-weight: 800; }
+
+    .practice-shell { padding: 32px; border: 1px solid #bddbd8; border-radius: 28px; background: linear-gradient(135deg, #e1f1ef, #eef2f7); }
+    .practice-intro { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(280px,.8fr); gap: 22px; align-items: start; }
+    .dataset-card { padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.9); }
+    .dataset-card h3 { margin: 0 0 7px; font-size: 1.2rem; }
+    .dataset-card p { margin: 0 0 14px; color: var(--muted); font-size: .88rem; line-height: 1.5; }
+    .dataset-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+    .dataset-table-wrap { margin-top: 18px; overflow: auto; border: 1px solid var(--line); border-radius: 14px; background: white; }
+    .dataset-table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: .76rem; }
+    .dataset-table th, .dataset-table td { padding: 8px 10px; border-bottom: 1px solid #e8ebed; text-align: left; white-space: nowrap; }
+    .dataset-table th { position: sticky; top: 0; color: var(--navy); background: #edf6f5; }
+    .variable-key { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 14px; }
+    .variable-key div { padding: 9px 10px; border-radius: 10px; background: #f6f8f8; font-size: .78rem; }
+    .practice-tasks { display: grid; gap: 14px; margin-top: 24px; }
+    .practice-task { overflow: hidden; border: 1px solid var(--line); border-radius: 17px; background: rgba(255,255,255,.92); }
+    .task-head { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 16px 18px; }
+    .task-number { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: white; background: var(--teal); font-weight: 850; }
+    .task-head h3 { margin: 0; font-size: 1rem; }
+    .task-head p { margin: 3px 0 0; color: var(--muted); font-size: .82rem; }
+    .task-goal { display: inline-block; margin-bottom: 5px; padding: 3px 7px; border-radius: 999px; color: #0e706c; background: var(--teal-soft); font-size: .67rem; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
+    .reveal-solution { padding: 8px 11px; border: 1px solid var(--navy); border-radius: 9px; color: var(--navy); background: white; cursor: pointer; font-weight: 800; }
+    .task-solution { display: none; padding: 0 18px 18px; }
+    .task-solution.visible { display: block; }
+    .solution-steps { margin: 0 0 13px; padding: 13px 15px 13px 34px; border-radius: 12px; background: var(--gold-soft); font-size: .84rem; line-height: 1.5; }
+    .practice-tabs { display: flex; gap: 6px; margin-bottom: 7px; }
+    .practice-tab { padding: 7px 11px; border: 0; border-radius: 8px; background: #e8ecee; cursor: pointer; font-weight: 800; }
+    .practice-tab.active { color: white; background: var(--navy); }
+    .practice-code { min-height: 0; max-height: 390px; padding-top: 18px; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 900px) {
+      .hero { padding-top: 38px; }
+      .levels { grid-template-columns: 1fr 24px 1fr 24px 1fr 24px 1fr; }
+      .recommendations, .atlas-grid { grid-template-columns: repeat(2, 1fr); }
+      #chartDialog { height: calc(100dvh - 16px); }
+      .modal-top { grid-template-columns: 1fr; }
+      .interpretation-panel { grid-template-columns: 1fr; }
+      pre { height: 320px; }
+      .practice-intro { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 650px) {
+      .keep-together { white-space: normal; }
+
+      .shell { width: min(100% - 22px, 1180px); }
+      .topnav { display: none; }
+      .hero { padding-bottom: 48px; }
+      h1 { font-size: clamp(3rem, 17vw, 4.4rem); }
+      .hero-title { align-items: flex-start; }
+      .section { padding: 52px 0; }
+      .section-head { align-items: start; flex-direction: column; }
+      .levels, .steps, .recommendations, .atlas-grid { grid-template-columns: 1fr; }
+      .practice-shell { padding: 18px; }
+      .variable-key { grid-template-columns: 1fr; }
+      .task-head { grid-template-columns: auto 1fr; }
+      .reveal-solution { grid-column: 1 / -1; }
+      .inherit-arrow { transform: rotate(90deg); min-height: 32px; }
+      .level-groups { grid-template-columns: 1fr; }
+      .quiz-launch { align-items: start; flex-direction: column; }
+      .chooser-wrap { padding: 18px; border-radius: 22px; }
+      .chooser-head { flex-direction: column; }
+      .heading-icon { width: 44px; height: 44px; border-radius: 13px; }
+      .heading-icon svg { width: 27px; height: 27px; }
+      #atlas .icon-heading h2 { white-space: normal; }
+      .option-grid { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; }
+      .modal-body, .modal-head { padding: 16px; }
+      .modal-visual .chart-preview { height: 165px; }
+      pre { height: 280px; font-size: .74rem; }
+    }
+
+    .quiz-dialog { width: min(720px, calc(100% - 28px)); }
+    .quiz-body { padding: 26px; }
+    .quiz-progress { color: var(--teal); font-size: .78rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+    .quiz-question { margin: 10px 0 20px; font-size: 1.15rem; font-weight: 750; }
+    .answer-panel { display: none; padding: 16px; border-left: 4px solid var(--teal); border-radius: 0 12px 12px 0; background: var(--teal-soft); }
+    .answer-panel.visible { display: block; }
+    .answer-panel strong { display: block; margin-bottom: 5px; color: #0e706c; font-size: 1.1rem; }
+    .quiz-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+    .quiz-action { padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: white; cursor: pointer; font-weight: 850; }
+    .quiz-action.primary { color: white; border-color: var(--navy); background: var(--navy); }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <span></span>
+    <nav class="topnav" aria-label="Primary">
+      <a href="#levels">Levels of measurement</a>
+      <a href="#chooser">Chart chooser</a>
+      <a href="#atlas">Chart atlas</a>
+      <a href="#practice">Practice lab</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="shell hero">
+      <div class="hero-title">
+        <svg class="hero-compass" viewBox="0 0 120 120" role="img" aria-label="Compass">
+          <circle cx="60" cy="60" r="52" fill="#e2f2f0" stroke="#173f5f" stroke-width="5"/>
+          <circle cx="60" cy="60" r="39" fill="#fff" stroke="#168c87" stroke-width="2"/>
+          <path d="M72 32 64 64 32 76 56 56z" fill="#ef6a5b" stroke="#173f5f" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M48 88 56 56 88 44 64 64z" fill="#173f5f" stroke="#173f5f" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="60" cy="60" r="5" fill="#e9aa32" stroke="#173f5f" stroke-width="2"/>
+          <text x="60" y="20" text-anchor="middle" font-size="12" font-weight="800" fill="#173f5f">N</text>
+        </svg>
+        <h1>Plot&nbsp;&nbsp;Compass</h1>
+      </div>
+      <h2>Choose a chart with purpose</h2>
+      <p class="hero-description">Understand the structure of your variables &amp; decide what you want your audience to notice.<br>This guide turns those choices into a clear chart recommendation and runnable code.</p>
+      <p class="hero-credit">Designed by Luis Novoa and built using Codex - for educational purposes</p>
+      <div class="hero-actions">
+        <a class="secondary-btn" href="#levels">Review the four levels of measurement</a>
+        <a class="primary-btn" href="#chooser">Find my chart <span aria-hidden="true">↓</span></a>
+      </div>
+    </section>
+
+    <section class="section" id="levels">
+      <div class="shell">
+        <div class="section-head">
+          <div><span class="section-kicker">Key principle</span><h2>Not all data is created equal: some variables have more structure than others...</h2></div>
+          <p>A variable's level of measurement determines what we can and can't do with the variable.</p>
+        </div>
+        <div class="levels">
+          <article class="level-card nominal">
+            <div class="level-visual" aria-hidden="true">
+              <svg viewBox="0 0 180 76">
+                <path d="M8 39c8-15 30-15 38 0-8 15-30 15-38 0zm63 0c8-15 30-15 38 0-8 15-30 15-38 0zm63 0c8-15 30-15 38 0-8 15-30 15-38 0z" fill="#fff" stroke="#173f5f" stroke-width="3"/>
+                <circle cx="27" cy="39" r="8" fill="#7457a6"/><circle cx="90" cy="39" r="8" fill="#168c87"/><circle cx="153" cy="39" r="8" fill="#b97842"/>
+                <circle cx="24" cy="36" r="2.5" fill="#fff"/><circle cx="87" cy="36" r="2.5" fill="#fff"/><circle cx="150" cy="36" r="2.5" fill="#fff"/>
+              </svg>
+            </div>
+            <span class="level-no">N</span>
+            <h3>Nominal</h3>
+            <dl class="level-facts">
+              <div><dt>What's the vibe?</dt><dd>Can be labeled, but cannot be ordered.</dd></div>
+              <div><dt>What math can you do?</dt><dd>Count: mode and frequencies.</dd></div>
+              <div><dt>Common examples</dt><dd>Eye color and ZIP codes.</dd></div>
+            </dl>
+          </article>
+          <div class="inherit-arrow" aria-label="Ordinal inherits nominal properties">&lt;</div>
+          <article class="level-card ordinal">
+            <div class="level-visual" aria-hidden="true">
+              <svg viewBox="0 0 180 76">
+                <circle cx="90" cy="24" r="18" fill="#e9aa32"/><circle cx="48" cy="31" r="15" fill="#aab2ba"/><circle cx="132" cy="34" r="14" fill="#b97842"/>
+                <path d="M78 39l-7 29 19-10 19 10-7-29M38 43l-4 23 14-8 14 8-4-23M124 45l-3 21 11-7 12 7-4-21" fill="none" stroke="#173f5f" stroke-width="3"/>
+                <text x="90" y="30" text-anchor="middle" font-size="15" font-weight="900" fill="#173f5f">1</text><text x="48" y="36" text-anchor="middle" font-size="13" font-weight="900" fill="#173f5f">2</text><text x="132" y="39" text-anchor="middle" font-size="12" font-weight="900" fill="#173f5f">3</text>
+              </svg>
+            </div>
+            <span class="level-no">O</span>
+            <h3>Ordinal</h3>
+            <dl class="level-facts">
+              <div><dt>What's the vibe?</dt><dd>Can be labeled and ordered, but distances between labels are unknown.</dd></div>
+              <div><dt>What math can you do?</dt><dd>Count + rank: mode, frequencies, median and percentiles.</dd></div>
+              <div><dt>Common examples</dt><dd>Education level and clothing sizes <span class="keep-together">(S, M, L).</span></dd></div>
+            </dl>
+          </article>
+          <div class="inherit-arrow" aria-label="Interval inherits ordinal properties">&lt;</div>
+          <article class="level-card interval">
+            <div class="level-visual" aria-hidden="true">
+              <svg viewBox="0 0 180 76">
+                <g transform="translate(46 5)"><rect x="15" y="2" width="18" height="50" rx="9" fill="#fff" stroke="#173f5f" stroke-width="3"/><circle cx="24" cy="57" r="13" fill="#ef6a5b"/><rect x="20" y="19" width="8" height="39" rx="4" fill="#ef6a5b"/><text x="24" y="13" text-anchor="middle" font-size="9" fill="#173f5f">°C</text></g>
+                <g transform="translate(96 5)"><rect x="15" y="2" width="18" height="50" rx="9" fill="#fff" stroke="#173f5f" stroke-width="3"/><circle cx="24" cy="57" r="13" fill="#e9aa32"/><rect x="20" y="28" width="8" height="30" rx="4" fill="#e9aa32"/><text x="24" y="13" text-anchor="middle" font-size="9" fill="#173f5f">°F</text></g>
+              </svg>
+            </div>
+            <span class="level-no">I</span>
+            <h3>Interval</h3>
+            <dl class="level-facts">
+              <div><dt>What's the vibe?</dt><dd>Can be labeled, ordered, and spaced evenly, but zero is only a reference point, not “nothing,” so ratios and statements like “twice as warm” are not meaningful.</dd></div>
+              <div><dt>What math can you do?</dt><dd>Count, rank, add and subtract: plus mean and standard deviation.</dd></div>
+              <div><dt>Common examples</dt><dd>Calendar year and temperature in Celsius or Fahrenheit.</dd></div>
+            </dl>
+          </article>
+          <div class="inherit-arrow" aria-label="Ratio inherits interval properties">&lt;</div>
+          <article class="level-card ratio">
+            <div class="level-visual" aria-hidden="true">
+              <svg viewBox="0 0 180 76">
+                <path d="M24 21h132v38H24z" fill="#e9aa32" stroke="#173f5f" stroke-width="3" rx="4"/>
+                <path d="M36 21v19m14-19v11m14-11v19m14-19v11m14-11v19m14-19v11m14-11v19m14-19v11m14-11v19" stroke="#173f5f" stroke-width="3"/>
+                <text x="90" y="54" text-anchor="middle" font-size="12" font-weight="800" fill="#173f5f">0 means none</text>
+              </svg>
+            </div>
+            <span class="level-no">R</span>
+            <h3>Ratio</h3>
+            <dl class="level-facts">
+              <div><dt>What's the vibe?</dt><dd>Can be labeled, ordered and spaced evenly, and zero means the quantity is completely absent.</dd></div>
+              <div><dt>What math can you do?</dt><dd>Count, rank, add, subtract, multiply and divide: including ratios and coefficients of variation.</dd></div>
+              <div><dt>Common examples</dt><dd>Height, age and goals in a soccer game.</dd></div>
+            </dl>
+          </article>
+        </div>
+        <div class="level-groups">
+          <div class="level-group">Categorical variables: values are names of categories</div>
+          <div class="level-group">Numeric variables: values count or measure something</div>
+        </div>
+        <div class="quiz-launch">
+          <div><h3>Test your understanding of the levels of measurement</h3><p>Six quick questions. Reveal each answer when you are ready.</p></div>
+          <button class="quiz-btn" id="openQuiz" type="button">Start the quiz</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="chooser">
+      <div class="shell chooser-wrap">
+        <div class="chooser-head">
+          <div>
+            <div class="icon-heading">
+              <span class="heading-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="9" cy="8" r="3"/><path d="M4 24v-6c0-3 2-5 5-5s5 2 5 5v6M9 13v7M5 17l-3 4M13 17l4 3"/><path d="M18 7h11v14H18zM21 17l2-4 2 2 2-5"/></svg></span>
+              <h2>What would you like to show?</h2>
+            </div>
+            <p>Make two choices. The strongest matches rise to the top.</p>
+          </div>
+          <button class="reset-btn" id="resetChooser" type="button">Reset choices</button>
+        </div>
+        <div class="chooser-note"><strong>How to read the results:</strong> Best match = most direct mapping to your goal. Strong option = valid but with trade-offs. Option = requires specific conditions.</div>
+        <div class="steps">
+          <div class="step-card">
+            <div class="step-title"><span class="step-badge">1</span><span>What kind of variables do you have?</span></div>
+            <div class="option-grid" id="variableOptions">
+              <button class="option selected" data-variable="category" type="button"><strong>One categorical variable</strong></button>
+              <button class="option" data-variable="number" type="button"><strong>One numeric variable</strong></button>
+              <button class="option" data-variable="catnum" type="button"><strong>Two variables:<br>one categorical + one numeric</strong></button>
+              <button class="option" data-variable="twocat" type="button"><strong>Two categorical variables</strong></button>
+              <button class="option" data-variable="twonum" type="button"><strong>Two numeric variables</strong></button>
+              <button class="option" data-variable="threenum" type="button"><strong>Three numeric variables</strong></button>
+              <button class="option" data-variable="time" type="button"><strong>Time series</strong></button>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-title"><span class="step-badge">2</span><span>What should the audience notice?</span></div>
+            <div class="goal-grid" id="goalOptions"></div>
+          </div>
+        </div>
+        <div class="recommendations" id="recommendations" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section" id="atlas">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Chart atlas</span>
+            <div class="icon-heading">
+              <span class="heading-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="m3 8 8-4 10 4 8-4v20l-8 4-10-4-8 4z"/><path d="M11 4v20M21 8v20"/><path d="m14 16 3-3 3 2 5-5"/></svg></span>
+              <h2>Learn the visual vocabulary.</h2>
+            </div>
+          </div>
+          <p>Browse each chart to see when it works, what can go wrong, and how to build it in R, Python or Excel.</p>
+        </div>
+        <div class="atlas-grid" id="atlasGrid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="practice">
+      <div class="shell practice-shell">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Get your hands dirty</span>
+            <div class="icon-heading">
+              <span class="heading-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 6c5-2 9-1 12 2v19c-3-3-7-4-12-2zM28 6c-5-2-9-1-12 2v19c3-3 7-4 12-2z"/><path d="M8 19v-5M11 19v-8M14 19v-3M20 18l2-3 2 1 2-5"/></svg></span>
+              <h2>Turn a small dataset into a clear story.</h2>
+            </div>
+          </div>
+          <p>Try each question before revealing the solution. The dataset works in both RStudio and Python.</p>
+        </div>
+        <div class="practice-intro">
+          <div>
+            <h3>Campus Café Orders</h3>
+            <p>This fictional dataset contains 24 café orders. It deliberately mixes category labels, ordered categories, numeric measurements, and dates so you can practice choosing different plots.</p>
+            <div class="dataset-actions">
+              <button class="primary-btn" id="downloadDataset" type="button">Download the CSV</button>
+              <button class="secondary-btn" id="toggleDataset" type="button">Preview the data</button>
+            </div>
+          </div>
+          <div class="dataset-card">
+            <h3>Before plotting</h3>
+            <p>Ask what each row represents, identify the variable types, and decide what the audience should notice.</p>
+            <div class="variable-key">
+              <div><strong>Nominal:</strong> drink, mobile_order</div>
+              <div><strong>Ordinal:</strong> size, satisfaction</div>
+              <div><strong>Ratio:</strong> wait_minutes, order_total, items</div>
+              <div><strong>Time:</strong> order_date</div>
+            </div>
+          </div>
+        </div>
+        <div class="dataset-table-wrap" id="datasetPreview" hidden>
+          <table class="dataset-table">
+            <thead id="datasetHead"></thead>
+            <tbody id="datasetBody"></tbody>
+          </table>
+        </div>
+        <div class="practice-tasks" id="practiceTasks"></div>
+      </div>
+    </section>
+
+    <section class="section" id="references">
+      <div class="shell">
+        <div class="section-head">
+          <div><span class="section-kicker">Sources and inspiration</span><h2>References consulted</h2></div>
+          <p>These resources informed the taxonomy and fact-checking.</p>
+        </div>
+        <ul class="references-list">
+          <li><a href="https://www.data-to-viz.com/" target="_blank" rel="noopener">From Data to Viz</a> — a decision tree connecting data formats to appropriate chart families and common cautions.</li>
+          <li><a href="https://www.data-to-viz.com/poster.html" target="_blank" rel="noopener"><cite>Data Plots Poster</cite></a> from Data to Viz — the supplied chart-family poster used to cross-check categorical, numeric, relational and time-series options.</li>
+          <li><a href="https://ft-interactive.github.io/visual-vocabulary/" target="_blank" rel="noopener">Financial Times Visual Vocabulary</a> — a purpose-based vocabulary for selecting charts according to what the audience should notice.</li>
+          <li><a href="https://ggplot2.tidyverse.org/reference/index.html" target="_blank" rel="noopener">ggplot2 reference</a> — official R documentation for plot layers, scales, coordinates and themes.</li>
+          <li><a href="https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/00Index.html" target="_blank" rel="noopener">R graphics manual</a> — official documentation for Base R plotting functions.</li>
+          <li><a href="https://matplotlib.org/stable/plot_types/index.html" target="_blank" rel="noopener">Matplotlib plot types</a> and <a href="https://seaborn.pydata.org/api.html" target="_blank" rel="noopener">Seaborn API</a> — official Python plotting references used to verify examples and parameters.</li>
+          <li><a href="https://fonts.google.com/specimen/Roboto" target="_blank" rel="noopener">Google Fonts: Roboto</a> — the interface typeface used in this guide.</li>
+          <li><cite>Simply Statistics</cite> by Dr. Scott Stevens.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <div class="footer-title">Plot Compass · an interactive learning aid</div>
+    </div>
+  </footer>
+
+  <dialog id="chartDialog" aria-labelledby="dialogTitle">
+    <div class="modal-head">
+      <div><h2 id="dialogTitle"></h2><p id="dialogSubtitle"></p></div>
+      <button class="close-btn" id="closeDialog" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-top">
+        <div class="modal-visual">
+          <div id="modalPreview" class="chart-preview"></div>
+          <div class="info-list">
+            <div class="info-row"><strong>Use it when</strong><span id="dialogUse"></span></div>
+            <div class="info-row"><strong>Levels of measurement</strong><span id="dialogLevels"></span></div>
+            <div class="info-row"><strong>Further reading</strong><a id="dialogSource" target="_blank" rel="noopener">Explore the related Data-to-Viz guide</a></div>
+            <div class="info-row"><strong>Official manuals</strong><span class="manual-links"><a id="dialogRManual" target="_blank" rel="noopener">R function reference</a><a id="dialogPythonManual" target="_blank" rel="noopener">Python function reference</a></span></div>
+          </div>
+        </div>
+        <div>
+          <div class="code-tabs" role="tablist" aria-label="Plotting tool">
+            <button class="code-tab active" data-code="ggplot" type="button" role="tab">ggplot2</button>
+            <button class="code-tab" data-code="base" type="button" role="tab">Base R</button>
+            <button class="code-tab" data-code="python" type="button" role="tab">Python</button>
+            <button class="code-tab" data-code="excel" type="button" role="tab">Excel</button>
+          </div>
+          <div class="code-box">
+            <button class="copy-btn" id="copyCode" type="button">Copy code</button>
+            <pre><code id="codeContent"></code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="interpretation-panel">
+        <section class="interpretation-card interpret">
+          <div class="interpretation-heading">
+            <span class="guide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M8.4 14.5A6 6 0 1 1 15.6 14.5C14.6 15.2 14 16 14 17h-4c0-1-.6-1.8-1.6-2.5Z"/><path d="M12 3v1M4.9 5.9l.8.8M19.1 5.9l-.8.8"/></svg></span>
+            <h3>And how do I properly interpret this plot?</h3>
+          </div>
+          <ul id="dialogInterpret"></ul>
+        </section>
+        <section class="interpretation-card attention">
+          <div class="interpretation-heading">
+            <span class="guide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M8 10.5h5M10.5 8v5"/></svg></span>
+            <h3>Anything to pay attention to?</h3>
+          </div>
+          <ul id="dialogAttention"></ul>
+        </section>
+        <section class="interpretation-card caveats">
+          <div class="interpretation-heading">
+            <span class="guide-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.5h.01"/></svg></span>
+            <h3>Caveats and recommendations</h3>
+          </div>
+          <ul id="dialogCaveats"></ul>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="quizDialog" class="quiz-dialog" aria-labelledby="quizTitle">
+    <div class="modal-head">
+      <div><h2 id="quizTitle">Levels of measurement quiz</h2><p>Think first. Then reveal the answer.</p></div>
+      <button class="close-btn" id="closeQuiz" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="quiz-body">
+      <div class="quiz-progress" id="quizProgress"></div>
+      <div class="quiz-question" id="quizQuestion"></div>
+      <button class="quiz-action primary" id="showAnswer" type="button">Show the answer</button>
+      <div class="answer-panel" id="quizAnswer"></div>
+      <div class="quiz-actions">
+        <button class="quiz-action" id="prevQuestion" type="button">Previous</button>
+        <button class="quiz-action" id="nextQuestion" type="button">Next question</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const charts = {
+      bar: {
+        name: "Bar chart",
+        short: "Compare counts, percentages, or summaries across categories.",
+        use: "You want to answer a simple question: which category has more, less, highest or lowest?",
+        levels: "Nominal: labels you can count. Ordinal: ranked labels that must stay in their natural order. A discrete numeric variable can also use bars to show the frequency of values such as 0, 1, 2 or 3 goals.",
+        caution: "Use one defined value per category and start the value axis at zero. Sort nominal categories by value; preserve the meaningful order of ordinal categories.",
+        tags: ["categorical"], why: "Bar length is like comparing pencils side by side: longer is easy to spot.",
+        base: `# 1. Make a tiny data set.\nmajor <- c("Business", "Science", "Arts", "Education")\nstudents <- c(42, 31, 24, 18)\n\n# 2. Draw one bar for each major.\nbarplot(students, names.arg = major,\n  col = "#168c87", border = NA,\n  ylab = "Number of students", main = "Students by major")`,
+        ggplot: `# Run install.packages("ggplot2") once if needed.\nlibrary(ggplot2)\n\n# 1. Make a tiny data set.\ndf <- data.frame(\n  major = c("Business", "Science", "Arts", "Education"),\n  students = c(42, 31, 24, 18))\n\n# 2. Draw the bars and turn them sideways.\nggplot(df, aes(x = reorder(major, students), y = students)) +\n  geom_col(fill = "#168c87") + coord_flip() +\n  labs(x = NULL, y = "Number of students", title = "Students by major") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib\nimport matplotlib.pyplot as plt\n\n# 1. Make a tiny data set.\nmajor = ["Business", "Science", "Arts", "Education"]\nstudents = [42, 31, 24, 18]\n\n# 2. Draw the bars.\nplt.bar(major, students, color="#168c87")\nplt.ylabel("Number of students")\nplt.title("Students by major")\nplt.tight_layout()\nplt.show()`,
+        excel: `1. Enter Major in A1 and Students in B1.\n2. Enter: Business 42, Science 31, Arts 24, Education 18.\n3. Select A1:B5.\n4. Choose Insert > Column or Bar Chart > Clustered Column.\n5. Add the title “Students by major.”\n6. Check that the value axis starts at 0.`
+      },
+      pie: {
+        name: "Pie chart",
+        short: "Show a simple part-to-whole composition.",
+        use: "A few categories make one complete whole, and rough shares are more important than exact comparisons.",
+        levels: "Nominal or ordinal categories counted as parts of one total. All slices together must equal 100%.",
+        caution: "Use only a few mutually exclusive slices that total 100%. Pie and doughnut charts are equivalent alternatives; use a bar chart for close comparisons. Ensure sufficient contrast for color-blind readers.",
+        tags: ["categorical"], why: "It looks like sharing one pizza, so the part-to-whole idea feels familiar.",
+        base: `# 1. These shares add to 100.\nshare <- c(48, 27, 16, 9)\nlabels <- c("Business", "Science", "Arts", "Education")\n\n# 2. Cut the circle into four slices.\npie(share, labels = paste0(labels, " (", share, "%)"),\n  col = c("#168c87", "#ef6a5b", "#e9aa32", "#7457a6"),\n  border = "white", main = "Share of students by major")`,
+        ggplot: `library(ggplot2)\n\n# 1. These shares add to 100.\ndf <- data.frame(\n  major = c("Business", "Science", "Arts", "Education"),\n  share = c(48, 27, 16, 9))\n\n# 2. Make one stacked bar, then bend it into a circle.\nggplot(df, aes(x = "", y = share, fill = major)) +\n  geom_col(width = 1, color = "white") +\n  coord_polar(theta = "y") +\n  labs(fill = "Major", title = "Share of students by major") +\n  theme_void(base_size = 13)`,
+        python: `# Run: pip install matplotlib\nimport matplotlib.pyplot as plt\n\n# 1. These shares add to 100.\nlabels = ["Business", "Science", "Arts", "Education"]\nshare = [48, 27, 16, 9]\n\n# 2. Draw the slices.\nplt.pie(share, labels=labels, autopct="%1.0f%%", startangle=90)\nplt.title("Share of students by major")\nplt.axis("equal")\nplt.show()`,
+        excel: `1. Enter Major in A1 and Share in B1.\n2. Enter: Business 48, Science 27, Arts 16, Education 9.\n3. Select A1:B5.\n4. Choose Insert > Pie > 2-D Pie.\n5. Add Data Labels and show percentages.\n6. Stop if you have many slices; a bar chart will be clearer.`
+      },
+      doughnut: {
+        name: "Doughnut chart",
+        short: "Show a small number of categories as parts of one whole.",
+        use: "A few categories add to 100%, and the center space can hold a useful total or short label.",
+        levels: "One nominal or ordinal category summarized as nonnegative counts or percentages.",
+        caution: "Keep the category count small and make sure slices total 100%. Pie and doughnut charts are equivalent alternatives; use bars for exact comparison. Ensure sufficient contrast for color-blind readers.",
+        tags: ["categorical", "composition"], why: "It shows one whole divided into slices while leaving room for a label in the center.",
+        base: `# 1. These shares add to 100.\nshare <- c(48,27,16,9)\nlabels <- c("Business","Science","Arts","Education")\n\n# 2. Draw a pie and cover the center to make a ring.\npie(share, labels = labels,\n  col = c("#168c87","#ef6a5b","#e9aa32","#7457a6"),\n  border = "white", main = "Share of students by major")\nsymbols(0,0,circles=.45,inches=FALSE,add=TRUE,bg="white",fg="white")\ntext(0,0,"100%",font=2)`,
+        ggplot: `library(ggplot2)\n\n# 1. These shares add to 100.\ndf <- data.frame(\n  major = c("Business","Science","Arts","Education"),\n  share = c(48,27,16,9))\n\n# 2. A wide stacked bar becomes a ring in polar coordinates.\nggplot(df, aes(x = 2, y = share, fill = major)) +\n  geom_col(color = "white") +\n  coord_polar(theta = "y") + xlim(.5,2.5) +\n  labs(fill = "Major", title = "Share of students by major") +\n  theme_void(base_size = 13)`,
+        python: `# Run: pip install matplotlib\nimport matplotlib.pyplot as plt\n\n# 1. These shares add to 100.\nlabels = ["Business","Science","Arts","Education"]\nshare = [48,27,16,9]\n\n# 2. Set wedge width to make a ring.\nplt.pie(share, labels=labels, autopct="%1.0f%%",\n        wedgeprops={"width":0.42, "edgecolor":"white"})\nplt.text(0,0,"100%",ha="center",va="center",weight="bold")\nplt.title("Share of students by major")\nplt.show()`,
+        excel: `1. Enter categories and shares in two columns.\n2. Select the complete table.\n3. Choose Insert > Pie or Doughnut > Doughnut.\n4. Add percentage labels.\n5. Use only a few slices.`
+      },
+      histogram: {
+        name: "Histogram",
+        short: "Reveal the shape of one numeric distribution.",
+        use: "You want to see where values gather, how spread out they are, and whether the shape has gaps or a long tail.",
+        levels: "Interval or ratio: numeric values with meaningful, even spacing.",
+        caution: "Bin width can change the apparent shape. Try several sensible widths, avoid unequal bins unless clearly explained, and do not confuse a histogram with a bar chart.",
+        tags: ["numeric"], why: "It puts nearby numbers into buckets so the overall shape becomes visible.",
+        base: `# 1. Each number is one student's score.\nscores <- c(58,62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91,95)\n\n# 2. Put scores into 5-point buckets.\nhist(scores, breaks = seq(55, 100, by = 5),\n  col = "#168c87", border = "white",\n  xlab = "Exam score", main = "Distribution of exam scores")`,
+        ggplot: `library(ggplot2)\n\n# 1. Each row is one student's score.\ndf <- data.frame(scores = c(58,62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91,95))\n\n# 2. Put scores into 5-point buckets.\nggplot(df, aes(x = scores)) +\n  geom_histogram(binwidth = 5, boundary = 55, fill = "#168c87", color = "white") +\n  labs(x = "Exam score", y = "Count", title = "Distribution of exam scores") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib\nimport matplotlib.pyplot as plt\n\n# 1. Each number is one student's score.\nscores = [58,62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91,95]\n\n# 2. Put scores into 5-point buckets.\nplt.hist(scores, bins=range(55, 101, 5), color="#168c87", edgecolor="white")\nplt.xlabel("Exam score"); plt.ylabel("Count")\nplt.title("Distribution of exam scores")\nplt.show()`,
+        excel: `1. Enter Score in A1, then place the 20 scores below it.\n2. Select the score cells.\n3. Choose Insert > Statistic Chart > Histogram.\n4. Right-click the horizontal axis and choose Format Axis.\n5. Set Bin width to 5.\n6. Add clear axis labels and a title.`
+      },
+      dot: {
+        name: "Dot plot",
+        short: "Show every value in a small numeric dataset.",
+        use: "The dataset is small and you want students to see every observation, not only a summary.",
+        levels: "Interval or ratio values. A categorical group can split the dots into rows.",
+        caution: "Too many dots pile up. For a larger dataset, use a histogram or box plot.",
+        tags: ["numeric"], why: "One dot means one observation. Nothing is hidden.",
+        base: `# 1. Each number is one student's score.\nscores <- c(62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91)\n\n# 2. Stack equal or nearby scores as dots.\nstripchart(scores, method = "stack", pch = 19,\n  col = "#168c87", offset = 0.7,\n  xlab = "Exam score", main = "Individual exam scores")`,
+        ggplot: `library(ggplot2)\n\n# 1. Each row is one student's score.\ndf <- data.frame(scores = c(62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91))\n\n# 2. Stack nearby scores as dots.\nggplot(df, aes(x = scores)) +\n  geom_dotplot(binwidth = 2, fill = "#168c87", color = "white", dotsize = 0.8) +\n  labs(x = "Exam score", y = NULL, title = "Individual exam scores") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nfrom collections import Counter\n\n# 1. Count repeated scores so dots can stack.\nscores = [62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91]\nseen = Counter()\ny = []\nfor score in scores:\n    seen[score] += 1\n    y.append(seen[score])\n\n# 2. Draw one dot for each score.\nplt.scatter(scores, y, color="#168c87", s=70)\nplt.xlabel("Exam score"); plt.yticks([])\nplt.title("Individual exam scores")\nplt.show()`,
+        excel: `Excel has no one-click stacked dot plot.\n1. Enter scores in column A.\n2. In column B, number repeated values 1, 2, 3, and so on.\n3. Select both columns.\n4. Choose Insert > Scatter > Markers.\n5. Hide the vertical-axis labels.`
+      },
+      scatter: {
+        name: "Scatter plot",
+        short: "Examine the relationship between two numeric variables.",
+        use: "You want to know whether two numeric variables move together, form a pattern, or contain unusual cases.",
+        levels: "Two interval or ratio variables measured on the same people or objects.",
+        caution: "A pattern does not prove causation. Many overlapping points can hide density, so use transparency, smaller marks or a 2D density plot.",
+        tags: ["relationship", "numeric"], why: "Each dot is one case with two coordinates, like a location on a map.",
+        base: `# 1. Each pair belongs to one student.\nhours <- c(1,2,2.5,3,4,4.5,5,6,7,8)\nscore <- c(58,61,67,66,72,76,78,84,87,93)\n\n# 2. Draw one dot per student, then add a trend line.\nplot(hours, score, pch = 19, col = "#168c87",\n  xlab = "Study hours", ylab = "Exam score", main = "Study time and exam performance")\nabline(lm(score ~ hours), col = "#ef6a5b", lwd = 2)`,
+        ggplot: `library(ggplot2)\n\n# 1. Each row belongs to one student.\ndf <- data.frame(hours = c(1,2,2.5,3,4,4.5,5,6,7,8), score = c(58,61,67,66,72,76,78,84,87,93))\n\n# 2. Draw the dots and a straight trend line.\nggplot(df, aes(x = hours, y = score)) +\n  geom_point(size = 3, color = "#168c87") +\n  geom_smooth(method = "lm", se = FALSE, color = "#ef6a5b") +\n  labs(x = "Study hours", y = "Exam score", title = "Study time and exam performance") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# 1. Each pair belongs to one student.\nhours = np.array([1,2,2.5,3,4,4.5,5,6,7,8])\nscores = np.array([58,61,67,66,72,76,78,84,87,93])\n\n# 2. Draw the dots and a straight trend line.\nplt.scatter(hours, scores, color="#168c87")\nm, b = np.polyfit(hours, scores, 1)\nplt.plot(hours, m * hours + b, color="#ef6a5b")\nplt.xlabel("Study hours"); plt.ylabel("Exam score")\nplt.title("Study time and exam performance"); plt.show()`,
+        excel: `1. Enter Study hours in A1 and Exam score in B1.\n2. Enter each student's paired values in one row.\n3. Select both columns.\n4. Choose Insert > Scatter > Scatter with only Markers.\n5. To add a trend, right-click a point > Add Trendline > Linear.\n6. Remember: a trend is not proof of cause.`
+      },
+      bubble: {
+        name: "Bubble chart",
+        short: "Show the relationship among three numeric variables.",
+        use: "You have three numeric measurements for each case: one controls horizontal position, one controls vertical position, and one controls bubble area.",
+        levels: "Three interval or ratio variables measured on the same people, places or objects.",
+        caution: "Scale bubble area, not diameter, and include a size legend. Use outlines or labels when color identifies groups, and ensure sufficient contrast for color-blind readers.",
+        tags: ["relationship", "numeric"], why: "It is a scatter plot with one extra clue: bigger circles mean more of the third variable.",
+        base: `# 1. Each row describes one city.\nincome <- c(32,38,44,51,57,63,70)\nlife_expectancy <- c(69,72,74,76,78,79,81)\npopulation <- c(1.2,2.8,1.9,4.5,3.2,5.8,2.4)\n\n# 2. Bubble area represents population.\n# R quirk: inches rescales every circle proportionally.\n# Only the relative bubble sizes are preserved.\nsymbols(income, life_expectancy,\n  circles = sqrt(population), inches = 0.3,\n  bg = "#168c8780", fg = "#168c87",\n  xlab = "Income (thousands)", ylab = "Life expectancy",\n  main = "Income, life expectancy and population")`,
+        ggplot: `library(ggplot2)\n\n# 1. Each row describes one city.\ndf <- data.frame(\n  income = c(32,38,44,51,57,63,70),\n  life_expectancy = c(69,72,74,76,78,79,81),\n  population = c(1.2,2.8,1.9,4.5,3.2,5.8,2.4))\n\n# 2. Position shows two variables; bubble area shows population.\nggplot(df, aes(x = income, y = life_expectancy, size = population)) +\n  geom_point(color = "#168c87", alpha = 0.65) +\n  scale_size_area(max_size = 18) +\n  labs(x = "Income (thousands)", y = "Life expectancy",\n       size = "Population (millions)",\n       title = "Income, life expectancy and population") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib\nimport matplotlib.pyplot as plt\n\n# 1. Each position describes one city.\nincome = [32,38,44,51,57,63,70]\nlife_expectancy = [69,72,74,76,78,79,81]\npopulation = [1.2,2.8,1.9,4.5,3.2,5.8,2.4]\n\n# 2. Matplotlib's "s" value controls bubble area.\nareas = [value * 180 for value in population]\nplt.scatter(income, life_expectancy, s=areas,\n            color="#168c87", alpha=0.6, edgecolors="#173f5f")\nplt.xlabel("Income (thousands)"); plt.ylabel("Life expectancy")\nplt.title("Income, life expectancy and population")\nplt.show()`,
+        excel: `1. Put Income, Life expectancy and Population in columns A:C.\n2. Put one city on each row.\n3. Select all three columns.\n4. Choose Insert > Scatter > Bubble.\n5. Set Income as X, Life expectancy as Y and Population as size.\n6. Add axis labels and a size explanation.`
+      },
+      box: {
+        name: "Box plot",
+        short: "Compare numeric distributions across groups.",
+        use: "You need a compact view of the middle, spread and possible unusual values in several groups.",
+        levels: "A nominal or ordinal group plus an interval or ratio outcome.",
+        caution: "A box plot hides sample size and distribution shape. Add dots, show group sizes and order groups by median when useful. Ensure sufficient contrast for color-blind readers.",
+        tags: ["categorical", "numeric"], why: "Each box is a five-number summary folded into a small space.",
+        base: `# 1. Scores belong to three class sections.\nscore <- c(72,76,81,84,88,65,71,73,79,82,68,74,77,83,91)\nsection <- rep(c("A", "B", "C"), each = 5)\n\n# 2. Draw one summary box per section.\nboxplot(score ~ section,\n  col = c("#168c87", "#ef6a5b", "#e9aa32"),\n  xlab = "Class section", ylab = "Exam score", main = "Scores by class section")`,
+        ggplot: `library(ggplot2)\n\n# 1. Scores belong to three class sections.\ndf <- data.frame(score = c(72,76,81,84,88,65,71,73,79,82,68,74,77,83,91), section = rep(c("A","B","C"), each = 5))\n\n# 2. Draw boxes and show the original dots too.\nggplot(df, aes(x = section, y = score, fill = section)) +\n  geom_boxplot(width = 0.55, show.legend = FALSE) +\n  geom_jitter(width = 0.08, alpha = 0.65) +\n  labs(x = "Class section", y = "Exam score", title = "Scores by class section") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib\nimport matplotlib.pyplot as plt\n\n# 1. Keep each section's scores together.\nscores = [[72,76,81,84,88], [65,71,73,79,82], [68,74,77,83,91]]\n\n# 2. Draw one summary box per section.\nplt.boxplot(scores, labels=["A", "B", "C"])\nplt.xlabel("Class section"); plt.ylabel("Exam score")\nplt.title("Scores by class section")\nplt.show()`,
+        excel: `1. Put Section A, B and C in three column headers.\n2. Enter each section's scores under its header.\n3. Select the full table.\n4. Choose Insert > Statistic Chart > Box and Whisker.\n5. Add axis labels and the title “Scores by class section.”`
+      },
+      line: {
+        name: "Line chart",
+        short: "Show change in a numeric value across time.",
+        use: "Observations follow a real time order and you want the audience to see rises, falls or turning points.",
+        levels: "Time or another evenly ordered interval on the horizontal axis; an interval or ratio measure vertically.",
+        caution: "Connecting points says the order matters. Too many series create a tangled chart, so highlight a few or use small multiples. Ensure sufficient contrast for color-blind readers.",
+        tags: ["time", "numeric"], why: "The line lets your eye follow the journey from one time point to the next.",
+        base: `# 1. Match each week with its attendance.\nweek <- 1:8\nattendance <- c(78,82,80,86,89,87,91,94)\n\n# 2. Connect the weeks in time order.\nplot(week, attendance, type = "o", pch = 19, lwd = 2,\n  col = "#168c87", xlab = "Week", ylab = "Attendance (%)",\n  main = "Attendance over time")`,
+        ggplot: `library(ggplot2)\n\n# 1. Match each week with its attendance.\ndf <- data.frame(week = 1:8, attendance = c(78,82,80,86,89,87,91,94))\n\n# 2. Connect the weeks in time order.\nggplot(df, aes(x = week, y = attendance)) +\n  geom_line(linewidth = 1.1, color = "#168c87") +\n  geom_point(size = 2.8, color = "#168c87") +\n  labs(x = "Week", y = "Attendance (%)", title = "Attendance over time") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib\nimport matplotlib.pyplot as plt\n\n# 1. Match each week with its attendance.\nweek = [1,2,3,4,5,6,7,8]\nattendance = [78,82,80,86,89,87,91,94]\n\n# 2. Connect the weeks in time order.\nplt.plot(week, attendance, marker="o", color="#168c87")\nplt.xlabel("Week"); plt.ylabel("Attendance (%)")\nplt.title("Attendance over time")\nplt.show()`,
+        excel: `1. Enter Week in A1 and Attendance in B1.\n2. Enter weeks 1 through 8 and their attendance values.\n3. Select both columns.\n4. Choose Insert > Line > Line with Markers.\n5. Add clear axis labels and the title “Attendance over time.”`
+      },
+      mosaic: {
+        name: "Mosaic plot",
+        short: "Compare the association between two categorical variables.",
+        use: "You want to see whether the mix of one category changes across another category.",
+        levels: "Two nominal or ordinal variables summarized in a table of counts.",
+        caution: "Area is hard to compare precisely. A 100% stacked bar chart is often easier for beginners.",
+        tags: ["categorical", "relationship"], why: "The rectangles resize to show how the full table is divided.",
+        base: `# 1. Build a table of counts.\ntab <- matrix(c(28,18,14,12,22,26), nrow = 2,\n  dimnames = list(Result = c("Pass","Not pass"), Method = c("Online","Hybrid","Classroom")))\n\n# 2. Turn the table into sized rectangles.\nmosaicplot(tab, color = c("#168c87","#ef6a5b"),\n  main = "Result by teaching method", xlab = "Teaching method", ylab = "Result")`,
+        ggplot: `library(ggplot2)\n\n# 1. Build a table of counts.\ndf <- data.frame(method = rep(c("Online","Hybrid","Classroom"), each = 2), result = rep(c("Pass","Not pass"), 3), count = c(28,18,14,12,22,26))\n\n# 2. Use equal-height bars to compare percentages.\nggplot(df, aes(x = method, y = count, fill = result)) +\n  geom_col(position = "fill") +\n  scale_y_continuous(labels = scales::percent) +\n  labs(x = "Teaching method", y = "Percentage", fill = "Result", title = "Result composition by teaching method") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib statsmodels pandas\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom statsmodels.graphics.mosaicplot import mosaic\n\n# 1. Store each category pair and its count.\ncounts = {("Online","Pass"):28, ("Online","Not pass"):18,\n          ("Hybrid","Pass"):14, ("Hybrid","Not pass"):12,\n          ("Classroom","Pass"):22, ("Classroom","Not pass"):26}\n\n# 2. Resize rectangles to match the counts.\nmosaic(counts, title="Result by teaching method")\nplt.show()`,
+        excel: `Excel does not have a built-in mosaic chart.\nUse a 100% stacked column chart instead:\n1. Make rows for Online, Hybrid and Classroom.\n2. Make columns for Pass and Not pass, then enter the counts.\n3. Select the table.\n4. Choose Insert > Column > 100% Stacked Column.\n5. Compare the colored proportions across methods.`
+      },
+      density: {
+        name: "Density plot",
+        short: "Show a smooth picture of a numeric distribution.",
+        use: "You have enough numeric observations to show the overall shape without focusing on exact bucket counts.",
+        levels: "One interval or ratio variable; groups can be compared with separate curves.",
+        caution: "Bandwidth can change the conclusion. Try several values, show the observed range with a rug, and avoid overlaying more than about three groups.",
+        tags: ["numeric"], why: "It is a smoothed histogram: hills show where many values live.",
+        base: `# 1. Make a small set of exam scores.\nscores <- c(58,62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91,95)\n\n# 2. Estimate and draw the smooth distribution.\nd <- density(scores)\nplot(d, lwd = 3, col = "#168c87",\n  xlab = "Exam score", main = "Smooth distribution of exam scores")\npolygon(d, col = "#168c8740", border = NA)\nrug(scores, col = "#173f5f")`,
+        ggplot: `library(ggplot2)\n\n# 1. Make a small set of exam scores.\ndf <- data.frame(scores = c(58,62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91,95))\n\n# 2. Draw the smooth distribution and the observed values.\nggplot(df, aes(x = scores)) +\n  geom_density(fill = "#168c87", alpha = 0.3, color = "#168c87", linewidth = 1.1) +\n  geom_rug(color = "#173f5f") +\n  labs(x = "Exam score", y = "Density", title = "Smooth distribution of exam scores") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib seaborn\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\n# 1. Make a small set of exam scores.\nscores = [58,62,65,67,68,70,72,72,74,75,76,78,79,81,82,84,86,88,91,95]\n\n# 2. Draw the smooth distribution and tiny marks for the data.\nsns.kdeplot(x=scores, fill=True, color="#168c87")\nsns.rugplot(x=scores, color="#173f5f")\nplt.xlabel("Exam score"); plt.title("Smooth distribution of exam scores")\nplt.show()`,
+        excel: `Excel has no built-in density plot.\nA histogram is the clearer classroom option:\n1. Enter the scores in one column.\n2. Select the score cells.\n3. Choose Insert > Statistic Chart > Histogram.\n4. Adjust the bin width until the shape is useful.\nUse R or Python when you specifically need a smooth density curve.`
+      },
+      stacked: {
+        name: "Stacked bar chart",
+        short: "Compare totals across groups, or how each group is divided into the same categories.",
+        use: "You want to compare totals or part-to-whole composition across groups.",
+        levels: "Two categorical variables plus counts, percentages or another additive ratio measure.",
+        caution: "Only the bottom segment has a shared baseline. Use 100% stacking for proportions and grouped bars for exact comparison. Ensure sufficient contrast for color-blind readers.",
+        tags: ["categorical", "composition"], why: "Each bar is a container, and the colored blocks show what fills it.",
+        base: `# 1. Rows are results; columns are teaching methods.\ntab <- matrix(c(28,18,14,12,22,26), nrow = 2,\n  dimnames = list(Result = c("Pass","Not pass"), Method = c("Online","Hybrid","Classroom")))\n\n# 2. Make every bar total 100% so the mixes are comparable.\npercent <- sweep(tab, 2, colSums(tab), "/")\nbarplot(percent, col = c("#168c87","#ef6a5b"),\n  legend.text = rownames(tab), ylab = "Proportion",\n  main = "Result mix by teaching method")`,
+        ggplot: `library(ggplot2)\n\n# 1. Store the category combinations and counts.\ndf <- data.frame(method = rep(c("Online","Hybrid","Classroom"), each = 2), result = rep(c("Pass","Not pass"), 3), count = c(28,18,14,12,22,26))\n\n# 2. Give every bar the same height to compare its mix.\nggplot(df, aes(x = method, y = count, fill = result)) +\n  geom_col(position = "fill") +\n  labs(x = "Teaching method", y = "Proportion", fill = "Result", title = "Result mix by teaching method") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# 1. Store pass and not-pass counts by method.\nmethods = ["Online", "Hybrid", "Classroom"]\npassed = np.array([28,14,22]); not_passed = np.array([18,12,26])\ntotal = passed + not_passed\n\n# 2. Stack proportions so every bar reaches 100%.\nplt.bar(methods, passed/total, label="Pass", color="#168c87")\nplt.bar(methods, not_passed/total, bottom=passed/total, label="Not pass", color="#ef6a5b")\nplt.ylabel("Proportion"); plt.title("Result mix by teaching method")\nplt.legend(); plt.show()`,
+        excel: `1. Put Online, Hybrid and Classroom in column A.\n2. Put Pass and Not pass in columns B and C, then enter the counts.\n3. Select the table.\n4. Choose Insert > Column > 100% Stacked Column.\n5. Use a regular Stacked Column instead when totals, not proportions, matter.`
+      },
+      pareto: {
+        name: "Pareto chart",
+        short: "Rank categories and show how quickly they add up.",
+        use: "You want to identify the few categories responsible for most of a total, such as defect or complaint types.",
+        levels: "One nominal category plus a count or nonnegative ratio measure.",
+        caution: "Always sort bars from largest to smallest. The cumulative line is meaningful only when categories are parts of the same total.",
+        tags: ["categorical", "ranking"], why: "The bars show the biggest problems first; the line shows how much of the total they explain together.",
+        base: `# 1. Count four types of customer complaint.\nissue <- c("Late delivery","Wrong item","Damaged","Billing")\ncount <- c(46,28,17,9)\norder_id <- order(count, decreasing = TRUE)\nissue <- issue[order_id]; count <- count[order_id]\ncumulative <- cumsum(count) / sum(count) * 100\n\n# 2. Draw ranked bars and the cumulative percentage line.\nmid <- barplot(count, names.arg = issue, col = "#168c87", las = 2,\n  ylab = "Complaints", main = "Pareto chart of complaints")\npar(new = TRUE)\nplot(mid, cumulative, type = "o", pch = 19, axes = FALSE, xlab = "", ylab = "", ylim = c(0,100), col = "#ef6a5b")\naxis(4); mtext("Cumulative %", side = 4, line = 2)`,
+        ggplot: `library(ggplot2)\n\n# 1. Sort complaint types and calculate a running percentage.\ndf <- data.frame(issue = c("Late delivery","Wrong item","Damaged","Billing"), count = c(46,28,17,9))\ndf <- df[order(-df$count), ]\ndf$cumulative <- cumsum(df$count) / sum(df$count) * 100\nscale_factor <- max(df$count) / 100\n\n# 2. Draw ranked bars plus the running percentage line.\nggplot(df, aes(x = reorder(issue, -count))) +\n  geom_col(aes(y = count), fill = "#168c87") +\n  geom_line(aes(y = cumulative * scale_factor, group = 1), color = "#ef6a5b", linewidth = 1) +\n  geom_point(aes(y = cumulative * scale_factor), color = "#ef6a5b", size = 2.5) +\n  scale_y_continuous(name = "Complaints", sec.axis = sec_axis(~ . / scale_factor, name = "Cumulative %")) +\n  labs(x = NULL, title = "Pareto chart of complaints") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# 1. Sort complaint types from largest to smallest.\nissues = np.array(["Late delivery","Wrong item","Damaged","Billing"])\ncounts = np.array([46,28,17,9])\norder = np.argsort(-counts); issues = issues[order]; counts = counts[order]\ncumulative = counts.cumsum() / counts.sum() * 100\n\n# 2. Draw bars and a cumulative percentage line.\nfig, ax = plt.subplots()\nax.bar(issues, counts, color="#168c87"); ax.set_ylabel("Complaints")\nax2 = ax.twinx(); ax2.plot(issues, cumulative, color="#ef6a5b", marker="o"); ax2.set_ylabel("Cumulative %"); ax2.set_ylim(0,105)\nplt.title("Pareto chart of complaints"); plt.xticks(rotation=20); plt.tight_layout(); plt.show()`,
+        excel: `1. Enter complaint type in column A and count in column B.\n2. Select the table.\n3. Choose Insert > Statistic Chart > Pareto.\n4. Excel sorts the bars and adds the cumulative percentage line.\n5. Check that every category is part of the same total.`
+      },
+      heatmap: {
+        name: "Heatmap",
+        short: "Use color to reveal patterns in a table of values.",
+        use: "You want a quick overview of high and low values across a table, matrix or two-dimensional grid.",
+        levels: "Two categorical dimensions with a numeric value in each cell, or two ordered numeric grid axes with a numeric response.",
+        caution: "Heatmaps are for overview, not exact reading. Scale variables measured in different units, use a clear legend and avoid rainbow palettes. Ensure sufficient contrast for color-blind readers.",
+        tags: ["relationship", "categorical"], why: "It is like viewing a table from above: darker or brighter cells make patterns jump out.",
+        base: `# 1. Make a table: rows are days and columns are class periods.\nvalues <- matrix(c(8,12,18, 10,15,22, 7,11,19, 13,17,24), nrow = 4, byrow = TRUE)\nrownames(values) <- c("Mon","Tue","Wed","Thu")\ncolnames(values) <- c("Morning","Afternoon","Evening")\n\n# 2. Turn each cell into a color.\nheatmap(values, Rowv = NA, Colv = NA, scale = "none",\n  col = colorRampPalette(c("#fff2d7","#ef6a5b","#173f5f"))(20),\n  margins = c(7,5), main = "Study-room use")`,
+        ggplot: `library(ggplot2)\n\n# 1. Store one value for every day-and-period combination.\ndf <- expand.grid(day = c("Mon","Tue","Wed","Thu"), period = c("Morning","Afternoon","Evening"))\ndf$value <- c(8,10,7,13, 12,15,11,17, 18,22,19,24)\n\n# 2. Turn larger values into darker cells.\nggplot(df, aes(x = period, y = day, fill = value)) +\n  geom_tile(color = "white") +\n  geom_text(aes(label = value), color = "white") +\n  scale_fill_gradient(low = "#e8f5f3", high = "#173f5f") +\n  labs(x = NULL, y = NULL, fill = "Students", title = "Study-room use") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# 1. Rows are days; columns are class periods.\nvalues = np.array([[8,12,18],[10,15,22],[7,11,19],[13,17,24]])\n\n# 2. Turn each value into a color.\nfig, ax = plt.subplots()\nimage = ax.imshow(values, cmap="YlGnBu")\nax.set_xticks(range(3), ["Morning","Afternoon","Evening"])\nax.set_yticks(range(4), ["Mon","Tue","Wed","Thu"])\nfor row in range(4):\n    for col in range(3): ax.text(col, row, values[row,col], ha="center", va="center")\nfig.colorbar(image, label="Students"); plt.title("Study-room use"); plt.show()`,
+        excel: `1. Make a table with days in rows and periods in columns.\n2. Enter one numeric value in each cell.\n3. Select only the numeric cells.\n4. Choose Home > Conditional Formatting > Color Scales.\n5. Pick a light-to-dark scale and keep the numbers visible for exact reading.`
+      },
+      lollipop: {
+        name: "Lollipop chart",
+        short: "A cleaner alternative to a bar chart, especially when bars feel visually heavy or many values are similar in height.",
+        use: "You have one value per category and want a cleaner alternative to bars, especially with many categories.",
+        levels: "One categorical variable plus one count, percentage or numeric summary.",
+        caution: "Dots are less forceful than bars and should still use a zero baseline when magnitude is the message.",
+        tags: ["categorical", "ranking"], why: "The dot marks the value while the thin stem helps your eye trace it back to zero.",
+        base: `# 1. Store one value for each category.\nmajor <- c("Education","Arts","Science","Business")\nstudents <- c(18,24,31,42)\ny <- seq_along(major)\n\n# 2. Draw stems from zero and place a dot at each value.\nplot(students, y, pch = 19, cex = 1.7, col = "#168c87",\n  yaxt = "n", ylab = "", xlab = "Students", xlim = c(0,45),\n  main = "Students by major")\nsegments(0, y, students, y, col = "#9ccbc7", lwd = 3)\naxis(2, at = y, labels = major, las = 1)`,
+        ggplot: `library(ggplot2)\n\n# 1. Store one value for each category.\ndf <- data.frame(major = c("Education","Arts","Science","Business"), students = c(18,24,31,42))\n\n# 2. Draw a stem and a dot for each value.\nggplot(df, aes(x = students, y = reorder(major, students))) +\n  geom_segment(aes(x = 0, xend = students, yend = reorder(major, students)), color = "#9ccbc7", linewidth = 1.2) +\n  geom_point(size = 4, color = "#168c87") +\n  labs(x = "Students", y = NULL, title = "Students by major") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib\nimport matplotlib.pyplot as plt\n\n# 1. Store one value for each category.\nmajor = ["Education","Arts","Science","Business"]\nstudents = [18,24,31,42]\n\n# 2. Draw stems and dots.\nplt.hlines(major, 0, students, color="#9ccbc7", linewidth=3)\nplt.scatter(students, major, color="#168c87", s=90)\nplt.xlabel("Students"); plt.title("Students by major")\nplt.xlim(0,45); plt.show()`,
+        excel: `Excel has no one-click lollipop chart.\n1. Enter categories and values in two columns.\n2. Insert a horizontal bar chart and make the bars very thin.\n3. Add a second copy of the values as an XY marker series.\n4. Hide unnecessary borders and keep the value axis starting at zero.\nFor beginners, a regular bar chart is easier to build and interpret.`
+      },
+      wordcloud: {
+        name: "Word cloud",
+        short: "Give a rough visual impression of which words appear most in a text — not reliable for precise frequency comparisons.",
+        use: "You are exploring text and want the most frequent words to stand out at a glance.",
+        levels: "Words treated as nominal categories plus their frequencies.",
+        caution: "Word clouds are visually appealing but unreliable for comparison — a bar chart communicates rank more accurately.",
+        tags: ["categorical", "text"], why: "Frequently used words appear larger, so the main themes are easy to notice quickly.",
+        base: `# 1. Store words and their frequencies.\nwords <- c("data","students","charts","analysis","learning","R")\nfreq <- c(42,30,24,18,15,11)\npositions <- matrix(c(.5,.55, .27,.7, .72,.7, .25,.35, .7,.35, .5,.2), ncol = 2, byrow = TRUE)\n\n# 2. Place larger words according to frequency.\nplot.new(); plot.window(c(0,1), c(0,1))\ntext(positions[,1], positions[,2], words,\n  cex = 1 + 2.5 * freq / max(freq),\n  col = c("#173f5f","#168c87","#ef6a5b","#7457a6","#e9aa32","#3568c0"))\ntitle("Common words")`,
+        ggplot: `library(ggplot2)\n\n# 1. Store words, frequencies and simple positions.\ndf <- data.frame(\n  word = c("data","students","charts","analysis","learning","R"),\n  frequency = c(42,30,24,18,15,11),\n  x = c(.5,.27,.72,.25,.7,.5), y = c(.55,.7,.7,.35,.35,.2))\n\n# 2. Use text size to show frequency.\nggplot(df, aes(x, y, label = word, size = frequency, color = word)) +\n  geom_text(show.legend = FALSE, fontface = "bold") +\n  scale_size(range = c(5,14)) + coord_cartesian(xlim = c(0,1), ylim = c(0,1)) +\n  labs(title = "Common words") + theme_void()`,
+        python: `# Run: pip install matplotlib wordcloud\nimport matplotlib.pyplot as plt\nfrom wordcloud import WordCloud\n\n# 1. Store each word and its frequency.\nfrequencies = {"data":42, "students":30, "charts":24,\n               "analysis":18, "learning":15, "R":11}\n\n# 2. Let the package place larger words for larger counts.\ncloud = WordCloud(width=800, height=400, background_color="white", colormap="viridis").generate_from_frequencies(frequencies)\nplt.imshow(cloud, interpolation="bilinear")\nplt.axis("off"); plt.title("Common words"); plt.show()`,
+        excel: `Excel has no built-in word cloud.\nUse a ranked bar chart for accurate frequencies:\n1. Put words in column A and counts in column B.\n2. Sort counts from largest to smallest.\n3. Insert a horizontal bar chart.\nA word-cloud add-in is possible, but add-ins may send data outside Excel.`
+      },
+      violin: {
+        name: "Violin plot",
+        short: "Compare the full shape of numeric distributions across groups.",
+        use: "You have enough observations in each group to show where values are dense, possibly with multiple peaks.",
+        levels: "One categorical grouping variable and one interval or ratio outcome.",
+        caution: "Violins need enough observations for stable density estimates. Add a box plot or points, show group sizes and order groups by median. Ensure sufficient contrast for color-blind readers.",
+        tags: ["categorical", "numeric"], why: "A wider section means more observations live around that value.",
+        base: `# 1. Create scores for three groups.\nset.seed(7)\nscore <- c(rnorm(30,75,6), rnorm(30,82,5), rnorm(30,78,8))\ngroup <- rep(c("A","B","C"), each = 30)\n\n# 2. Mirror each density curve around its group position.\nplot(1, type = "n", xlim = c(.5,3.5), ylim = range(score), xaxt = "n", xlab = "Group", ylab = "Score", main = "Scores by group")\nfor (i in 1:3) {\n  d <- density(score[group == c("A","B","C")[i]])\n  w <- d$y / max(d$y) * .35\n  polygon(c(i-w, rev(i+w)), c(d$x, rev(d$x)), col = "#168c8766", border = "#168c87")\n}\naxis(1, at = 1:3, labels = c("A","B","C"))`,
+        ggplot: `library(ggplot2)\n\n# 1. Create scores for three groups.\nset.seed(7)\ndf <- data.frame(score = c(rnorm(30,75,6), rnorm(30,82,5), rnorm(30,78,8)), group = rep(c("A","B","C"), each = 30))\n\n# 2. Show distribution shape plus a compact box plot.\nggplot(df, aes(x = group, y = score, fill = group)) +\n  geom_violin(trim = FALSE, alpha = .55, show.legend = FALSE) +\n  geom_boxplot(width = .12, fill = "white", show.legend = FALSE) +\n  labs(x = "Group", y = "Score", title = "Scores by group") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# 1. Create scores for three groups.\nrng = np.random.default_rng(7)\ngroups = [rng.normal(75,6,30), rng.normal(82,5,30), rng.normal(78,8,30)]\n\n# 2. Draw the mirrored distribution shapes.\nparts = plt.violinplot(groups, showmedians=True)\nfor body in parts["bodies"]: body.set_facecolor("#168c87")\nplt.xticks([1,2,3], ["A","B","C"])\nplt.xlabel("Group"); plt.ylabel("Score"); plt.title("Scores by group")\nplt.show()`,
+        excel: `Excel has no built-in violin plot.\nUse Box and Whisker instead:\n1. Put each group in a separate column.\n2. Select the columns.\n3. Choose Insert > Statistic Chart > Box and Whisker.\nUse R or Python to show distribution shape.`
+      },
+      density2d: {
+        name: "2D density plot",
+        short: "Reveal where many paired numeric observations cluster.",
+        use: "A scatter plot has so many overlapping points that dense regions are difficult to see.",
+        levels: "Two interval or ratio variables measured on the same cases, usually with many observations.",
+        caution: "Bandwidth can hide small clusters or create broad blobs. Show points or contours, use a perceptually ordered palette and report smoothing when it matters.",
+        tags: ["relationship", "numeric"], why: "It turns crowded point clouds into a topographic map of dense and sparse regions.",
+        base: `# 1. Create many paired observations.\nset.seed(4)\nx <- c(rnorm(180,0,1), rnorm(120,3,.8))\ny <- c(.7*x[1:180] + rnorm(180,0,.8), rnorm(120,2.5,.7))\n\n# 2. Estimate density over a grid and draw contours.\nk <- MASS::kde2d(x, y, n = 60)\nfilled.contour(k$x, k$y, k$z,\n  color.palette = function(n) colorRampPalette(c("#e8f5f3","#168c87","#173f5f"))(n),\n  xlab = "X", ylab = "Y", main = "2D density of paired values")`,
+        ggplot: `library(ggplot2)\n\n# 1. Create many paired observations.\nset.seed(4)\ndf <- data.frame(x = c(rnorm(180,0,1), rnorm(120,3,.8)))\ndf$y <- c(.7*df$x[1:180] + rnorm(180,0,.8), rnorm(120,2.5,.7))\n\n# 2. Draw density contours over faint observations.\nggplot(df, aes(x, y)) +\n  geom_point(alpha = .12, color = "#173f5f") +\n  stat_density_2d(aes(fill = after_stat(level)), geom = "polygon", alpha = .55) +\n  labs(title = "2D density of paired values") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib seaborn numpy\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nimport numpy as np\n\n# 1. Create many paired observations.\nrng = np.random.default_rng(4)\nx = np.r_[rng.normal(0,1,180), rng.normal(3,.8,120)]\ny = np.r_[.7*x[:180] + rng.normal(0,.8,180), rng.normal(2.5,.7,120)]\n\n# 2. Draw filled density contours and faint points.\nsns.kdeplot(x=x, y=y, fill=True, levels=8, cmap="YlGnBu")\nplt.scatter(x, y, s=8, alpha=.12, color="#173f5f")\nplt.title("2D density of paired values"); plt.show()`,
+        excel: `Excel has no built-in 2D density plot.\nUse a scatter plot first:\n1. Put the two numeric variables in adjacent columns.\n2. Choose Insert > Scatter > Markers.\n3. Make markers small and partly transparent.\nUse R or Python when overlap is still too heavy to see density.`
+      },
+      spider: {
+        name: "Spider (radar) plot",
+        short: "Compare a few profiles across several similarly scaled measures.",
+        use: "You have a small number of cases and a small number of numeric measures that share a meaningful scale.",
+        levels: "Several numeric variables, usually standardized or measured on the same bounded scale.",
+        caution: "Area and angle can exaggerate differences. Avoid many profiles, mixed units or arbitrary axis order. Ensure sufficient contrast for color-blind readers.",
+        tags: ["multivariate", "profile"], why: "Each spoke is one measure, and the connected shape gives a quick profile.",
+        base: `# 1. Two products scored from 0 to 10 on five measures.\nlabels <- c("Speed","Quality","Ease","Value","Support")\na <- c(8,7,9,6,7); b <- c(6,9,7,8,8)\nangles <- seq(0, 2*pi, length.out = length(labels) + 1)\n\n# 2. Draw spokes and connect each profile.\nplot(0, type = "n", xlim = c(-11,11), ylim = c(-11,11), asp = 1, axes = FALSE, xlab = "", ylab = "", main = "Product profiles")\nfor (r in c(2,4,6,8,10)) symbols(0,0,circles=r,inches=FALSE,add=TRUE,fg="#dfe3e6")\nsegments(0,0,10*cos(angles[-6]),10*sin(angles[-6]),col="#aeb7bf")\npolygon(a[c(1:5,1)]*cos(angles), a[c(1:5,1)]*sin(angles), border="#168c87", col="#168c8733", lwd=2)\npolygon(b[c(1:5,1)]*cos(angles), b[c(1:5,1)]*sin(angles), border="#ef6a5b", col="#ef6a5b22", lwd=2)\ntext(11*cos(angles[-6]),11*sin(angles[-6]),labels,cex=.8)`,
+        ggplot: `library(ggplot2)\n\n# 1. Store two profiles on the same 0-to-10 scale.\ndf <- data.frame(\n  measure = rep(c("Speed","Quality","Ease","Value","Support"), 2),\n  score = c(8,7,9,6,7, 6,9,7,8,8),\n  product = rep(c("A","B"), each = 5))\n\n# 2. Connect scores around a circular axis.\nggplot(df, aes(x = measure, y = score, group = product, color = product, fill = product)) +\n  geom_polygon(alpha = .12) + geom_line(linewidth = 1) + geom_point(size = 2) +\n  coord_polar() + ylim(0,10) +\n  labs(title = "Product profiles") + theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# 1. Store two profiles on the same 0-to-10 scale.\nlabels = ["Speed","Quality","Ease","Value","Support"]\na = [8,7,9,6,7]; b = [6,9,7,8,8]\nangles = np.linspace(0, 2*np.pi, len(labels), endpoint=False).tolist()\nangles += angles[:1]; a += a[:1]; b += b[:1]\n\n# 2. Draw both profiles on shared spokes.\nax = plt.subplot(111, polar=True)\nax.plot(angles, a, color="#168c87"); ax.fill(angles, a, color="#168c87", alpha=.15)\nax.plot(angles, b, color="#ef6a5b"); ax.fill(angles, b, color="#ef6a5b", alpha=.12)\nax.set_xticks(angles[:-1], labels); ax.set_ylim(0,10)\nplt.title("Product profiles"); plt.show()`,
+        excel: `1. Put measures in column A and profiles in other columns.\n2. Keep every measure on the same scale.\n3. Select the table.\n4. Choose Insert > Radar > Radar with Markers.\n5. Use only a few profiles.`
+      },
+      surface3d: {
+        name: "3D surface plot",
+        short: "Show how a numeric response changes across a two-dimensional numeric grid.",
+        use: "Two ordered numeric inputs form a meaningful grid and a third numeric variable is measured at each grid location.",
+        levels: "Three interval or ratio variables: x, y and a response z observed over a regular or near-regular grid.",
+        caution: "Perspective hides values and can distort slopes. Provide a contour or heatmap alternative whenever exact reading matters.",
+        tags: ["relationship", "numeric"], why: "The height of the surface adds a third numeric dimension to the x-y grid.",
+        base: `# 1. Create an x-y grid and calculate one z value per location.\nx <- seq(-3,3,length.out=35); y <- seq(-3,3,length.out=35)\nz <- outer(x, y, function(a,b) 8 * exp(-(a^2+b^2)/5) + sin(a*b))\n\n# 2. Draw the response as a surface.\npersp(x, y, z, theta = 35, phi = 25, expand = .7,\n  col = "#70bbb4", shade = .45,\n  xlab = "X", ylab = "Y", zlab = "Response",\n  main = "Response surface")`,
+        ggplot: `# Run install.packages("plotly") once if needed.\n# 1. Create an x-y grid and calculate z.\nx <- seq(-3,3,length.out=35); y <- seq(-3,3,length.out=35)\nz <- outer(x, y, function(a,b) 8 * exp(-(a^2+b^2)/5) + sin(a*b))\n\n# 2. Draw an interactive 3D surface.\nplotly::plot_ly(x = x, y = y, z = z) |>\n  plotly::add_surface(colorscale = "Viridis") |>\n  plotly::layout(title = "Response surface",\n    scene = list(xaxis=list(title="X"), yaxis=list(title="Y"), zaxis=list(title="Response")))`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# 1. Create an x-y grid and calculate z.\nx = np.linspace(-3,3,35); y = np.linspace(-3,3,35)\nX, Y = np.meshgrid(x, y)\nZ = 8*np.exp(-(X**2+Y**2)/5) + np.sin(X*Y)\n\n# 2. Draw the response as a surface.\nfig = plt.figure(); ax = fig.add_subplot(111, projection="3d")\nax.plot_surface(X, Y, Z, cmap="viridis")\nax.set_xlabel("X"); ax.set_ylabel("Y"); ax.set_zlabel("Response")\nplt.title("Response surface"); plt.show()`,
+        excel: `1. Arrange x values across columns and y values down rows.\n2. Put the response value in each grid cell.\n3. Select the whole grid.\n4. Choose Insert > Waterfall, Funnel, Stock, Surface or Radar > 3-D Surface.\n5. Also create a Contour chart so hidden values are easier to inspect.`
+      },
+      correlogram: {
+        name: "Correlogram",
+        short: "Summarize pairwise correlations among several numeric variables.",
+        use: "You want an overview of which numeric variables move together, in opposite directions or barely relate.",
+        levels: "Several interval or ratio variables measured on the same cases.",
+        caution: "A large matrix becomes unreadable, and correlation does not prove causation. Limit and order variables, inspect important pairs, and use a color-blind-safe diverging scale.",
+        tags: ["multivariate", "relationship"], why: "One matrix lets you scan many pairwise relationships at once.",
+        base: `# 1. Use four numeric variables measured on the same cars.\ndf <- mtcars[, c("mpg","disp","hp","wt")]\ncorrelations <- cor(df)\n\n# 2. Turn correlations from -1 to 1 into a color matrix.\nimage(1:4, 1:4, correlations[4:1,], zlim = c(-1,1),\n  col = colorRampPalette(c("#3568c0","white","#ef6a5b"))(50),\n  axes = FALSE, xlab = "", ylab = "", main = "Correlation matrix")\naxis(1, at=1:4, labels=colnames(df))\naxis(2, at=1:4, labels=rev(colnames(df)), las=1)`,
+        ggplot: `library(ggplot2)\n\n# 1. Calculate correlations among four numeric variables.\ncors <- cor(mtcars[, c("mpg","disp","hp","wt")])\ndf <- as.data.frame(as.table(cors))\n\n# 2. Turn each correlation into a colored cell.\nggplot(df, aes(Var1, Var2, fill = Freq)) +\n  geom_tile(color = "white") +\n  geom_text(aes(label = round(Freq,2)), size = 3) +\n  scale_fill_gradient2(low = "#3568c0", mid = "white", high = "#ef6a5b", limits = c(-1,1)) +\n  labs(x = NULL, y = NULL, fill = "Correlation", title = "Correlation matrix") +\n  theme_minimal(base_size = 13)`,
+        python: `# Run: pip install matplotlib pandas seaborn\nimport pandas as pd\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\n# 1. Store several numeric variables measured on the same cases.\ndf = pd.DataFrame({\n  "mpg":[21,21,22.8,21.4,18.7,18.1],\n  "disp":[160,160,108,258,360,225],\n  "hp":[110,110,93,110,175,105],\n  "wt":[2.62,2.88,2.32,3.22,3.44,3.46]})\n\n# 2. Calculate every pairwise correlation and color the matrix.\nsns.heatmap(df.corr(), vmin=-1, vmax=1, center=0, cmap="coolwarm", annot=True)\nplt.title("Correlation matrix"); plt.show()`,
+        excel: `1. Put each numeric variable in its own column and each case in one row.\n2. Enable the Analysis ToolPak if needed.\n3. Choose Data > Data Analysis > Correlation.\n4. Select the numeric columns and create the correlation matrix.\n5. Apply Conditional Formatting > Color Scales to the matrix.\n6. Inspect important pairs with scatter plots before interpreting them.`
+      },
+      venn: {
+        name: "Venn diagram",
+        short: "Show overlap between two or three sets.",
+        use: "Categories can overlap because one person or object may belong to more than one set.",
+        levels: "Two or three set-membership indicators and counts for each overlap.",
+        caution: "Use only two or three overlapping sets; more become difficult to read. Label every region, add outlines or patterns, and ensure sufficient contrast for color-blind readers.",
+        tags: ["categorical", "composition"], why: "Overlapping circles make shared membership visible.",
+        base: `# 1. Counts for two overlapping student groups.\nonly_r <- 18; both <- 11; only_python <- 15\n\n# 2. Draw two overlapping circles and label every region.\nplot.new(); plot.window(c(0,10), c(0,7), asp = 1)\nsymbols(4,3.5,circles=2.5,inches=FALSE,add=TRUE,bg="#168c8755",fg="#168c87")\nsymbols(6,3.5,circles=2.5,inches=FALSE,add=TRUE,bg="#ef6a5b55",fg="#ef6a5b")\ntext(2.6,6.3,"R"); text(7.4,6.3,"Python")\ntext(3.2,3.5,only_r); text(5,3.5,both); text(6.8,3.5,only_python)\ntitle("Students using R and Python")`,
+        ggplot: `library(ggplot2)\n\n# 1. Make circle boundaries and overlap labels.\ntheta <- seq(0, 2*pi, length.out = 200)\ncircles <- rbind(\n  data.frame(x=4+2.5*cos(theta), y=3.5+2.5*sin(theta), set="R"),\n  data.frame(x=6+2.5*cos(theta), y=3.5+2.5*sin(theta), set="Python"))\n\n# 2. Draw and label the two overlapping sets.\nggplot(circles, aes(x,y,color=set,fill=set,group=set)) +\n  geom_polygon(alpha=.2, linewidth=1) + coord_equal() +\n  annotate("text", x=c(3.2,5,6.8), y=3.5, label=c(18,11,15), size=5) +\n  labs(title="Students using R and Python") + theme_void()`,
+        python: `# Run: pip install matplotlib matplotlib-venn\nimport matplotlib.pyplot as plt\nfrom matplotlib_venn import venn2\n\n# 1. Give counts for R only, Python only and both.\nvenn2(subsets=(18, 15, 11), set_labels=("R", "Python"),\n      set_colors=("#168c87", "#ef6a5b"), alpha=0.5)\n\n# 2. Keep region counts visible.\nplt.title("Students using R and Python")\nplt.show()`,
+        excel: `Excel has no data-driven Venn chart.\n1. Choose Insert > SmartArt > Relationship > Basic Venn.\n2. Label each set.\n3. Add counts to every region.\n4. Use only for overlapping sets.`
+      },
+      density3d: {
+        name: "3D density surface",
+        short: "Show a smooth joint density for two numeric variables.",
+        use: "You want a surface view of a bivariate distribution, such as a bivariate normal density.",
+        levels: "Two interval or ratio variables; surface height represents estimated joint density.",
+        caution: "Perspective can hide peaks and valleys. Always pair it with a 2D contour or density plot.",
+        tags: ["distribution", "numeric"], why: "Height shows where combinations of x and y are most concentrated.",
+        base: `# 1. Build a grid for a bivariate normal density.\nx <- seq(-3,3,length.out=45); y <- seq(-3,3,length.out=45)\nz <- outer(x, y, function(a,b) exp(-(a^2+b^2)/2) / (2*pi))\n\n# 2. Draw density as height above the x-y plane.\npersp(x, y, z, theta=35, phi=28, expand=.75,\n  col="#70bbb4", shade=.5,\n  xlab="X", ylab="Y", zlab="Density",\n  main="Bivariate normal density")`,
+        ggplot: `# Run install.packages("plotly") once if needed.\n# 1. Build a grid for a bivariate normal density.\nx <- seq(-3,3,length.out=45); y <- seq(-3,3,length.out=45)\nz <- outer(x, y, function(a,b) exp(-(a^2+b^2)/2) / (2*pi))\n\n# 2. Draw an interactive density surface.\nplotly::plot_ly(x=x, y=y, z=z) |>\n  plotly::add_surface(colorscale="Viridis") |>\n  plotly::layout(title="Bivariate normal density")`,
+        python: `# Run: pip install matplotlib numpy\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# 1. Build a grid for a bivariate normal density.\nx = np.linspace(-3,3,45); y = np.linspace(-3,3,45)\nX, Y = np.meshgrid(x, y)\nZ = np.exp(-(X**2 + Y**2)/2) / (2*np.pi)\n\n# 2. Draw density as surface height.\nfig = plt.figure(); ax = fig.add_subplot(111, projection="3d")\nax.plot_surface(X, Y, Z, cmap="viridis")\nax.set_xlabel("X"); ax.set_ylabel("Y"); ax.set_zlabel("Density")\nplt.title("Bivariate normal density"); plt.show()`,
+        excel: `1. Put x values across columns.\n2. Put y values down rows.\n3. Enter density in each grid cell.\n4. Select the full grid.\n5. Choose Insert > Surface > 3-D Surface.`
+      }
+    };
+
+    const chartSources = {
+      bar: "https://www.data-to-viz.com/graph/barplot.html",
+      lollipop: "https://www.data-to-viz.com/graph/lollipop.html",
+      wordcloud: "https://www.data-to-viz.com/graph/wordcloud.html",
+      pie: "https://www.data-to-viz.com/graph/pie.html",
+      doughnut: "https://www.data-to-viz.com/graph/donut.html",
+      pareto: "https://www.data-to-viz.com/",
+      venn: "https://www.data-to-viz.com/graph/venn.html",
+      histogram: "https://www.data-to-viz.com/graph/histogram.html",
+      density: "https://www.data-to-viz.com/graph/density.html",
+      dot: "https://www.data-to-viz.com/",
+      line: "https://www.data-to-viz.com/graph/line.html",
+      box: "https://www.data-to-viz.com/graph/boxplot.html",
+      violin: "https://www.data-to-viz.com/graph/violin.html",
+      correlogram: "https://www.data-to-viz.com/graph/correlogram.html",
+      spider: "https://www.data-to-viz.com/graph/spider.html",
+      heatmap: "https://www.data-to-viz.com/graph/heatmap.html",
+      stacked: "https://www.data-to-viz.com/graph/barplot.html",
+      density2d: "https://www.data-to-viz.com/graph/density2d.html",
+      density3d: "https://www.data-to-viz.com/",
+      scatter: "https://www.data-to-viz.com/graph/scatter.html",
+      bubble: "https://www.data-to-viz.com/graph/bubble.html"
+    };
+
+    const interpretationGuides = {
+      bar: {
+        interpret: ["Longer bars mean more; shorter bars mean less.", "Compare bars from the same starting line, usually zero."],
+        attention: ["Read the axis label so you know whether the bars show counts, percentages, or averages.", "Check whether the bars are ranked or kept in a natural order."],
+        caveats: ["If the value axis does not start at zero, small differences can look much bigger than they are.", "A bar shows one summary for each category, not every individual value."]
+      },
+      lollipop: {
+        interpret: ["The dot marks the value; the thin stick only helps your eye find it.", "Higher or farther dots mean larger values."],
+        attention: ["Look for the first, last, and any dots packed closely together.", "Make sure every stick begins from the same starting line."],
+        caveats: ["Close dots can be harder to compare than bars.", "Choose a bar chart when exact ranking needs to be obvious."]
+      },
+      wordcloud: {
+        interpret: ["Bigger words appeared more often or were given more importance.", "Use the cloud to spot a general theme, not an exact winner."],
+        attention: ["Ask which common words were removed and whether similar words were combined.", "A long word can look important simply because it takes up more room."],
+        caveats: ["Word sizes are hard to compare accurately.", "Pair the cloud with a ranked bar chart when the exact order matters."]
+      },
+      pie: {
+        interpret: ["Think of the circle as one pizza and each category as a slice.", "A bigger slice means a bigger share of the whole."],
+        attention: ["Make sure every item belongs to only one slice and all slices add to 100%.", "Add percentages when two slices look close."],
+        caveats: ["Our eyes compare bar lengths better than slice angles.", "Use a bar chart when there are many slices or the slices are similar."]
+      },
+      doughnut: {
+        interpret: ["Think of the ring as one whole cut into pieces.", "A longer piece around the ring means a bigger share."],
+        attention: ["Make sure the pieces add to 100%.", "Keep only a few pieces and label them clearly."],
+        caveats: ["The hole in the middle does not make close pieces easier to compare.", "A pie chart tells the same story; bars are better for exact comparison."]
+      },
+      histogram: {
+        interpret: ["Each bar is a bucket that counts nearby numbers.", "Look for where values bunch together, how far they spread, empty gaps, and unusually high or low values."],
+        attention: ["Check how wide each bucket is and where the first bucket starts.", "Make sure all buckets have the same width before comparing their heights."],
+        caveats: ["Changing bucket width can change the picture, so try more than one sensible width.", "A histogram shows the overall shape, not every exact value."]
+      },
+      dot: {
+        interpret: ["Each dot is one observation; stacked dots mean values repeated or landed close together.", "Look for crowds of dots, empty gaps, and lonely dots."],
+        attention: ["Check whether nearby numbers were grouped together.", "With a small dataset, count the dots to recover the frequency."],
+        caveats: ["Too many dots can pile on top of one another.", "Switch to a histogram or box plot when the display becomes crowded."]
+      },
+      scatter: {
+        interpret: ["Each dot is one person or thing with two numbers.", "Ask whether the dots climb, fall, curve, or form no clear path."],
+        attention: ["Look for separate groups, changing spread, and dots sitting far away.", "Read both axes carefully and notice if the scale has been changed."],
+        caveats: ["A pattern does not prove that one variable caused the other.", "Look at the dots before trusting a trend line; one strange dot can pull the line."]
+      },
+      bubble: {
+        interpret: ["Each bubble works like a scatter-plot dot, but its area carries a third number.", "Use the size key to compare bubbles; do not compare only their widths."],
+        attention: ["First read the left-right and up-down pattern, then ask what the bubble sizes add.", "Check whether large bubbles are hiding small ones."],
+        caveats: ["Our eyes are not very good at judging circle areas.", "Use see-through bubbles and a clear size key; use another chart for exact size comparison."]
+      },
+      box: {
+        interpret: ["The line inside the box is the median: the value in the middle.", "The box holds the middle half of the data; the whiskers reach toward the usual low and high values."],
+        attention: ["Compare the middle lines first, then the box sizes, whiskers, and any dots sitting apart.", "Check whether one group has many more observations than another."],
+        caveats: ["A box can hide bumps, gaps, and clusters.", "Add the original dots, especially when the groups are small."]
+      },
+      line: {
+        interpret: ["Read from left to right, usually from earlier to later.", "An upward line means growth, a downward line means decline, and a turn shows a change in direction."],
+        attention: ["Look for the big direction, repeating patterns, sudden jumps, and missing dates.", "Check whether the time gaps are evenly spaced."],
+        caveats: ["Connecting dots tells the reader that their order matters.", "Too many lines become a knot; highlight a few or give them separate small panels."]
+      },
+      density: {
+        interpret: ["Think of the curve as a smooth hill: taller places are where more values gather.", "The height is not a head count; the whole shape is scaled to have the same total area."],
+        attention: ["Look for hills, long tails, overall spread, and overlap between groups.", "Check the smoothing setting, often called bandwidth, because it changes how bumpy the hill looks."],
+        caveats: ["Too much smoothing hides real bumps; too little can create bumps that are only noise.", "Show the observations or a histogram nearby so the curve does not feel mysterious."]
+      },
+      stacked: {
+        interpret: ["The whole bar is the group total; each colored block is one piece of that total.", "If every bar reaches 100%, compare shares rather than totals."],
+        attention: ["Compare full bar heights first, then compare the pieces.", "Keep the colored pieces in the same order in every bar."],
+        caveats: ["Middle pieces are hard to compare because they start in different places.", "Use side-by-side bars when exact piece-to-piece comparison matters."]
+      },
+      pareto: {
+        interpret: ["The bars place the biggest category first and the smallest last.", "The line shows how much of the total you have collected as you move across the bars."],
+        attention: ["Look for the point where a few bars already explain most of the total.", "Make sure all categories are pieces of the same total."],
+        caveats: ["The winners can change with another time period or group.", "Do not force an 80/20 story; use the pattern your data actually shows."]
+      },
+      heatmap: {
+        interpret: ["Each colored square belongs to one row and one column.", "Use the color key to learn whether a square means more, less, positive, or negative."],
+        attention: ["Look for blocks, stripes, gradual changes, and squares that stand alone.", "Row and column order can make a pattern easier or harder to see."],
+        caveats: ["Color is good for spotting a pattern but poor for reading an exact number.", "Label important cells and use colors that remain distinct for color-blind readers."]
+      },
+      violin: {
+        interpret: ["A wide part of the violin means many values gather around that level.", "Up and down shows the actual number; left and right only shows how crowded that level is."],
+        attention: ["Compare the middle, spread, tails, and any separate bulges.", "Look for a middle marker, a small box, or the original dots inside the violin."],
+        caveats: ["With only a few observations, the shape can be wobbly or misleading.", "Show group sizes and add dots or a box plot."]
+      },
+      density2d: {
+        interpret: ["Read the lines like a weather map: each loop surrounds a region with a similar crowd of points.", "Tighter nested loops or darker areas usually mean more observations are packed there."],
+        attention: ["Look for one crowd or several crowds, their direction, and empty spaces.", "Use the legend to learn what darker colors or extra loops mean."],
+        caveats: ["The smoothing setting can blend two crowds together or make one crowd look too broad.", "Keep faint dots underneath so students can see the observations behind the smooth shapes."]
+      },
+      spider: {
+        interpret: ["Each spoke is one measure; farther from the center means more.", "Compare the shapes one spoke at a time, not by judging the whole colored area."],
+        attention: ["Make sure all spokes use the same scale or were changed to a common scale.", "Check which direction means better and how the spokes were arranged."],
+        caveats: ["A dramatic-looking shape can make small differences feel large.", "Use only a few profiles; choose dots or small panels for precise comparison."]
+      },
+      surface3d: {
+        interpret: ["The floor gives two numbers; the surface height gives a third.", "Hills mean higher values, valleys mean lower values, and slopes show change."],
+        attention: ["Turn the plot when possible because one viewing angle can hide part of the surface.", "Also look at a top-down contour map to locate hills and valleys."],
+        caveats: ["Perspective can make slopes look steeper or flatter than they are.", "Use a heatmap or contour map when exact comparison matters."]
+      },
+      correlogram: {
+        interpret: ["Each square asks whether two numeric variables tend to move together.", "The sign shows whether they move in the same or opposite direction; values closer to 1 or -1 show a stronger straight-line pattern."],
+        attention: ["Look for groups of strong colors and especially strong positive or negative pairs.", "Check which correlation rule was used and read the color legend."],
+        caveats: ["Correlation does not prove that one variable causes the other.", "A strange point or a curved pattern can fool the number, so open important pairs as scatter plots."]
+      },
+      venn: {
+        interpret: ["Each circle is a group; the overlap contains things that belong to both groups.", "Read every region, including the parts that do not overlap."],
+        attention: ["Ask whether circle size truly represents the count or is only a drawing.", "Use this chart only when an item is allowed to belong to more than one group."],
+        caveats: ["Circle area usually does not match the numbers exactly.", "Stop at two or three groups; use a table when there are more."]
+      },
+      density3d: {
+        interpret: ["The floor shows pairs of x and y values; tall hills show combinations where more observations gather.", "One hill suggests one main crowd; several hills suggest several crowds."],
+        attention: ["Look at where the hills sit, how many there are, and how wide they spread.", "Also view the same data from above as a 2D contour map."],
+        caveats: ["The viewing angle can hide valleys, and smoothing can join separate hills.", "Height shows concentration around an area, not the chance of one exact point."]
+      }
+    };
+
+    const chartManuals = {
+      bar: ["https://ggplot2.tidyverse.org/reference/geom_bar.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html"],
+      lollipop: ["https://ggplot2.tidyverse.org/reference/geom_segment.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.stem.html"],
+      wordcloud: ["https://cran.r-project.org/web/packages/wordcloud/wordcloud.pdf", "https://amueller.github.io/word_cloud/generated/wordcloud.WordCloud.html"],
+      pie: ["https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/pie.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.pie.html"],
+      doughnut: ["https://ggplot2.tidyverse.org/reference/coord_polar.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.pie.html"],
+      histogram: ["https://ggplot2.tidyverse.org/reference/geom_histogram.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html"],
+      dot: ["https://ggplot2.tidyverse.org/reference/geom_dotplot.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.scatter.html"],
+      scatter: ["https://ggplot2.tidyverse.org/reference/geom_point.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.scatter.html"],
+      bubble: ["https://ggplot2.tidyverse.org/reference/scale_size.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.scatter.html"],
+      box: ["https://ggplot2.tidyverse.org/reference/geom_boxplot.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.boxplot.html"],
+      line: ["https://ggplot2.tidyverse.org/reference/geom_path.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.plot.html"],
+      density: ["https://ggplot2.tidyverse.org/reference/geom_density.html", "https://seaborn.pydata.org/generated/seaborn.kdeplot.html"],
+      stacked: ["https://ggplot2.tidyverse.org/reference/position_stack.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html"],
+      pareto: ["https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/barplot.html", "https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html"],
+      heatmap: ["https://ggplot2.tidyverse.org/reference/geom_tile.html", "https://seaborn.pydata.org/generated/seaborn.heatmap.html"],
+      violin: ["https://ggplot2.tidyverse.org/reference/geom_violin.html", "https://seaborn.pydata.org/generated/seaborn.violinplot.html"],
+      density2d: ["https://ggplot2.tidyverse.org/reference/geom_density_2d.html", "https://seaborn.pydata.org/generated/seaborn.kdeplot.html"],
+      spider: ["https://ggplot2.tidyverse.org/reference/coord_polar.html", "https://matplotlib.org/stable/api/projections/polar.html"],
+      surface3d: ["https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/persp.html", "https://matplotlib.org/stable/plot_types/3D/surface3d_simple.html"],
+      correlogram: ["https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.html", "https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html"],
+      venn: ["https://bioconductor.org/packages/release/bioc/manuals/limma/man/limma.pdf", "https://pypi.org/project/matplotlib-venn/"],
+      density3d: ["https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/persp.html", "https://matplotlib.org/stable/plot_types/3D/surface3d_simple.html"]
+    };
+
+    const goals = {
+      distribution: {
+        label: "Distribution",
+        help: "Where do the numbers bunch together, spread apart, or look unusual?"
+      },
+      rank: {
+        label: "Ranking",
+        help: "Who comes first, who comes last, and what is in between?"
+      },
+      association: {
+        label: "Correlation",
+        help: "When one variable changes, does another tend to change with it?"
+      },
+      composition: {
+        label: "Part of a whole",
+        help: "How is one complete thing split into pieces?"
+      },
+      evolution: {
+        label: "Evolution",
+        help: "How do values rise, fall, or change as time moves forward?"
+      }
+    };
+
+    const allowedGoals = {
+      category: ["rank", "composition"],
+      number: ["distribution"],
+      catnum: ["distribution"],
+      twocat: ["rank", "association", "composition"],
+      twonum: ["evolution", "distribution", "association"],
+      time: ["evolution", "distribution", "rank"],
+      threenum: ["association"],
+    };
+
+    const recommendations = {
+      "category|rank": ["bar", "lollipop", "wordcloud"],
+      "category|composition": ["pie", "doughnut", "pareto", "venn"],
+      "number|distribution": ["histogram", "density", "dot"],
+      "catnum|distribution": ["box", "violin"],
+      "twocat|rank": ["bar", "spider"],
+      "twocat|association": ["heatmap"],
+      "twocat|composition": ["stacked"],
+      "twonum|evolution": ["line"],
+      "twonum|distribution": ["density2d", "density3d"],
+      "twonum|association": ["scatter", "density2d"],
+      "threenum|association": ["bubble", "correlogram"],
+      "time|evolution": ["line"],
+      "time|distribution": ["box", "violin"],
+      "time|rank": ["bar", "lollipop"]
+    };
+
+    const quizItems = [
+      {
+        question: 'A researcher records the exact time it takes runners to finish a marathon (e.g., 3 hours 15 minutes, 4 hours 10 minutes). Which level of measurement does the variable "marathon time" have?',
+        answer: "Ratio",
+        explanation: "A minute is always the same size, and zero seconds means no time has passed. We can meaningfully say one duration is twice another."
+      },
+      {
+        question: 'A doctor asks a patient to rate their pain on a scale from 0 to 10, where 0 means "no pain" and 10 means "worst imaginable pain." Which level of measurement does the variable "pain level" have?',
+        answer: "Ordinal",
+        explanation: "The labels have an order, but the jumps may not feel equally large. Moving from 2 to 3 may feel different from moving from 7 to 8."
+      },
+      {
+        question: 'You are analyzing a roulette wheel containing the numbers 1 through 36, plus 0 and 00. Which level of measurement does the variable "number obtained when rolling the roulette wheel" have?',
+        answer: "Nominal",
+        explanation: "The numbers are name tags for pockets. In the game, landing on 36 is not a higher amount than landing on 2."
+      },
+      {
+        question: 'You are tracking the funds in your checking account. Which level of measurement does the variable "money in the account" have?',
+        answer: "Ratio",
+        explanation: "Dollars use equal units, and $0 means there is no money in the account. That makes zero a meaningful absence of the quantity."
+      },
+      {
+        question: 'A bank looks at applicants’ FICO credit scores, which range strictly from 300 to 850, to determine loan eligibility. Which level of measurement does the variable "FICO credit score" have?',
+        answer: "Interval",
+        explanation: "Score points are evenly numbered and differences can be calculated, but zero is not a possible or meaningful absence of creditworthiness. A caution: the same point increase does not necessarily create the same change in lending risk everywhere on the scale."
+      },
+      {
+        question: 'A marketing team organizes a list of customers based on their telephone area codes (e.g., 212, 310, 703). Which level of measurement does the variable "phone area code" have?',
+        answer: "Nominal",
+        explanation: "Area codes look like numbers, but they are geographic name tags. 703 is not more or better than 212."
+      }
+    ];
+
+    const cafeCsv = `order_id,order_date,day,time_slot,drink,size,wait_minutes,order_total,satisfaction,items,mobile_order
+1,2026-03-02,Monday,Morning,Coffee,Small,4,3.25,5,1,No
+2,2026-03-02,Monday,Lunch,Tea,Medium,6,4.50,4,2,Yes
+3,2026-03-02,Monday,Afternoon,Smoothie,Large,9,7.75,3,2,No
+4,2026-03-03,Tuesday,Morning,Coffee,Medium,5,4.25,5,1,Yes
+5,2026-03-03,Tuesday,Lunch,Hot Chocolate,Medium,7,5.50,4,2,No
+6,2026-03-03,Tuesday,Afternoon,Smoothie,Large,10,8.25,3,2,No
+7,2026-03-04,Wednesday,Morning,Coffee,Small,3,3.25,5,1,Yes
+8,2026-03-04,Wednesday,Lunch,Tea,Large,8,6.25,3,2,No
+9,2026-03-04,Wednesday,Afternoon,Hot Chocolate,Medium,11,6.50,2,3,No
+10,2026-03-05,Thursday,Morning,Coffee,Medium,4,4.75,5,2,Yes
+11,2026-03-05,Thursday,Lunch,Tea,Small,6,3.75,4,1,Yes
+12,2026-03-05,Thursday,Afternoon,Smoothie,Large,12,9.25,2,3,No
+13,2026-03-06,Friday,Morning,Coffee,Small,5,3.25,5,1,Yes
+14,2026-03-06,Friday,Lunch,Hot Chocolate,Medium,7,5.75,4,2,No
+15,2026-03-06,Friday,Afternoon,Smoothie,Large,12,9.75,2,3,No
+16,2026-03-07,Saturday,Morning,Tea,Small,4,3.50,5,1,Yes
+17,2026-03-07,Saturday,Lunch,Coffee,Medium,6,5.25,4,2,Yes
+18,2026-03-07,Saturday,Afternoon,Hot Chocolate,Large,10,8.00,3,3,No
+19,2026-03-08,Sunday,Morning,Coffee,Small,3,3.25,5,1,Yes
+20,2026-03-08,Sunday,Lunch,Tea,Medium,7,5.00,4,2,No
+21,2026-03-08,Sunday,Afternoon,Smoothie,Large,9,8.25,3,2,No
+22,2026-03-09,Monday,Morning,Coffee,Medium,5,4.75,5,2,Yes
+23,2026-03-09,Monday,Lunch,Tea,Small,8,4.25,3,2,No
+24,2026-03-09,Monday,Afternoon,Hot Chocolate,Medium,11,7.00,2,3,No`;
+
+    const practiceTasks = [
+      {
+        goal: "Get ready",
+        title: "Meet the variables before choosing a chart",
+        prompt: "First, meet the data. What does one row represent, and what kind of variable is each column?",
+        steps: [
+          "Think of a row as one receipt: one row is one café order.",
+          "drink is a name, size and satisfaction have an order, wait_minutes measures an amount, and order_date tells us when it happened.",
+          "A chart is easier to choose once you know what each variable is allowed to say."
+        ],
+        r: `# 1. Put campus_cafe_orders.csv in your RStudio project folder.
+cafe <- read.csv("campus_cafe_orders.csv")
+
+# 2. Inspect the rows, variable types, and summaries.
+head(cafe)
+str(cafe)
+summary(cafe)
+
+# 3. Tell R which categories have a meaningful order.
+cafe$size <- factor(cafe$size,
+  levels = c("Small", "Medium", "Large"), ordered = TRUE)
+cafe$satisfaction <- factor(cafe$satisfaction,
+  levels = 1:5, ordered = TRUE)
+cafe$order_date <- as.Date(cafe$order_date)`,
+        python: `# Run once if needed: pip install pandas
+import pandas as pd
+
+# 1. Read the CSV from the same folder as your notebook or script.
+cafe = pd.read_csv("campus_cafe_orders.csv",
+                   parse_dates=["order_date"])
+
+# 2. Inspect rows, variable types, and summaries.
+print(cafe.head())
+print(cafe.dtypes)
+print(cafe.describe(include="all"))
+
+# 3. Store ordered categories explicitly.
+cafe["size"] = pd.Categorical(
+    cafe["size"], categories=["Small", "Medium", "Large"],
+    ordered=True)`
+      },
+      {
+        goal: "Ranking",
+        title: "Ranking: which drinks were ordered most?",
+        prompt: "Make a bar chart that lets someone spot the most popular drink in one quick look.",
+        steps: [
+          "Count how many receipts mention each drink.",
+          "Put the biggest bar first because we are making a ranking.",
+          "Coffee wins this small race with 8 orders; Tea comes next with 6."
+        ],
+        r: `library(ggplot2)
+cafe <- read.csv("campus_cafe_orders.csv")
+
+# 1. Count orders and arrange the drink labels by frequency.
+drink_counts <- as.data.frame(table(cafe$drink))
+names(drink_counts) <- c("drink", "orders")
+
+# 2. Draw ranked bars from largest to smallest.
+ggplot(drink_counts,
+       aes(x = reorder(drink, orders), y = orders)) +
+  geom_col(fill = "#168c87") +
+  coord_flip() +
+  labs(x = NULL, y = "Number of orders",
+       title = "Coffee was ordered most often") +
+  theme_minimal(base_size = 13)`,
+        python: `# Run once if needed: pip install pandas matplotlib
+import pandas as pd
+import matplotlib.pyplot as plt
+
+cafe = pd.read_csv("campus_cafe_orders.csv")
+
+# 1. Count and sort the drink categories.
+counts = cafe["drink"].value_counts().sort_values()
+
+# 2. Draw horizontal bars so labels stay easy to read.
+counts.plot.barh(color="#168c87")
+plt.xlabel("Number of orders")
+plt.ylabel("")
+plt.title("Coffee was ordered most often")
+plt.tight_layout()
+plt.show()`
+      },
+      {
+        goal: "Distribution",
+        title: "Distribution: how long did customers wait?",
+        prompt: "Make a histogram that shows where wait times bunch together and where they thin out.",
+        steps: [
+          "Put nearby wait times into simple two-minute buckets.",
+          "Most customers waited about 4 to 10 minutes; the shortest wait was 3 and the longest was 12.",
+          "Change the bucket width once. If the story changes completely, be cautious."
+        ],
+        r: `library(ggplot2)
+cafe <- read.csv("campus_cafe_orders.csv")
+
+# Each bar counts waits inside a two-minute interval.
+ggplot(cafe, aes(x = wait_minutes)) +
+  geom_histogram(binwidth = 2, boundary = 2,
+                 fill = "#168c87", color = "white") +
+  labs(x = "Wait time (minutes)", y = "Number of orders",
+       title = "Distribution of café wait times") +
+  theme_minimal(base_size = 13)`,
+        python: `import pandas as pd
+import matplotlib.pyplot as plt
+
+cafe = pd.read_csv("campus_cafe_orders.csv")
+
+# Each bar counts waits inside a two-minute interval.
+plt.hist(cafe["wait_minutes"],
+         bins=range(2, 15, 2),
+         color="#168c87", edgecolor="white")
+plt.xlabel("Wait time (minutes)")
+plt.ylabel("Number of orders")
+plt.title("Distribution of café wait times")
+plt.show()`
+      },
+      {
+        goal: "Distribution",
+        title: "Distribution: did mobile orders wait less?",
+        prompt: "Use box plots and dots to compare the shapes of the two wait-time groups.",
+        steps: [
+          "Start with the middle line in each box, then look at how spread out the dots are.",
+          "In this small made-up dataset, mobile orders usually have shorter waits.",
+          "The picture shows a difference, but it cannot prove that the phone caused the shorter wait."
+        ],
+        r: `library(ggplot2)
+cafe <- read.csv("campus_cafe_orders.csv")
+
+# Boxes summarize each group; jittered dots show every order.
+ggplot(cafe, aes(x = mobile_order, y = wait_minutes,
+                 fill = mobile_order)) +
+  geom_boxplot(width = .55, alpha = .65,
+               show.legend = FALSE) +
+  geom_jitter(width = .08, size = 2, alpha = .75) +
+  labs(x = "Mobile order", y = "Wait time (minutes)",
+       title = "Mobile orders tended to wait less") +
+  theme_minimal(base_size = 13)`,
+        python: `# Run once if needed: pip install pandas seaborn matplotlib
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+cafe = pd.read_csv("campus_cafe_orders.csv")
+
+# Boxes summarize; dots keep the individual orders visible.
+sns.boxplot(data=cafe, x="mobile_order", y="wait_minutes",
+            color="#70bbb4")
+sns.stripplot(data=cafe, x="mobile_order", y="wait_minutes",
+              color="#173f5f", jitter=.08, alpha=.7)
+plt.xlabel("Mobile order")
+plt.ylabel("Wait time (minutes)")
+plt.title("Mobile orders tended to wait less")
+plt.show()`
+      },
+      {
+        goal: "Correlation",
+        title: "Correlation: do larger totals come with longer waits?",
+        prompt: "Make a scatter plot and ask whether the dots seem to climb as the order total grows.",
+        steps: [
+          "Each dot is one receipt: left or right shows its price, and up or down shows its wait.",
+          "The dots generally climb, so larger totals tend to come with longer waits.",
+          "That does not prove price causes waiting. Bigger orders, drink type, or time of day may help explain the pattern."
+        ],
+        r: `library(ggplot2)
+cafe <- read.csv("campus_cafe_orders.csv")
+
+# Draw one point per order and a descriptive trend line.
+ggplot(cafe, aes(x = order_total, y = wait_minutes)) +
+  geom_point(size = 2.8, color = "#168c87") +
+  geom_smooth(method = "lm", se = FALSE,
+              color = "#ef6a5b") +
+  labs(x = "Order total ($)", y = "Wait time (minutes)",
+       title = "Larger orders tended to take longer") +
+  theme_minimal(base_size = 13)`,
+        python: `import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+cafe = pd.read_csv("campus_cafe_orders.csv")
+
+# Draw one point per order and a descriptive trend line.
+sns.regplot(data=cafe, x="order_total", y="wait_minutes",
+            scatter_kws={"color":"#168c87", "s":55},
+            line_kws={"color":"#ef6a5b"},
+            ci=None)
+plt.xlabel("Order total ($)")
+plt.ylabel("Wait time (minutes)")
+plt.title("Larger orders tended to take longer")
+plt.show()`
+      },
+      {
+        goal: "Part of a whole",
+        title: "Part of a whole: what share used each cup size?",
+        prompt: "Split all 24 orders into Small, Medium, and Large slices, then ask whether the slices are easy to compare.",
+        steps: [
+          "Imagine all 24 orders as one pizza. Each cup size gets one slice of that pizza.",
+          "Medium has the largest slice with 10 of the 24 orders.",
+          "The slices are close in size, so a bar chart would make the comparison easier."
+        ],
+        r: `library(ggplot2)
+cafe <- read.csv("campus_cafe_orders.csv")
+
+# 1. Count sizes and preserve their natural order.
+sizes <- as.data.frame(table(factor(cafe$size,
+  levels = c("Small", "Medium", "Large"))))
+names(sizes) <- c("size", "orders")
+
+# 2. Bend one stacked bar into a ring.
+ggplot(sizes, aes(x = 2, y = orders, fill = size)) +
+  geom_col(color = "white") +
+  coord_polar(theta = "y") +
+  xlim(.5, 2.5) +
+  labs(fill = "Size", title = "Share of orders by cup size") +
+  theme_void(base_size = 13)`,
+        python: `import pandas as pd
+import matplotlib.pyplot as plt
+
+cafe = pd.read_csv("campus_cafe_orders.csv")
+sizes = cafe["size"].value_counts().reindex(
+    ["Small", "Medium", "Large"])
+
+# The wedge width turns a pie chart into a doughnut.
+plt.pie(sizes, labels=sizes.index, autopct="%1.0f%%",
+        wedgeprops={"width":.42, "edgecolor":"white"},
+        startangle=90)
+plt.title("Share of orders by cup size")
+plt.show()`
+      },
+      {
+        goal: "Evolution",
+        title: "Evolution: did average wait time change by date?",
+        prompt: "Find one average wait for each date, then connect the dates from earliest to latest.",
+        steps: [
+          "Turn each day's receipts into one average wait time.",
+          "Put the dates in order before connecting them. A line drawn out of order tells the wrong story.",
+          "The waits bounce up and down; March 6 and March 9 have the highest daily averages."
+        ],
+        r: `library(ggplot2)
+cafe <- read.csv("campus_cafe_orders.csv")
+cafe$order_date <- as.Date(cafe$order_date)
+
+# 1. Calculate one average wait for each date.
+daily <- aggregate(wait_minutes ~ order_date,
+                   data = cafe, FUN = mean)
+
+# 2. Connect dates in chronological order.
+ggplot(daily, aes(x = order_date, y = wait_minutes)) +
+  geom_line(linewidth = 1.1, color = "#168c87") +
+  geom_point(size = 2.7, color = "#168c87") +
+  labs(x = NULL, y = "Average wait (minutes)",
+       title = "Average wait time fluctuated by date") +
+  theme_minimal(base_size = 13)`,
+        python: `import pandas as pd
+import matplotlib.pyplot as plt
+
+cafe = pd.read_csv("campus_cafe_orders.csv",
+                   parse_dates=["order_date"])
+
+# 1. Calculate one average wait for each date.
+daily = (cafe.groupby("order_date", as_index=False)
+              ["wait_minutes"].mean()
+              .sort_values("order_date"))
+
+# 2. Connect dates in chronological order.
+plt.plot(daily["order_date"], daily["wait_minutes"],
+         marker="o", color="#168c87")
+plt.ylabel("Average wait (minutes)")
+plt.xlabel("")
+plt.title("Average wait time fluctuated by date")
+plt.xticks(rotation=30)
+plt.tight_layout()
+plt.show()`
+      }
+    ];
+
+    let selectedVariable = "category";
+    let selectedGoal = null;
+    let activeChart = "bar";
+    let activeCode = "ggplot";
+
+    const colors = ["#168c87", "#ef6a5b", "#e9aa32", "#7457a6", "#173f5f"];
+    const svgWrap = inner => `<svg viewBox="0 0 300 145" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Chart preview" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+
+    function preventOrphan(text, wordsToKeep = 3) {
+      const words = text.trim().split(/\s+/);
+      if (words.length <= wordsToKeep) return words.join("\u00a0");
+      return `${words.slice(0, -wordsToKeep).join(" ")} ${words.slice(-wordsToKeep).join("\u00a0")}`;
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      })[character]);
+    }
+
+    function preview(type) {
+      const axis = `<path d="M36 18V116H278" fill="none" stroke="#c7cdd2" stroke-width="1.5"/>`;
+      if (type === "bar") return svgWrap(`${axis}${[55,92,68,111].map((h,i)=>`<rect x="${58+i*50}" y="${116-h}" width="28" height="${h}" rx="3" fill="${colors[i]}"/>`).join("")}`);
+      if (type === "pie") return svgWrap(`<defs><pattern id="pieHatch" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 7 7 0" stroke="#173f5f" stroke-width="1.4"/></pattern><pattern id="pieDots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" fill="#173f5f"/></pattern></defs><g transform="translate(150 70)"><path d="M0 0 L0 -53 A53 53 0 0 1 50 18 Z" fill="${colors[0]}" stroke="white" stroke-width="2"/><path d="M0 0 L50 18 A53 53 0 0 1 -29 44 Z" fill="${colors[1]}" stroke="white" stroke-width="2"/><path d="M0 0 L-29 44 A53 53 0 0 1 -42 -32 Z" fill="${colors[2]}" stroke="white" stroke-width="2"/><path d="M0 0 L-42 -32 A53 53 0 0 1 0 -53 Z" fill="${colors[3]}" stroke="white" stroke-width="2"/><path d="M0 0 L50 18 A53 53 0 0 1 -29 44 Z" fill="url(#pieHatch)"/><path d="M0 0 L-42 -32 A53 53 0 0 1 0 -53 Z" fill="url(#pieDots)"/></g>`);
+      if (type === "doughnut") return svgWrap(`<g transform="translate(150 70)"><circle r="53" fill="none" stroke="${colors[0]}" stroke-width="24" stroke-dasharray="160 333" transform="rotate(-90)"/><circle r="53" fill="none" stroke="${colors[1]}" stroke-width="24" stroke-dasharray="7 5" stroke-dashoffset="-160" transform="rotate(-90)"/><circle r="53" fill="none" stroke="${colors[2]}" stroke-width="24" stroke-dasharray="53 333" stroke-dashoffset="-250" transform="rotate(-90)"/><circle r="53" fill="none" stroke="${colors[3]}" stroke-width="24" stroke-dasharray="3 4" stroke-dashoffset="-303" transform="rotate(-90)"/><text y="5" text-anchor="middle" font-size="18" font-weight="800" fill="${colors[4]}">100%</text></g>`);
+      if (type === "histogram") return svgWrap(`${axis}${[28,48,77,99,88,56,30].map((h,i)=>`<rect x="${52+i*30}" y="${116-h}" width="30" height="${h}" fill="${colors[0]}" stroke="white"/>`).join("")}`);
+      if (type === "dot") {
+        const dots = [[65,98],[79,98],[93,98],[93,83],[107,98],[107,83],[121,98],[135,98],[135,83],[135,68],[149,98],[149,83],[163,98],[177,98],[177,83],[191,98],[205,98],[219,98]];
+        return svgWrap(`${axis}${dots.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="6" fill="${colors[0]}" stroke="white" stroke-width="1.5"/>`).join("")}`);
+      }
+      if (type === "scatter") {
+        const pts = [[55,101],[76,94],[89,96],[109,80],[126,84],[143,68],[159,73],[180,54],[204,49],[226,33],[248,27]];
+        return svgWrap(`${axis}${pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="${colors[0]}"/>`).join("")}`);
+      }
+      if (type === "bubble") {
+        const pts = [[58,101,7],[86,91,13],[116,80,9],[145,67,17],[178,57,12],[213,43,20],[250,30,10]];
+        return svgWrap(`${axis}${pts.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${colors[0]}88" stroke="${colors[0]}" stroke-width="2"/>`).join("")}`);
+      }
+      if (type === "box") return svgWrap(`${axis}${[0,1,2].map(i=>`<g transform="translate(${90+i*65} 0)"><line x1="0" y1="${34+i*7}" x2="0" y2="${103-i*5}" stroke="${colors[i]}" stroke-width="2"/><rect x="-18" y="${50+i*5}" width="36" height="36" fill="${colors[i]}33" stroke="${colors[i]}" stroke-width="2"/><line x1="-18" y1="${68+i*3}" x2="18" y2="${68+i*3}" stroke="${colors[i]}" stroke-width="3"/></g>`).join("")}`);
+      if (type === "line") return svgWrap(`${axis}<polyline points="45,98 75,85 105,91 135,69 165,60 195,67 225,42 255,28" fill="none" stroke="${colors[0]}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${[[45,98],[75,85],[105,91],[135,69],[165,60],[195,67],[225,42],[255,28]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4.5" fill="white" stroke="${colors[0]}" stroke-width="3"/>`).join("")}`);
+      if (type === "mosaic") return svgWrap(`<rect x="45" y="22" width="210" height="94" rx="2" fill="none" stroke="#c7cdd2"/><rect x="45" y="22" width="72" height="63" fill="${colors[0]}"/><rect x="45" y="87" width="72" height="29" fill="${colors[1]}"/><rect x="119" y="22" width="52" height="47" fill="${colors[0]}"/><rect x="119" y="71" width="52" height="45" fill="${colors[1]}"/><rect x="173" y="22" width="82" height="70" fill="${colors[0]}"/><rect x="173" y="94" width="82" height="22" fill="${colors[1]}"/>`);
+      if (type === "density") return svgWrap(`${axis}<path d="M42 116 C68 114,72 101,91 94 C112 86,119 45,151 39 C183 34,194 76,215 85 C235 94,244 110,272 116 Z" fill="${colors[0]}44"/><path d="M42 116 C68 114,72 101,91 94 C112 86,119 45,151 39 C183 34,194 76,215 85 C235 94,244 110,272 116" fill="none" stroke="${colors[0]}" stroke-width="4"/>`);
+      if (type === "stacked") return svgWrap(`<defs><pattern id="stackHatch" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 7 7 0" stroke="#173f5f" stroke-width="1.2"/></pattern></defs>${axis}${[[52,34,30],[112,52,27],[172,42,44],[232,64,22]].map(([x,a,b],i)=>`<rect x="${x}" y="${116-a}" width="34" height="${a}" fill="${colors[0]}" stroke="#173f5f"/><rect x="${x}" y="${116-a-b}" width="34" height="${b}" fill="${colors[1]}" stroke="#173f5f"/><rect x="${x}" y="${116-a-b}" width="34" height="${b}" fill="url(#stackHatch)"/>`).join("")}`);
+      if (type === "pareto") return svgWrap(`${axis}${[92,68,43,25].map((h,i)=>`<rect x="${52+i*52}" y="${116-h}" width="30" height="${h}" fill="${colors[0]}"/>`).join("")}<polyline points="67,67 119,39 171,25 223,18" fill="none" stroke="${colors[1]}" stroke-width="3"/>${[[67,67],[119,39],[171,25],[223,18]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4" fill="${colors[1]}"/>`).join("")}`);
+      if (type === "heatmap") return svgWrap(`${[0,1,2,3].map(r=>[0,1,2,3,4].map(c=>{const palette=["#e8f5f3","#b7ddd8","#70bbb4","#168c87","#173f5f"];return `<rect x="${48+c*43}" y="${23+r*24}" width="40" height="21" rx="2" fill="${palette[(r*2+c)%5]}"/>`;}).join("")).join("")}`);
+      if (type === "lollipop") return svgWrap(`${axis}${[55,88,126,174,228].map((x,i)=>`<line x1="${x}" y1="116" x2="${x}" y2="${[88,67,48,76,30][i]}" stroke="#9ccbc7" stroke-width="4"/><circle cx="${x}" cy="${[88,67,48,76,30][i]}" r="7" fill="${colors[0]}"/>`).join("")}`);
+      if (type === "wordcloud") return svgWrap(`<text x="150" y="68" text-anchor="middle" font-size="34" font-weight="800" fill="${colors[4]}">data</text><text x="72" y="39" text-anchor="middle" font-size="20" fill="${colors[0]}">students</text><text x="230" y="40" text-anchor="middle" font-size="18" fill="${colors[1]}">charts</text><text x="77" y="102" text-anchor="middle" font-size="15" fill="${colors[3]}">analysis</text><text x="215" y="105" text-anchor="middle" font-size="14" fill="${colors[2]}">learning</text>`);
+      if (type === "violin") return svgWrap(`${axis}${[90,155,220].map((x,i)=>`<path d="M${x} 30 C${x-22} 45 ${x-18} 63 ${x-8} 74 C${x-20} 88 ${x-16} 104 ${x} 112 C${x+16} 104 ${x+20} 88 ${x+8} 74 C${x+18} 63 ${x+22} 45 ${x} 30Z" fill="${colors[i]}55" stroke="${colors[i]}" stroke-width="2"/><line x1="${x-12}" y1="74" x2="${x+12}" y2="74" stroke="${colors[i]}" stroke-width="3"/>`).join("")}`);
+      if (type === "density2d") return svgWrap(`<rect x="36" y="18" width="242" height="98" fill="#e8f5f3"/><ellipse cx="108" cy="78" rx="54" ry="31" fill="#70bbb455"/><ellipse cx="108" cy="78" rx="35" ry="20" fill="#168c8777"/><ellipse cx="108" cy="78" rx="17" ry="10" fill="#173f5f"/><ellipse cx="213" cy="45" rx="42" ry="25" fill="#70bbb455"/><ellipse cx="213" cy="45" rx="24" ry="14" fill="#168c8788"/><ellipse cx="213" cy="45" rx="9" ry="6" fill="#173f5f"/>`);
+      if (type === "spider") {
+        const center = [150,72], outer = [[150,20],[199,56],[180,112],[120,112],[101,56]];
+        return svgWrap(`${[.35,.7,1].map(s=>`<polygon points="${outer.map(([x,y])=>`${center[0]+(x-center[0])*s},${center[1]+(y-center[1])*s}`).join(" ")}" fill="none" stroke="#d2d8dc"/>`).join("")}${outer.map(([x,y])=>`<line x1="150" y1="72" x2="${x}" y2="${y}" stroke="#d2d8dc"/>`).join("")}<polygon points="150,28 188,59 172,101 126,104 109,59" fill="${colors[0]}33" stroke="${colors[0]}" stroke-width="3"/><circle cx="150" cy="28" r="4" fill="${colors[0]}"/><circle cx="188" cy="59" r="4" fill="${colors[0]}"/><circle cx="172" cy="101" r="4" fill="${colors[0]}"/><polygon points="150,39 194,58 166,94 119,97 117,61" fill="${colors[1]}22" stroke="${colors[1]}" stroke-width="3" stroke-dasharray="7 4"/><rect x="190" y="54" width="8" height="8" fill="${colors[1]}"/>`);
+      }
+      if (type === "surface3d") return svgWrap(`<defs><linearGradient id="surface" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#173f5f"/><stop offset=".55" stop-color="#168c87"/><stop offset="1" stop-color="#e9aa32"/></linearGradient></defs><path d="M48 101 L102 80 L151 92 L202 55 L260 72 L207 103 L154 91 L103 116 Z" fill="url(#surface)" stroke="#173f5f" stroke-width="2"/><path d="M48 101L103 116L154 91L207 103L260 72M66 94L120 107L169 83L222 94M84 87L137 99L185 74L239 84M102 80L151 92L202 55L260 72M48 101L102 80M76 108L128 87M103 116L151 92M128 105L176 78M154 91L202 55M181 97L228 65M207 103L260 72" fill="none" stroke="#ffffff99" stroke-width="1.2"/>`);
+      if (type === "correlogram") {
+        const vals=[1,-.8,-.6,-.7,-.8,1,.8,.9,-.6,.8,1,.7,-.7,.9,.7,1];
+        return svgWrap(`${vals.map((v,i)=>{const r=Math.floor(i/4),c=i%4,color=v<0?"#3568c0":"#ef6a5b",size=7+Math.abs(v)*12;return `<rect x="${70+c*42}" y="${15+r*29}" width="38" height="25" rx="3" fill="${color}" opacity="${.2+.7*Math.abs(v)}"/><circle cx="${89+c*42}" cy="${27.5+r*29}" r="${size/2}" fill="none" stroke="#ffffffaa"/>`;}).join("")}`);
+      }
+      if (type === "venn") return svgWrap(`<defs><pattern id="vennHatch" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 7 7 0" stroke="#173f5f" stroke-width="1.2"/></pattern></defs><circle cx="120" cy="72" r="48" fill="${colors[0]}55" stroke="${colors[0]}" stroke-width="4"/><circle cx="180" cy="72" r="48" fill="${colors[1]}44" stroke="${colors[1]}" stroke-width="4" stroke-dasharray="8 4"/><circle cx="180" cy="72" r="48" fill="url(#vennHatch)"/><text x="100" y="77" text-anchor="middle" font-size="18" font-weight="800">18</text><text x="150" y="77" text-anchor="middle" font-size="18" font-weight="800">11</text><text x="200" y="77" text-anchor="middle" font-size="18" font-weight="800">15</text>`);
+      if (type === "density3d") return svgWrap(`<defs><linearGradient id="densitySurface" x1="0" y1="1" x2=".55" y2="0"><stop stop-color="#173f5f"/><stop offset=".45" stop-color="#168c87"/><stop offset=".78" stop-color="#70bbb4"/><stop offset="1" stop-color="#e9aa32"/></linearGradient></defs><path d="M38 106 148 125 268 94 158 76Z" fill="#e7efef" stroke="#9caeb5" stroke-width="1.5"/><path d="M55 105C90 103 110 98 126 83C140 70 142 43 157 27C167 17 177 31 184 49C193 72 212 87 252 94L148 119C124 113 94 108 55 105Z" fill="url(#densitySurface)" stroke="#173f5f" stroke-width="2"/><path d="M70 106C103 103 124 95 136 77C147 60 150 37 160 28C169 22 178 43 183 58C191 80 212 91 239 95M88 109C119 105 137 95 146 76C154 58 156 39 162 33C168 31 175 50 178 64C184 83 201 94 224 99M108 112C134 107 148 96 154 79C160 61 161 47 164 43C169 46 173 61 174 72C177 88 191 99 207 103" fill="none" stroke="#ffffffb5" stroke-width="1.25"/><path d="M56 105 148 119 252 94M77 99 151 110 232 89M100 91 154 100 211 83M126 83 157 90 191 74M148 125 148 119M38 106 55 105M268 94 252 94" fill="none" stroke="#7d959e" stroke-width="1"/><ellipse cx="159" cy="106" rx="55" ry="13" fill="none" stroke="#168c87" stroke-width="1.5" stroke-dasharray="4 3"/><ellipse cx="160" cy="104" rx="34" ry="8" fill="none" stroke="#168c87" stroke-width="1.5" stroke-dasharray="4 3"/>`);
+      return svgWrap(axis);
+    }
+
+    function renderGoalOptions() {
+      const options = allowedGoals[selectedVariable];
+      const container = document.getElementById("goalOptions");
+      container.innerHTML = Object.keys(goals).map(id => {
+        const available = options.includes(id);
+        return `<button class="goal ${id === selectedGoal ? "selected" : ""}" data-goal="${id}" type="button" ${available ? "" : "disabled"} aria-disabled="${!available}">
+        <strong>${goals[id].label}</strong><small>${preventOrphan(`${goals[id].help}${available ? "" : " Not a good match for these variables."}`)}</small>
+      </button>`;
+      }).join("");
+      container.querySelectorAll(".goal").forEach(btn => btn.addEventListener("click", () => {
+        selectedGoal = btn.dataset.goal;
+        container.querySelectorAll(".goal").forEach(b => b.classList.toggle("selected", b === btn));
+        renderRecommendations();
+      }));
+    }
+
+    function renderRecommendations() {
+      if (!selectedGoal) {
+        document.getElementById("recommendations").innerHTML =
+          `<div class="empty-rec">Now choose what you want your audience to notice.</div>`;
+        return;
+      }
+      const ids = recommendations[`${selectedVariable}|${selectedGoal}`] || [];
+      const container = document.getElementById("recommendations");
+      const caveats = {
+        "twocat|rank": `<div class="chooser-note"><strong>Specialized use:</strong> A spider plot ranks profiles built from contingency-table counts or percentages. It does not rank raw category labels.</div>`,
+        "category|composition": `<div class="chooser-note"><strong>Choose carefully:</strong> Venn is only for overlapping sets. Pareto shows cumulative share after categories are ranked. Pie and doughnut require mutually exclusive parts that total 100%.</div>`
+      };
+      const caveatNote = caveats[`${selectedVariable}|${selectedGoal}`] || "";
+      container.innerHTML = caveatNote + ids.map((id, index) => {
+        const chart = charts[id];
+        const fit = id === "pie" || id === "doughnut"
+          ? "Option"
+          : index === 0 ? "Best match" : index === 1 ? "Strong option" : "Option";
+        return `<article class="rec-card ${index === 0 ? "primary" : ""}">
+          <div class="rec-rank"><span class="fit-pill">${fit}</span><span class="rec-index">0${index+1}</span></div>
+          <h3>${chart.name}</h3><p>${preventOrphan(chart.short)}</p>
+          <div class="chart-preview">${preview(id)}</div>
+          <div class="why"><strong>Why:</strong> ${chart.why}</div>
+          <button class="details-btn" data-chart="${id}" type="button">See guidance + plotting steps</button>
+        </article>`;
+      }).join("");
+      container.querySelectorAll("[data-chart]").forEach(btn => btn.addEventListener("click", () => openChart(btn.dataset.chart)));
+    }
+
+    function renderAtlas() {
+      const atlasOrder = [
+        "bar", "lollipop", "wordcloud", "pie", "doughnut", "pareto", "venn",
+        "histogram", "density", "dot", "line", "box", "violin", "correlogram",
+        "spider", "heatmap", "stacked", "density2d", "density3d", "scatter", "bubble"
+      ];
+      const entries = atlasOrder.map(id => [id, charts[id]]);
+      const grid = document.getElementById("atlasGrid");
+      grid.innerHTML = entries.map(([id, chart]) => `<article class="atlas-card" data-chart="${id}" tabindex="0" role="button" aria-label="Open ${chart.name} guide">
+        <div class="atlas-top"><h3>${chart.name}</h3></div>
+        <p>${preventOrphan(chart.short)}</p><div class="chart-preview">${preview(id)}</div>
+      </article>`).join("");
+      grid.querySelectorAll("[data-chart]").forEach(card => {
+        card.addEventListener("click", () => openChart(card.dataset.chart));
+        card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openChart(card.dataset.chart); }});
+      });
+    }
+
+    function openChart(id) {
+      activeChart = id;
+      activeCode = "ggplot";
+      const chart = charts[id];
+      const guide = interpretationGuides[id];
+      const manuals = chartManuals[id];
+      document.getElementById("dialogTitle").textContent = chart.name;
+      document.getElementById("dialogSubtitle").textContent = preventOrphan(chart.short);
+      document.getElementById("dialogUse").textContent = chart.use;
+      document.getElementById("dialogLevels").textContent = chart.levels;
+      document.getElementById("dialogSource").href = chartSources[id] || "https://www.data-to-viz.com/";
+      document.getElementById("dialogRManual").href = manuals[0];
+      document.getElementById("dialogPythonManual").href = manuals[1];
+      document.getElementById("dialogInterpret").innerHTML = guide.interpret.map(item => `<li>${preventOrphan(item)}</li>`).join("");
+      document.getElementById("dialogAttention").innerHTML = guide.attention.map(item => `<li>${preventOrphan(item)}</li>`).join("");
+      document.getElementById("dialogCaveats").innerHTML = guide.caveats.map(item => `<li>${preventOrphan(item)}</li>`).join("");
+      document.getElementById("modalPreview").innerHTML = preview(id);
+      document.querySelectorAll(".code-tab").forEach(tab => tab.classList.toggle("active", tab.dataset.code === "ggplot"));
+      updateCode();
+      document.getElementById("chartDialog").showModal();
+    }
+
+    function updateCode() {
+      document.getElementById("codeContent").textContent = charts[activeChart][activeCode];
+      document.getElementById("copyCode").textContent = activeCode === "excel" ? "Copy steps" : "Copy code";
+    }
+
+    document.querySelectorAll("#variableOptions .option").forEach(btn => btn.addEventListener("click", () => {
+      selectedVariable = btn.dataset.variable;
+      selectedGoal = null;
+      document.querySelectorAll("#variableOptions .option").forEach(b => b.classList.toggle("selected", b === btn));
+      renderGoalOptions();
+      renderRecommendations();
+    }));
+
+    document.getElementById("resetChooser").addEventListener("click", () => {
+      selectedVariable = "category";
+      selectedGoal = null;
+      document.querySelectorAll("#variableOptions .option").forEach(b => b.classList.toggle("selected", b.dataset.variable === selectedVariable));
+      renderGoalOptions();
+      renderRecommendations();
+    });
+
+    document.querySelectorAll(".code-tab").forEach(tab => tab.addEventListener("click", () => {
+      activeCode = tab.dataset.code;
+      document.querySelectorAll(".code-tab").forEach(b => b.classList.toggle("active", b === tab));
+      updateCode();
+    }));
+
+    document.getElementById("copyCode").addEventListener("click", async () => {
+      const button = document.getElementById("copyCode");
+      try {
+        await navigator.clipboard.writeText(charts[activeChart][activeCode]);
+        button.textContent = "Copied!";
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(document.getElementById("codeContent"));
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        button.textContent = "Selected";
+      }
+      setTimeout(() => button.textContent = activeCode === "excel" ? "Copy steps" : "Copy code", 1500);
+    });
+
+    function renderDatasetPreview() {
+      const rows = cafeCsv.trim().split("\n").map(row => row.split(","));
+      document.getElementById("datasetHead").innerHTML =
+        `<tr>${rows[0].map(cell => `<th>${cell}</th>`).join("")}</tr>`;
+      document.getElementById("datasetBody").innerHTML = rows.slice(1).map(row =>
+        `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`
+      ).join("");
+    }
+
+    function renderPracticeTasks() {
+      const container = document.getElementById("practiceTasks");
+      container.innerHTML = practiceTasks.map((task, index) => `
+        <article class="practice-task">
+          <div class="task-head">
+            <span class="task-number">${index + 1}</span>
+            <div><span class="task-goal">${task.goal}</span><h3>${task.title}</h3><p>${preventOrphan(task.prompt)}</p></div>
+            <button class="reveal-solution" data-task="${index}" type="button">Show solution</button>
+          </div>
+          <div class="task-solution" id="taskSolution${index}">
+            <ol class="solution-steps">${task.steps.map(step => `<li>${preventOrphan(step)}</li>`).join("")}</ol>
+            <div class="practice-tabs" role="tablist" aria-label="Solution language">
+              <button class="practice-tab active" data-task="${index}" data-language="r" type="button">RStudio</button>
+              <button class="practice-tab" data-task="${index}" data-language="python" type="button">Python</button>
+            </div>
+            <div class="code-box">
+              <button class="copy-btn practice-copy" data-task="${index}" type="button">Copy code</button>
+              <pre class="practice-code"><code id="practiceCode${index}">${escapeHtml(task.r)}</code></pre>
+            </div>
+          </div>
+        </article>`).join("");
+
+      container.querySelectorAll(".reveal-solution").forEach(button => button.addEventListener("click", () => {
+        const panel = document.getElementById(`taskSolution${button.dataset.task}`);
+        const visible = panel.classList.toggle("visible");
+        button.textContent = visible ? "Hide solution" : "Show solution";
+      }));
+
+      container.querySelectorAll(".practice-tab").forEach(button => button.addEventListener("click", () => {
+        const index = Number(button.dataset.task);
+        const language = button.dataset.language;
+        button.parentElement.querySelectorAll(".practice-tab").forEach(tab => tab.classList.toggle("active", tab === button));
+        document.getElementById(`practiceCode${index}`).textContent = practiceTasks[index][language];
+      }));
+
+      container.querySelectorAll(".practice-copy").forEach(button => button.addEventListener("click", async () => {
+        const code = document.getElementById(`practiceCode${button.dataset.task}`).textContent;
+        try {
+          await navigator.clipboard.writeText(code);
+          button.textContent = "Copied!";
+        } catch {
+          button.textContent = "Select the code";
+        }
+        setTimeout(() => button.textContent = "Copy code", 1500);
+      }));
+    }
+
+    document.getElementById("downloadDataset").addEventListener("click", () => {
+      const url = URL.createObjectURL(new Blob([cafeCsv], { type: "text/csv;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "campus_cafe_orders.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("toggleDataset").addEventListener("click", event => {
+      const preview = document.getElementById("datasetPreview");
+      preview.hidden = !preview.hidden;
+      event.currentTarget.textContent = preview.hidden ? "Preview the data" : "Hide the data";
+    });
+
+    document.getElementById("closeDialog").addEventListener("click", () => document.getElementById("chartDialog").close());
+    document.getElementById("chartDialog").addEventListener("click", e => {
+      const dialog = e.currentTarget;
+      const rect = dialog.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) dialog.close();
+    });
+
+    let quizIndex = 0;
+
+    function renderQuizQuestion() {
+      const item = quizItems[quizIndex];
+      document.getElementById("quizProgress").textContent = `Question ${quizIndex + 1} of ${quizItems.length}`;
+      document.getElementById("quizQuestion").textContent = item.question;
+      document.getElementById("quizAnswer").innerHTML = `<strong>${item.answer}</strong>${item.explanation}`;
+      document.getElementById("quizAnswer").classList.remove("visible");
+      document.getElementById("showAnswer").hidden = false;
+      document.getElementById("prevQuestion").disabled = quizIndex === 0;
+      document.getElementById("nextQuestion").textContent = quizIndex === quizItems.length - 1 ? "Start again" : "Next question";
+    }
+
+    document.getElementById("openQuiz").addEventListener("click", () => {
+      quizIndex = 0;
+      renderQuizQuestion();
+      document.getElementById("quizDialog").showModal();
+    });
+    document.getElementById("closeQuiz").addEventListener("click", () => document.getElementById("quizDialog").close());
+    document.getElementById("showAnswer").addEventListener("click", e => {
+      document.getElementById("quizAnswer").classList.add("visible");
+      e.currentTarget.hidden = true;
+    });
+    document.getElementById("prevQuestion").addEventListener("click", () => {
+      if (quizIndex > 0) quizIndex -= 1;
+      renderQuizQuestion();
+    });
+    document.getElementById("nextQuestion").addEventListener("click", () => {
+      quizIndex = quizIndex === quizItems.length - 1 ? 0 : quizIndex + 1;
+      renderQuizQuestion();
+    });
+    document.getElementById("quizDialog").addEventListener("click", e => {
+      const dialog = e.currentTarget;
+      const rect = dialog.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) dialog.close();
+    });
+
+    renderGoalOptions();
+    renderRecommendations();
+    renderAtlas();
+    renderDatasetPreview();
+    renderPracticeTasks();
+  </script>
+</body>
+</html>
