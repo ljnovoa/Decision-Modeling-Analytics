@@ -575,6 +575,35 @@
       line-height: 1.5;
     }
 
+    .montserrat-math sub {
+      bottom: -.22em;
+      font-size: .68em;
+      line-height: 0;
+      position: relative;
+      vertical-align: baseline;
+    }
+
+    .sqrt {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 0;
+      white-space: nowrap;
+    }
+
+    .sqrt-symbol {
+      font-size: 1.08em;
+      line-height: 1;
+      transform: translateY(.05em);
+    }
+
+    .sqrt-radicand {
+      border-top: 1.5px solid currentColor;
+      line-height: 1;
+      margin-left: -.10em;
+      padding: .06em .08em 0 .13em;
+      transform: translateY(.12em);
+    }
+
     .download-row {
       display: flex;
       flex-wrap: wrap;
@@ -1367,6 +1396,10 @@
       return `<span class="montserrat-math">${fallback}</span>`;
     }
 
+    function sqrtHTML(value) {
+      return `<span class="sqrt"><span class="sqrt-symbol">√</span><span class="sqrt-radicand">${value}</span></span>`;
+    }
+
     function normalityCheckText(config) {
       if (config.n >= 30) {
         return `Since n = ${config.n}, the sample size is at least 30, so using the t procedure is reasonable for this teaching simulation.`;
@@ -1467,6 +1500,8 @@
       const contains = ci.lower <= config.stats.mean && config.stats.mean <= ci.upper;
       $("detailPanel").style.display = "block";
       const alpha = 1 - config.confidence;
+      const sqrtN = sqrtHTML("n");
+      const sqrtSampleN = sqrtHTML(ci.n);
       const items = [
         ["Sample size n", ci.n],
         ["Sample mean x̄", fmt(ci.xbar, 5)],
@@ -1482,11 +1517,12 @@
         ["Upper endpoint", fmt(ci.upper, 5)]
       ];
       $("calcList").innerHTML = items.map(([label, value]) => `<div class="calc-item"><span>${label}</span><strong>${value}</strong></div>`).join("");
-      const ciFormula = mathHTML("\\mathsf{\\bar{x} \\pm t^* \\times \\frac{s}{\\sqrt{n}}}", "x̄ ± t* × s / √n");
-      const seFormula = mathHTML("\\mathsf{\\sigma_{\\bar{x}} = \\frac{s}{\\sqrt{n}}}", "σx̄ = s / √n");
-      const seSubstitution = mathHTML(`\\mathsf{\\sigma_{\\bar{x}} = \\frac{${fmt(ci.s, 5)}}{\\sqrt{${ci.n}}} = ${fmt(ci.se, 5)}}`, `σx̄ = ${fmt(ci.s, 5)} / √${ci.n} = ${fmt(ci.se, 5)}`);
+      const ciFormula = mathHTML("\\mathsf{\\bar{x} \\pm t^* \\times \\frac{s}{\\sqrt{n}}}", `x̄ ± t* × s / ${sqrtN}`);
+      const sigmaXbar = "σ<sub>x̄</sub>";
+      const seFormula = mathHTML("\\mathsf{\\sigma_{\\bar{x}} = \\frac{s}{\\sqrt{n}}}", `${sigmaXbar} = s / ${sqrtN}`);
+      const seSubstitution = mathHTML(`\\mathsf{\\sigma_{\\bar{x}} = \\frac{${fmt(ci.s, 5)}}{\\sqrt{${ci.n}}} = ${fmt(ci.se, 5)}}`, `${sigmaXbar} = ${fmt(ci.s, 5)} / ${sqrtSampleN} = ${fmt(ci.se, 5)}`);
       const tFormula = mathHTML(`\\mathsf{t^* = ${fmt(ci.tstar, 4)}}`, `t* = ${fmt(ci.tstar, 4)}`);
-      const moeFormula = mathHTML(`\\mathsf{\\text{MOE} = t^* \\times \\sigma_{\\bar{x}} = ${fmt(ci.tstar, 4)} \\times ${fmt(ci.se, 5)} = ${fmt(ci.moe, 5)}}`, `MOE = t* × σx̄ = ${fmt(ci.tstar, 4)} × ${fmt(ci.se, 5)} = ${fmt(ci.moe, 5)}`);
+      const moeFormula = mathHTML(`\\mathsf{\\text{MOE} = t^* \\times \\sigma_{\\bar{x}} = ${fmt(ci.tstar, 4)} \\times ${fmt(ci.se, 5)} = ${fmt(ci.moe, 5)}}`, `MOE = t* × ${sigmaXbar} = ${fmt(ci.tstar, 4)} × ${fmt(ci.se, 5)} = ${fmt(ci.moe, 5)}`);
       const ciBuildFormula = mathHTML(`\\mathsf{\\bar{x} \\pm \\text{MOE} = ${fmt(ci.xbar, 5)} \\pm ${fmt(ci.moe, 5)}}`, `x̄ ± MOE = ${fmt(ci.xbar, 5)} ± ${fmt(ci.moe, 5)}`);
       const ciFinalFormula = mathHTML(`\\mathsf{[${fmt(ci.lower, 5)},\\ ${fmt(ci.upper, 5)}]}`, `[${fmt(ci.lower, 5)}, ${fmt(ci.upper, 5)}]`);
       $("whiteboard").innerHTML = `
@@ -1522,7 +1558,7 @@
         </div>
         <div class="whiteboard-step">
           <strong>3. Compute t*, the critical t value</strong>
-          <div>Use confidence level c = ${config.confidencePct.toFixed(1)}%, α = ${fmt(alpha, 4)}, and df = n - 1 = ${ci.df}.</div>
+          <div>Use confidence level c = ${config.confidencePct.toFixed(1)}% and df = n - 1 = ${ci.df}.</div>
           <div class="math-line">${tFormula}</div>
         </div>
         <div class="whiteboard-step">
