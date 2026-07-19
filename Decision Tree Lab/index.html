@@ -1,14 +1,14 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Decision Tree Lab</title>
+    <title>Decision Tree EMV Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.cdnfonts.com/css/sreda" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260530-12">
+    <link rel="stylesheet" href="style.css?v=20260719-3">
   </head>
   <body>
     <main class="app-shell">
@@ -18,8 +18,8 @@
             <div class="brand-row">
               <img class="tree-logo" src="tree.png" alt="" aria-hidden="true">
               <div>
-                <h1>Decision Tree Lab</h1>
-                <p class="credit-line">Designed by Luis Novoa and built using Codex - for educational purposes</p>
+                <h1>Decision Tree Studio</h1>
+                <p class="credit-line">Designed by Luis Novoa and built using Codex</p>
               </div>
             </div>
           </div>
@@ -42,6 +42,12 @@
             <div class="tool-group">
               <span class="tool-label">Roll Back</span>
               <button id="rollbackBtn" type="button" class="tool-button primary-tool" title="Roll back the tree step by step" disabled><span class="tool-icon">&larr;</span><span>Start Rollback</span></button>
+            </div>
+            <div class="tool-group view-tools">
+              <span class="tool-label">Text</span>
+              <button id="textSizeDownBtn" type="button" class="tool-button compact" title="Decrease tree text size"><span class="tool-icon">A-</span></button>
+              <button id="textSizeResetBtn" type="button" class="tool-button compact" title="Reset tree text size"><span id="textSizeValue">100%</span></button>
+              <button id="textSizeUpBtn" type="button" class="tool-button compact" title="Increase tree text size"><span class="tool-icon">A+</span></button>
             </div>
           </div>
         </header>
@@ -119,9 +125,15 @@
     </dialog>
     <input id="openTreeFile" type="file" accept=".dtree,application/json" hidden>
 
-    <script src="app.js?v=20260530-12"></script>
+    <script src="app.js?v=20260719-3"></script>
   </body>
 </html>
+
+
+
+
+
+
 
 
 
