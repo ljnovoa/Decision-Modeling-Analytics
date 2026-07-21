@@ -1,4 +1,4 @@
-﻿const svg = document.getElementById("treeSvg");
+const svg = document.getElementById("treeSvg");
 const WORKSPACE_WIDTH = 2200;
 const WORKSPACE_HEIGHT = 2600;
 const WORKSPACE_TOP = 0;
@@ -23,6 +23,8 @@ const controls = {
   openTreeFile: document.getElementById("openTreeFile"),
   copyNodeBtn: document.getElementById("copyNodeBtn"),
   pasteNodeBtn: document.getElementById("pasteNodeBtn"),
+  undoBtn: document.getElementById("undoBtn"),
+  redoBtn: document.getElementById("redoBtn"),
 };
 
 const dialog = {
@@ -41,6 +43,14 @@ let payoffMode = false;
 let rollbackMode = false;
 let rollbackSteps = [];
 let rollbackStepIndex = -1;
+let showRollbackFocus = true;
+let rollbackOperationsVisible = localStorage.getItem("decisionTreeRollbackOperations") !== "false";
+let treeFontScale = Number(localStorage.getItem("decisionTreeTextScale") || 1);
+let treeFontFamily = localStorage.getItem("decisionTreeFontFamily") || "Montserrat";
+let numberLabelsBold = localStorage.getItem("decisionTreeNumberBold") === "true";
+let canvasBackgroundMode = localStorage.getItem("decisionTreeBackground") || "grid";
+let payoffUnitsMode = localStorage.getItem("decisionTreePayoffUnits") || "plain";
+let customPayoffUnits = localStorage.getItem("decisionTreeCustomPayoffUnits") || "";
 let layoutNodes = [];
 let layoutById = new Map();
 let parentById = new Map();
@@ -49,7 +59,88 @@ let dragging = null;
 let draggingLabel = null;
 let resizingPanel = null;
 let copiedNode = null;
+let undoStack = [];
+let redoStack = [];
+let editStartSnapshot = null;
+let isRestoringHistory = false;
 
+
+function evaluationState() {
+  return {
+    payoffMode,
+    rollbackMode,
+    rollbackStepIndex,
+    showRollbackFocus,
+  };
+}
+
+function snapshotState() {
+  return {
+    tree: JSON.parse(JSON.stringify(stripComputed(tree))),
+    selectedId,
+    evaluation: evaluationState(),
+  };
+}
+
+function statesMatch(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function updateHistoryControls() {
+  if (controls.undoBtn) controls.undoBtn.disabled = undoStack.length === 0;
+  if (controls.redoBtn) controls.redoBtn.disabled = redoStack.length === 0;
+}
+
+function pushUndoSnapshot(snapshot) {
+  if (isRestoringHistory || !snapshot) return;
+  if (statesMatch(snapshot, snapshotState())) return;
+  undoStack.push(snapshot);
+  if (undoStack.length > 60) undoStack.shift();
+  redoStack = [];
+  updateHistoryControls();
+}
+
+function recordHistory() {
+  pushUndoSnapshot(snapshotState());
+}
+
+function restoreState(snapshot) {
+  isRestoringHistory = true;
+  tree = JSON.parse(JSON.stringify(snapshot.tree));
+  selectedId = snapshot.selectedId;
+  payoffMode = Boolean(snapshot.evaluation?.payoffMode);
+  rollbackMode = Boolean(snapshot.evaluation?.rollbackMode);
+  rollbackStepIndex = Number(snapshot.evaluation?.rollbackStepIndex ?? -1);
+  showRollbackFocus = snapshot.evaluation?.showRollbackFocus !== false;
+  rollbackSteps = [];
+  bestEdges = new Set();
+  if (rollbackMode) {
+    prepareRollbackSteps();
+    rollbackStepIndex = Math.max(-1, Math.min(rollbackStepIndex, rollbackSteps.length - 1));
+    updateBestEdgesForVisibleSteps();
+  }
+  controls.rollbackBtn.disabled = !payoffMode || (rollbackMode && rollbackStepIndex >= rollbackSteps.length - 1);
+  controls.rollbackBtn.querySelector("span:last-child").textContent = rollbackMode
+    ? rollbackStepIndex >= rollbackSteps.length - 1 ? "Policy Complete" : "Next Step"
+    : "Start Rollback";
+  isRestoringHistory = false;
+  updateHistoryControls();
+  render();
+}
+
+function undoChange() {
+  const previous = undoStack.pop();
+  if (!previous) return;
+  redoStack.push(snapshotState());
+  restoreState(previous);
+}
+
+function redoChange() {
+  const next = redoStack.pop();
+  if (!next) return;
+  undoStack.push(snapshotState());
+  restoreState(next);
+}
 function setPanelWidth(width) {
   const max = Math.max(620, window.innerWidth - 260);
   const next = Math.max(260, Math.min(max, width));
@@ -81,6 +172,7 @@ function markDirty() {
   rollbackSteps = [];
   rollbackStepIndex = -1;
   currentStepNodeId = null;
+  showRollbackFocus = true;
   bestEdges = new Set();
   traverse(tree, (node) => {
     delete node._terminalTotal;
@@ -120,6 +212,8 @@ function snapshotNodePosition(node) {
     y: node.y,
     labelX: node.labelX,
     labelY: node.labelY,
+    payoffX: node.payoffX,
+    payoffY: node.payoffY,
     probX: node.probX,
     probY: node.probY,
     nameX: node.nameX,
@@ -138,11 +232,20 @@ function truncateLabel(value) {
 }
 
 function formatMoney(value) {
-  const rounded = Math.round((Number(value || 0) + Number.EPSILON) * 1000) / 1000;
-  if (Object.is(rounded, -0)) return "0";
-  return new Intl.NumberFormat("en-US", {
+  const raw = Number(value || 0);
+  const scale = payoffUnitsMode === "usd-thousands" ? 1000 : payoffUnitsMode === "usd-millions" ? 1000000 : 1;
+  const rounded = Math.round((raw / scale + Number.EPSILON) * 1000) / 1000;
+  const cleaned = Object.is(rounded, -0) ? 0 : rounded;
+  const formatted = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 3,
-  }).format(rounded);
+  }).format(cleaned);
+  if (payoffUnitsMode === "usd" || payoffUnitsMode === "usd-thousands" || payoffUnitsMode === "usd-millions") {
+    return "$" + formatted;
+  }
+  if (payoffUnitsMode === "custom" && customPayoffUnits.trim()) {
+    return `${formatted} ${customPayoffUnits.trim()}`;
+  }
+  return formatted;
 }
 
 function parseProbability(value) {
@@ -166,6 +269,14 @@ function formatProbabilityLabel(value) {
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 3,
   }).format(Number(value || 0));
+}
+
+function formatProbabilityFormula(value) {
+  return `(${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(Number(value || 0))})`;
+}
+
+function formatProbabilityDisplay(value) {
+  return `(${formatProbabilityLabel(value)})`;
 }
 
 function compactText(value, max = 54) {
@@ -260,7 +371,7 @@ function prepareRollbackSteps() {
       }
       const terms = node.children.map((child) => {
         const payoff = Number(child._emv || 0);
-        return `${formatProbabilityLabel(child.probability)} x ${formatMoney(payoff)}`;
+        return `${formatProbabilityFormula(child.probability)} x ${formatMoney(payoff)}`;
       });
       node._emv = node.children.reduce((sum, child) => sum + Number(child.probability || 0) * Number(child._emv || 0), 0);
       steps.push({
@@ -288,7 +399,7 @@ function prepareRollbackSteps() {
       nodeId: node.id,
       type: "decision",
       title: node.name,
-      formula: node.children.map((child) => `${child.branchLabel || child.name}: ${formatMoney(child._emv)}`).join("  |  "),
+      formula: `max(${node.children.map((child) => formatMoney(child._emv)).join(", ")})`,
       result: node._emv,
       bestChildId: bestChild?.id || null,
     });
@@ -298,6 +409,17 @@ function prepareRollbackSteps() {
   walk(tree);
   rollbackSteps = steps;
   return warnings;
+}
+
+function rollbackStepForNode(nodeId) {
+  return rollbackSteps.find((step) => step.nodeId === nodeId) || null;
+}
+
+function rollbackAnnotationText(node) {
+  const step = rollbackStepForNode(node.id);
+  if (!step) return `EV ${formatMoney(node._emv)}`;
+  if (!rollbackOperationsVisible) return `EV ${formatMoney(step.result)}`;
+  return `${step.formula}` + "\n" + `EV ${formatMoney(step.result)}`;
 }
 
 function activeStepIds() {
@@ -364,9 +486,50 @@ function svgEl(tag, attrs = {}) {
   return el;
 }
 
+function treeTextBaseSize(className = "") {
+  if (className.includes("node-emv")) return 16;
+  if (className.includes("label-evbox")) return 15;
+  if (className.includes("label-rollback-op")) return 12;
+  if (className.includes("label-emv")) return 13;
+  if (className.includes("label-end")) return 13;
+  if (className.includes("label-prob")) return 13;
+  if (className.includes("label-small")) return 13;
+  if (className.includes("label-main")) return 13;
+  if (className.includes("node-name")) return 13;
+  return null;
+}
+
+function treeFontStack() {
+  const serifFonts = new Set(["Merriweather"]);
+  const fallback = serifFonts.has(treeFontFamily) ? "Georgia, serif" : "Arial, sans-serif";
+  return `"${treeFontFamily}", ${fallback}`;
+}
+
+function isNumberLabelClass(className = "") {
+  return ["label-small", "label-end", "label-emv", "label-rollback-op", "node-emv", "label-prob"].some((name) => className.includes(name));
+}
+
+function scaledTreeFontSize(base) {
+  return `${Math.round(base * treeFontScale * 10) / 10}px`;
+}
+
 function addText(group, text, x, y, className, anchor = "start") {
   const el = svgEl("text", { x, y, class: className, "text-anchor": anchor });
-  el.textContent = text;
+  const baseSize = treeTextBaseSize(className);
+  if (baseSize) el.style.fontSize = scaledTreeFontSize(baseSize);
+  if (baseSize) el.style.fontFamily = treeFontStack();
+  if (isNumberLabelClass(className)) el.style.fontWeight = numberLabelsBold ? "800" : "500";
+  const lines = String(text ?? "").split("\n");
+  if (lines.length > 1) {
+    lines.forEach((line, index) => {
+      const tspan = svgEl("tspan", { x, dy: index === 0 ? 0 : "1.35em" });
+      tspan.textContent = line;
+      if (index > 0) tspan.classList.add("rollback-ev-line");
+      el.appendChild(tspan);
+    });
+  } else {
+    el.textContent = text;
+  }
   group.appendChild(el);
   return el;
 }
@@ -409,6 +572,14 @@ function labelPosition(child, geometry) {
   return { x: child.labelX, y: child.labelY };
 }
 
+function payoffPosition(child, label) {
+  if (typeof child.payoffX !== "number" || typeof child.payoffY !== "number") {
+    child.payoffX = label.x;
+    child.payoffY = label.y + 24;
+  }
+  return { x: child.payoffX, y: child.payoffY };
+}
+
 function probabilityPosition(child, geometry) {
   if (typeof child.probX !== "number" || typeof child.probY !== "number") {
     child.probX = geometry.start.x + Math.max(28, (geometry.midX - geometry.start.x) * 0.48);
@@ -427,8 +598,8 @@ function nodeNamePosition(node) {
 
 function emvPosition(node) {
   if (typeof node.emvX !== "number" || typeof node.emvY !== "number") {
-    node.emvX = node.x + 18;
-    node.emvY = node.y - 18;
+    node.emvX = node.x;
+    node.emvY = node.y - 32;
   }
   return { x: node.emvX, y: node.emvY };
 }
@@ -465,24 +636,24 @@ function render() {
       addText(labelGroup, child.branchLabel || child.name, label.x, label.y, "label-main");
       if (node.type === "chance") {
         const probability = probabilityPosition(child, geometry);
-        const probabilityText = addText(labels, formatProbabilityLabel(child.probability), probability.x, probability.y, "label-prob label-drag", "start");
+        const probabilityText = addText(labels, formatProbabilityDisplay(child.probability), probability.x, probability.y, "label-prob label-drag", "start");
         probabilityText.setAttribute("data-label-id", child.id);
         probabilityText.setAttribute("data-label-kind", "probability");
       }
       if (getBranchCashFlow(child)) {
-        addText(labelGroup, formatMoney(getBranchCashFlow(child)), label.x, label.y + 24, "label-small");
+        const payoff = payoffPosition(child, label);
+        const payoffText = addText(labels, formatMoney(getBranchCashFlow(child)), payoff.x, payoff.y, "label-small label-drag");
+        payoffText.setAttribute("data-label-id", child.id);
+        payoffText.setAttribute("data-label-kind", "payoff");
       }
       if (payoffMode && child.type === "end") {
         addText(labels, formatMoney(child.payoff), to.x + 34, to.y + 5, `label-end${child.id === selectedId ? " selected-text" : ""}`);
-      }
-      if (rollbackMode && activeStepIds().has(child.id) && child.type !== "end") {
-        addText(labelGroup, `EV ${formatMoney(child._emv)}`, label.x, label.y + 48, "label-emv");
       }
     });
   });
 
   layoutNodes.forEach(({ node, x, y }) => {
-    const currentStep = rollbackMode && rollbackSteps[rollbackStepIndex]?.nodeId === node.id;
+    const currentStep = showRollbackFocus && rollbackMode && rollbackSteps[rollbackStepIndex]?.nodeId === node.id;
     const calculated = rollbackMode && activeStepIds().has(node.id);
     const group = svgEl("g", { class: "node-hit", "data-select-id": node.id });
     if (node.type === "decision") {
@@ -498,6 +669,11 @@ function render() {
       const nodeName = addText(labels, node.name || node.type, namePos.x, namePos.y, "node-name label-drag", "middle");
       nodeName.setAttribute("data-node-name-id", node.id);
     }
+    if (calculated && node.type !== "end") {
+      const emvPos = emvPosition(node);
+      const emvText = addText(labels, rollbackAnnotationText(node), emvPos.x, emvPos.y, `label-emv label-rollback-op label-drag${rollbackOperationsVisible ? " showing-ops" : ""}`, "middle");
+      emvText.setAttribute("data-emv-id", node.id);
+    }
   });
 
   renderRollbackCard();
@@ -508,6 +684,11 @@ function render() {
 
 function renderRollbackCard() {
   if (!rollbackMode) {
+    controls.rollbackCard.hidden = true;
+    controls.rollbackCard.innerHTML = "";
+    return;
+  }
+  if (!showRollbackFocus && rollbackStepIndex >= rollbackSteps.length - 1) {
     controls.rollbackCard.hidden = true;
     controls.rollbackCard.innerHTML = "";
     return;
@@ -545,10 +726,10 @@ function cloneNodeForPaste(node, offsetX = 40, offsetY = 40) {
     item.id = makeId();
     item.x = Math.max(0, Math.min(WORKSPACE_WIDTH, Number(item.x || 0) + offsetX));
     item.y = Math.max(WORKSPACE_TOP, Math.min(WORKSPACE_HEIGHT, Number(item.y || 0) + offsetY));
-    ["labelX", "probX", "nameX", "emvX"].forEach((key) => {
+    ["labelX", "payoffX", "probX", "nameX", "emvX"].forEach((key) => {
       if (typeof item[key] === "number") item[key] = Math.max(0, Math.min(WORKSPACE_WIDTH, item[key] + offsetX));
     });
-    ["labelY", "probY", "nameY", "emvY"].forEach((key) => {
+    ["labelY", "payoffY", "probY", "nameY", "emvY"].forEach((key) => {
       if (typeof item[key] === "number") item[key] = Math.max(LABEL_TOP, Math.min(WORKSPACE_HEIGHT, item[key] + offsetY));
     });
     (item.children || []).forEach(renew);
@@ -577,7 +758,7 @@ function pasteCopiedNode() {
     controls.policyBanner.textContent = "Paste is only available when an end node is selected.";
     return;
   }
-
+  recordHistory();
   const target = found.node;
   const incoming = {
     id: target.id,
@@ -646,6 +827,7 @@ function openTreeFile(file) {
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result);
+  recordHistory();
       tree = parsed.tree || parsed;
       selectedId = tree.id || "root";
       resetEvaluationState();
@@ -659,9 +841,18 @@ function openTreeFile(file) {
 }
 
 function updatePanel(warnings) {
-  const found = findNode(selectedId) || findNode(tree.id);
+  const found = selectedId ? findNode(selectedId) : null;
+  if (!found) {
+    controls.selectedTitle.textContent = "No node selected";
+    controls.selectedBadge.textContent = "";
+    fields.nodeName.value = "";
+    fields.nodeType.value = "";
+    fields.branchEditor.innerHTML = "<div class=\"branch-empty\">Click a node or branch to edit it.</div>";
+    if (warnings.length) controls.policyBanner.textContent = warnings.join(" ");
+    updatePolicyBanner();
+    return;
+  }
   const { node } = found;
-  selectedId = node.id;
   controls.selectedTitle.textContent = node.type === "end" ? "End" : node.name || "Selected node";
   controls.selectedBadge.textContent = node.type;
   fields.nodeName.value = node.name || "";
@@ -788,6 +979,16 @@ function renderEndpointReport() {
   `;
 }
 
+
+function beginEditHistory() {
+  if (!editStartSnapshot) editStartSnapshot = snapshotState();
+}
+
+function commitEditHistory() {
+  if (!editStartSnapshot) return;
+  pushUndoSnapshot(editStartSnapshot);
+  editStartSnapshot = null;
+}
 function updateSelectedFromFields() {
   const found = findNode(selectedId);
   if (!found) return;
@@ -856,6 +1057,7 @@ function openNodeDialog(type) {
 function createNodeFromDialog() {
   const found = findNode(selectedId);
   if (!found) return;
+  recordHistory();
   const { node } = found;
   const baseX = node.x || 150;
   const baseY = node.y || 260;
@@ -902,11 +1104,12 @@ svg.addEventListener("pointerdown", (event) => {
     const child = findNode(labelTarget.getAttribute("data-label-id"))?.node;
     if (!child) return;
     selectedId = child.id;
+    showRollbackFocus = true;
     const point = svgPoint(event);
     const kind = labelTarget.getAttribute("data-label-kind");
-    const originX = kind === "probability" ? child.probX : child.labelX;
-    const originY = kind === "probability" ? child.probY : child.labelY;
-    draggingLabel = { id: child.id, kind, dx: point.x - originX, dy: point.y - originY };
+    const originX = kind === "probability" ? child.probX : kind === "payoff" ? child.payoffX : child.labelX;
+    const originY = kind === "probability" ? child.probY : kind === "payoff" ? child.payoffY : child.labelY;
+    draggingLabel = { id: child.id, kind, dx: point.x - originX, dy: point.y - originY, before: snapshotState(), moved: false };
     svg.setPointerCapture(event.pointerId);
     event.preventDefault();
     render();
@@ -918,9 +1121,10 @@ svg.addEventListener("pointerdown", (event) => {
     const node = findNode(nodeNameTarget.getAttribute("data-node-name-id"))?.node;
     if (!node) return;
     selectedId = node.id;
+    showRollbackFocus = true;
     const point = svgPoint(event);
     const pos = nodeNamePosition(node);
-    draggingLabel = { id: node.id, kind: "nodeName", dx: point.x - pos.x, dy: point.y - pos.y };
+    draggingLabel = { id: node.id, kind: "nodeName", dx: point.x - pos.x, dy: point.y - pos.y, before: snapshotState(), moved: false };
     svg.setPointerCapture(event.pointerId);
     event.preventDefault();
     render();
@@ -932,9 +1136,10 @@ svg.addEventListener("pointerdown", (event) => {
     const node = findNode(emvTarget.getAttribute("data-emv-id"))?.node;
     if (!node) return;
     selectedId = node.id;
+    showRollbackFocus = true;
     const point = svgPoint(event);
     const pos = emvPosition(node);
-    draggingLabel = { id: node.id, kind: "emv", dx: point.x - pos.x, dy: point.y - pos.y };
+    draggingLabel = { id: node.id, kind: "emv", dx: point.x - pos.x, dy: point.y - pos.y, before: snapshotState(), moved: false };
     svg.setPointerCapture(event.pointerId);
     event.preventDefault();
     render();
@@ -942,8 +1147,14 @@ svg.addEventListener("pointerdown", (event) => {
   }
 
   const target = event.target.closest("[data-select-id]");
-  if (!target) return;
+  if (!target) {
+    selectedId = null;
+    showRollbackFocus = false;
+    render();
+    return;
+  }
   selectedId = target.getAttribute("data-select-id");
+  showRollbackFocus = true;
   const found = findNode(selectedId);
   if (!found) return;
   const point = svgPoint(event);
@@ -952,6 +1163,7 @@ svg.addEventListener("pointerdown", (event) => {
     startPointerX: point.x,
     startPointerY: point.y,
     moved: false,
+    before: snapshotState(),
     nodes: collectSubtree(found.node).map(snapshotNodePosition),
   };
   svg.setPointerCapture(event.pointerId);
@@ -972,11 +1184,26 @@ svg.addEventListener("pointermove", (event) => {
     } else if (draggingLabel.kind === "probability") {
       found.node.probX = Math.max(0, Math.min(WORKSPACE_WIDTH, point.x - draggingLabel.dx));
       found.node.probY = Math.max(LABEL_TOP, Math.min(WORKSPACE_HEIGHT, point.y - draggingLabel.dy));
+    } else if (draggingLabel.kind === "payoff") {
+      found.node.payoffX = Math.max(0, Math.min(WORKSPACE_WIDTH, point.x - draggingLabel.dx));
+      found.node.payoffY = Math.max(LABEL_TOP, Math.min(WORKSPACE_HEIGHT, point.y - draggingLabel.dy));
     } else {
       found.node.labelX = Math.max(0, Math.min(WORKSPACE_WIDTH, point.x - draggingLabel.dx));
       found.node.labelY = Math.max(LABEL_TOP, Math.min(WORKSPACE_HEIGHT, point.y - draggingLabel.dy));
     }
+    draggingLabel.moved = true;
+
+    draggingLabel.moved = true;
+
+
+    draggingLabel.moved = true;
+
+
+
     render();
+
+
+
     return;
   }
 
@@ -991,7 +1218,9 @@ svg.addEventListener("pointermove", (event) => {
     node.y = Math.max(WORKSPACE_TOP, Math.min(WORKSPACE_HEIGHT, snapshot.y + dy));
     node.labelX = shiftDefined(snapshot.labelX, dx, 0, WORKSPACE_WIDTH);
     node.labelY = shiftDefined(snapshot.labelY, dy, LABEL_TOP, WORKSPACE_HEIGHT);
-    node.probX = shiftDefined(snapshot.probX, dx, 0, WORKSPACE_WIDTH);
+    node.payoffX = shiftDefined(snapshot.payoffX, dx, 0, WORKSPACE_WIDTH);
+    node.payoffY = shiftDefined(snapshot.payoffY, dy, LABEL_TOP, WORKSPACE_HEIGHT);
+node.probX = shiftDefined(snapshot.probX, dx, 0, WORKSPACE_WIDTH);
     node.probY = shiftDefined(snapshot.probY, dy, LABEL_TOP, WORKSPACE_HEIGHT);
     node.nameX = shiftDefined(snapshot.nameX, dx, 0, WORKSPACE_WIDTH);
     node.nameY = shiftDefined(snapshot.nameY, dy, LABEL_TOP, WORKSPACE_HEIGHT);
@@ -1004,6 +1233,8 @@ svg.addEventListener("pointermove", (event) => {
 
 svg.addEventListener("pointerup", (event) => {
   if (dragging || draggingLabel) svg.releasePointerCapture(event.pointerId);
+  if (dragging?.moved) pushUndoSnapshot(dragging.before);
+  if (draggingLabel?.moved) pushUndoSnapshot(draggingLabel.before);
   dragging = null;
   draggingLabel = null;
 });
@@ -1026,10 +1257,12 @@ sidePanel.addEventListener("pointerup", (event) => {
   resizingPanel = null;
 });
 
+fields.nodeName.addEventListener("focus", beginEditHistory);
 fields.nodeName.addEventListener("input", updateSelectedFromFields);
-fields.nodeName.addEventListener("change", updateSelectedFromFields);
+fields.nodeName.addEventListener("change", (event) => { updateSelectedFromFields(event); commitEditHistory(); });
+fields.branchEditor.addEventListener("focusin", beginEditHistory);
 fields.branchEditor.addEventListener("input", updateBranchFromEditor);
-fields.branchEditor.addEventListener("change", updateBranchFromEditor);
+fields.branchEditor.addEventListener("change", (event) => { updateBranchFromEditor(event); commitEditHistory(); });
 
 dialog.branchCount.addEventListener("input", renderBranchRows);
 dialog.form.addEventListener("submit", (event) => {
@@ -1040,6 +1273,7 @@ dialog.form.addEventListener("submit", (event) => {
 });
 
 document.getElementById("newBtn").addEventListener("click", () => {
+  recordHistory();
   tree = makeRoot();
   selectedId = tree.id;
   resetEvaluationState();
@@ -1052,6 +1286,8 @@ document.getElementById("addChanceBtn").addEventListener("click", () => openNode
 document.getElementById("calcPayoffsBtn").addEventListener("click", calculateTerminalPayoffs);
 controls.copyNodeBtn.addEventListener("click", copySelectedNode);
 controls.pasteNodeBtn.addEventListener("click", pasteCopiedNode);
+controls.undoBtn?.addEventListener("click", undoChange);
+controls.redoBtn?.addEventListener("click", redoChange);
 controls.saveTreeBtn.addEventListener("click", saveTreeFile);
 controls.openTreeBtn.addEventListener("click", () => controls.openTreeFile.click());
 controls.openTreeFile.addEventListener("change", () => {
@@ -1059,13 +1295,34 @@ controls.openTreeFile.addEventListener("change", () => {
   if (file) openTreeFile(file);
   controls.openTreeFile.value = "";
 });
+
+function updateRollbackOpsControls() {
+  const button = document.getElementById("rollbackOpsToggleBtn");
+  const value = document.getElementById("rollbackOpsValue");
+  if (!button) return;
+  button.setAttribute("aria-pressed", String(rollbackOperationsVisible));
+  button.classList.toggle("active", rollbackOperationsVisible);
+  if (value) value.textContent = rollbackOperationsVisible ? "Ops" : "EV";
+}
+
+function setRollbackOperationsVisible(nextValue) {
+  rollbackOperationsVisible = Boolean(nextValue);
+  localStorage.setItem("decisionTreeRollbackOperations", String(rollbackOperationsVisible));
+  updateRollbackOpsControls();
+updateHistoryControls();
+render();
+}
+
+document.getElementById("rollbackOpsToggleBtn")?.addEventListener("click", () => setRollbackOperationsVisible(!rollbackOperationsVisible));
+updateRollbackOpsControls();
 document.getElementById("rollbackBtn").addEventListener("click", () => {
   if (!rollbackMode) {
     rollbackMode = true;
     rollbackStepIndex = -1;
     prepareRollbackSteps();
   }
-  if (rollbackStepIndex < rollbackSteps.length - 1) {
+  showRollbackFocus = true;
+if (rollbackStepIndex < rollbackSteps.length - 1) {
     rollbackStepIndex += 1;
   }
   controls.rollbackBtn.querySelector("span:last-child").textContent =
@@ -1074,36 +1331,137 @@ document.getElementById("rollbackBtn").addEventListener("click", () => {
   render();
 });
 
+function applyCanvasBackground() {
+  const frame = document.querySelector(".canvas-frame");
+  if (!frame) return;
+  frame.classList.toggle("white-bg", canvasBackgroundMode === "white");
+  const value = document.getElementById("bgToggleValue");
+  if (value) value.textContent = canvasBackgroundMode === "white" ? "White" : "Grid";
+}
+
+function toggleCanvasBackground() {
+  canvasBackgroundMode = canvasBackgroundMode === "white" ? "grid" : "white";
+  localStorage.setItem("decisionTreeBackground", canvasBackgroundMode);
+  applyCanvasBackground();
+}
+
+document.getElementById("bgToggleBtn")?.addEventListener("click", toggleCanvasBackground);
+
+function updatePayoffUnitsControls() {
+  const select = document.getElementById("payoffUnitsSelect");
+  if (select) select.value = payoffUnitsMode;
+  const input = document.getElementById("customUnitsInput");
+  if (input) input.value = customPayoffUnits;
+}
+
+function setPayoffUnitsMode(nextMode) {
+  payoffUnitsMode = nextMode || "plain";
+  localStorage.setItem("decisionTreePayoffUnits", payoffUnitsMode);
+  updatePayoffUnitsControls();
+  render();
+}
+
+function setCustomPayoffUnits(nextUnits) {
+  customPayoffUnits = String(nextUnits || "").slice(0, 18);
+  localStorage.setItem("decisionTreeCustomPayoffUnits", customPayoffUnits);
+  if (customPayoffUnits.trim()) {
+    payoffUnitsMode = "custom";
+    localStorage.setItem("decisionTreePayoffUnits", payoffUnitsMode);
+  }
+  updatePayoffUnitsControls();
+  render();
+}
+
+document.getElementById("payoffUnitsSelect")?.addEventListener("change", (event) => setPayoffUnitsMode(event.target.value));
+document.getElementById("customUnitsInput")?.addEventListener("input", (event) => setCustomPayoffUnits(event.target.value));
+function updateFontControls() {
+  const select = document.getElementById("treeFontSelect");
+  if (select) select.value = treeFontFamily;
+}
+
+function setTreeFontFamily(nextFamily) {
+  treeFontFamily = nextFamily || "Montserrat";
+  localStorage.setItem("decisionTreeFontFamily", treeFontFamily);
+  updateFontControls();
+  render();
+}
+
+document.getElementById("treeFontSelect")?.addEventListener("change", (event) => setTreeFontFamily(event.target.value));
+
+function updateTextSizeControls() {
+  const value = document.getElementById("textSizeValue");
+  if (value) value.textContent = `${Math.round(treeFontScale * 100)}%`;
+}
+
+function setTreeFontScale(nextScale) {
+  treeFontScale = Math.max(0.75, Math.min(1.8, Math.round(nextScale * 20) / 20));
+  localStorage.setItem("decisionTreeTextScale", String(treeFontScale));
+  updateTextSizeControls();
+  render();
+}
+
+document.getElementById("textSizeDownBtn")?.addEventListener("click", () => setTreeFontScale(treeFontScale - 0.1));
+document.getElementById("textSizeUpBtn")?.addEventListener("click", () => setTreeFontScale(treeFontScale + 0.1));
+document.getElementById("textSizeResetBtn")?.addEventListener("click", () => setTreeFontScale(1));
+
+function updateNumberBoldControls() {
+  const button = document.getElementById("numberBoldBtn");
+  if (!button) return;
+  button.setAttribute("aria-pressed", String(numberLabelsBold));
+  button.classList.toggle("active", numberLabelsBold);
+}
+
+function setNumberLabelsBold(nextValue) {
+  numberLabelsBold = Boolean(nextValue);
+  localStorage.setItem("decisionTreeNumberBold", String(numberLabelsBold));
+  updateNumberBoldControls();
+  render();
+}
+
+document.getElementById("numberBoldBtn")?.addEventListener("click", () => setNumberLabelsBold(!numberLabelsBold));
+updateNumberBoldControls();
+updateTextSizeControls();
+
 document.getElementById("deleteBtn").addEventListener("click", () => {
   const found = findNode(selectedId);
   if (!found?.parent) return;
-  found.parent.children = found.parent.children.filter((child) => child.id !== selectedId);
-  selectedId = found.parent.id;
+  recordHistory();
+  const node = found.node;
+  const preserved = {
+    id: node.id,
+    name: "End",
+    type: "end",
+    payoff: 0,
+    branchLabel: node.branchLabel || "",
+    branchCashFlow: getBranchCashFlow(node),
+    branchEntries: Array.isArray(node.branchEntries) ? JSON.parse(JSON.stringify(node.branchEntries)) : [],
+    probability: node.probability,
+    x: node.x,
+    y: node.y,
+    labelX: node.labelX,
+    labelY: node.labelY,
+    payoffX: node.payoffX,
+    payoffY: node.payoffY,
+    probX: node.probX,
+    probY: node.probY,
+  };
+  Object.keys(node).forEach((key) => delete node[key]);
+  Object.assign(node, preserved, { children: [] });
+  selectedId = node.id;
   markDirty();
+  controls.policyBanner.textContent = "Subtree removed. Parent branch kept as an end node.";
   render();
 });
 
 controls.policyBanner.textContent = "";
+updatePayoffUnitsControls();
+updateFontControls();
+updateTextSizeControls();
+applyCanvasBackground();
+updateNumberBoldControls();
+updateRollbackOpsControls();
+updateHistoryControls();
 render();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
