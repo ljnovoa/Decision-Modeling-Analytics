@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.cdnfonts.com/css/sreda" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Lato:wght@400;700;900&family=Merriweather:wght@400;700;900&family=Montserrat:wght@400;500;700;800;900&family=Nunito:wght@400;700;800;900&family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260720-8">
+    <link rel="stylesheet" href="style.css?v=20260720-11">
   </head>
   <body>
     <main class="app-shell">
@@ -37,11 +37,14 @@
               <button id="calcPayoffsBtn" type="button" class="tool-button" title="Calculate terminal payoffs"><span class="tool-icon">=</span><span>Calculate Payoffs</span></button>
               <button id="copyNodeBtn" type="button" class="tool-button" title="Copy selected node and its children"><span class="tool-icon">C</span><span>Copy</span></button>
               <button id="pasteNodeBtn" type="button" class="tool-button" title="Paste copied node onto selected end node"><span class="tool-icon">P</span><span>Paste</span></button>
+              <button id="undoBtn" type="button" class="tool-button compact" title="Undo" disabled><span class="tool-icon">↶</span><span>Undo</span></button>
+              <button id="redoBtn" type="button" class="tool-button compact" title="Redo" disabled><span class="tool-icon">↷</span><span>Redo</span></button>
               <button id="deleteBtn" type="button" class="tool-button danger compact" title="Delete selected"><span class="tool-icon">x</span><span>Delete</span></button>
             </div>
             <div class="tool-group">
               <span class="tool-label">Roll Back</span>
               <button id="rollbackBtn" type="button" class="tool-button primary-tool" title="Roll back the tree step by step" disabled><span class="tool-icon">&larr;</span><span>Start Rollback</span></button>
+              <button id="rollbackOpsToggleBtn" type="button" class="tool-button compact" title="Show or hide rollback operations" aria-pressed="true"><span id="rollbackOpsValue">Ops</span></button>
             </div>
             <div class="tool-group view-tools">
               <span class="tool-label">Text</span>
@@ -146,9 +149,16 @@
     </dialog>
     <input id="openTreeFile" type="file" accept=".dtree,application/json" hidden>
 
-    <script src="app.js?v=20260720-8"></script>
+    <script src="app.js?v=20260720-11"></script>
   </body>
 </html>
+
+
+
+
+
+
+
 
 
 
