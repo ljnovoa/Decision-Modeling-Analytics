@@ -387,15 +387,40 @@
 
 	  <a href="https://ljnovoa.github.io/Decision-Modeling-Analytics/hiker_on_the_flat_mountain.html" target="_blank" rel="noopener" class="app-card reveal">
       <span class="app-tag">Optimization</span>
-      <svg class="app-icon-svg" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- cutting plane (parallelogram, semi-transparent fill) -->
-        <polygon points="4,22 26,16 48,22 26,34" fill="rgba(0,229,255,0.12)" stroke="#00e5ff" stroke-width="2.5"/>
-        <!-- intersection highlight dots -->
-        <circle cx="8"  cy="23" r="2.5" fill="#00e5ff" opacity="0.9"/>
-        <circle cx="44" cy="23" r="2.5" fill="#00e5ff" opacity="0.9"/>
-        <circle cx="26" cy="16" r="2.5" fill="#00e5ff" opacity="0.9"/>
-        <circle cx="26" cy="34" r="2.5" fill="#00e5ff" opacity="0.9"/>
-      </svg>
+      <svg class="app-icon-svg" viewBox="0 0 52 52" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Projection lines (dashed lines dropped from floating plane to xy-plane) -->
+  <g stroke="#00e5ff" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.6">
+    <line x1="8"  y1="13" x2="8"  y2="33" />
+    <line x1="26" y1="7"  x2="26" y2="27" />
+    <line x1="44" y1="13" x2="44" y2="33" />
+    <line x1="26" y1="25" x2="26" y2="45" />
+  </g>
+
+  <!-- Projected footprint on xy-plane -->
+  <polygon points="8,33 26,27 44,33 26,45" 
+           fill="rgba(0, 229, 255, 0.08)" 
+           stroke="#00e5ff" 
+           stroke-width="1.5" 
+           stroke-opacity="0.4" />
+
+  <!-- Floating 3D plane -->
+  <polygon points="8,13 26,7 44,13 26,25" 
+           fill="rgba(0, 229, 255, 0.25)" 
+           stroke="#00e5ff" 
+           stroke-width="2.2" />
+
+  <!-- Upper vertex dots -->
+  <circle cx="8"  cy="13" r="2" fill="#00e5ff" />
+  <circle cx="26" cy="7"  r="2" fill="#00e5ff" />
+  <circle cx="44" cy="13" r="2" fill="#00e5ff" />
+  <circle cx="26" cy="25" r="2" fill="#00e5ff" />
+
+  <!-- Projected footprint dots -->
+  <circle cx="8"  cy="33" r="1.5" fill="#00e5ff" opacity="0.5" />
+  <circle cx="26" cy="27" r="1.5" fill="#00e5ff" opacity="0.5" />
+  <circle cx="44" cy="33" r="1.5" fill="#00e5ff" opacity="0.5" />
+  <circle cx="26" cy="45" r="1.5" fill="#00e5ff" opacity="0.5" />
+</svg>
       <h3 class="app-title">Hiking on a flat mountain</h3>
       <p class="app-desc">Visualize improving directions with the Oktomasks problem.</p>
       <div class="app-link">Launch App →</div>
